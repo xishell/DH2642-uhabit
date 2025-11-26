@@ -10,22 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: ${{ vars.PRODUCTION_URL }}
+      url: ${{ vars.APP_URL }}
 
     steps:
-      - name: Validate required variables
+      - name: Validate required environment variables
         run: |
-          if [ -z "${{ vars.PRODUCTION_URL }}" ]; then
-            echo "Error: PRODUCTION_URL variable is not set"
-            echo "Please set it in Settings → Secrets and variables → Actions → Variables"
+          if [ -z "${{ vars.APP_URL }}" ]; then
+            echo "Error: APP_URL is not set in the 'production' environment."
             exit 1
           fi
-          if [ -z "${{ vars.PRODUCTION_PROJECT_NAME }}" ]; then
-            echo "Error: PRODUCTION_PROJECT_NAME variable is not set"
-            echo "Please set it in Settings → Secrets and variables → Actions → Variables"
+          if [ -z "${{ vars.PROJECT_NAME }}" ]; then
+            echo "Error: PROJECT_NAME is not set in the 'production' environment."
             exit 1
           fi
-          echo "All required variables are set"
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,7 +46,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PRODUCTION_PROJECT_NAME }} --branch=main
+          command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PROJECT_NAME }} --branch=main
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1

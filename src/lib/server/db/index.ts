@@ -1,10 +1,8 @@
-import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
+import { drizzle } from 'drizzle-orm/d1';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import * as schema from './schema';
-import { env } from '$env/dynamic/private';
 
-if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
-
-const client = createClient({ url: env.DATABASE_URL });
-
-export const db = drizzle(client, { schema });
+// For D1, we'll create the db instance per request using the platform binding
+export function getDB(d1: D1Database): DrizzleD1Database<typeof schema> {
+	return drizzle(d1, { schema });
+}

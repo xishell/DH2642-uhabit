@@ -41,6 +41,7 @@
 		"@skeletonlabs/skeleton": "^4.5.3",
 		"@skeletonlabs/tw-plugin": "^0.4.1",
 		"autoprefixer": "^10.4.22",
+		"better-auth": "^1.4.3",
 		"postcss": "^8.5.6"
 	}
 }

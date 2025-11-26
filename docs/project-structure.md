@@ -13,9 +13,9 @@ uhabit/
 │   │   │   ├── +page.svelte            # Contains defaults like the navbar and default placements of components, renders conditionally
 │   │   │   ├── +page.server.ts
 │   │   │   └── components/
-│   │   │       ├── +progressiveList.svelte
-│   │   │       ├── +taskList.svelte
-│   │   │       └── +progressBar.svelte
+│   │   │       ├── ProgressiveList.svelte
+│   │   │       ├── TaskList.svelte
+│   │   │       └── ProgressBar.svelte
 │   │   │
 │   │   ├── planning/
 │   │   │   ├── +page.svelte            # Contains overview defaults like the navbar and default placements of components, renders conditionally
@@ -27,17 +27,17 @@ uhabit/
 │   │   │       ├── +page.svelte
 │   │   │       ├── +page.server.ts
 │   │   │       └── components/
-│   │   │           ├── +progressiveList.svelte
-│   │   │           ├── +taskList.svelte
-│   │   │           └── +progressBar.svelte
+│   │   │           ├── ProgressiveList.svelte
+│   │   │           ├── TaskList.svelte
+│   │   │           └── ProgressBar.svelte
 │   │   │
 │   │   ├── statistics/
 │   │   │   ├── +page.svelte            # Contains overview defaults like the navbar and default placements of components, renders conditionally
 │   │   │   ├── +page.server.ts
 │   │   │   ├── components/
-│   │   │   │   ├── +weekly.svelte
-│   │   │   │   ├── +daily.svelte
-│   │   │   │   └── +monthly.svelte
+│   │   │   │   ├── Weekly.svelte
+│   │   │   │   ├── Daily.svelte
+│   │   │   │   └── Monthly.svelte
 │   │   │   └── details/
 │   │   │       ├── +page.svelte
 │   │   │       └── +page.server.ts

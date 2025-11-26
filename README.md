@@ -93,6 +93,8 @@ This project follows a trunk-based development model with weekly development cyc
 ## Documentation
 
 - [Project Structure](docs/project-structure.md) - Overview of the codebase organization
+- [Local Development Setup](docs/local-development-setup.md) - Code formatting and development tools
+- [GitHub Actions Workflows](.github/WORKFLOWS.md) - CI/CD pipeline configuration
 
 ## Building
 

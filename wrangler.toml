@@ -1,0 +1,28 @@
+name = "uhabit"
+compatibility_date = "2025-11-26"
+
+# Pages configuration
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "uhabit-db"
+database_id = "441a9bc3-d73d-41c0-b95d-54cdb4b04b8a"
+
+# Environment configuration
+[env.staging]
+name = "uhabit-staging"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "uhabit-db-staging"
+database_id = "c1b6383c-5932-4187-bb5a-9d350832a255"
+
+[env.production]
+name = "uhabit"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "uhabit-db-production"
+database_id = "947d30fd-474e-4e78-b65d-2d89b41212f4"

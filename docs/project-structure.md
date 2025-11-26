@@ -43,28 +43,47 @@ uhabit/
 │   │   │       └── +page.server.ts
 │   │   │
 │   │   ├── auth/
-│   │   │   ├── login/+page.svelte
-│   │   │   └── register/+page.svelte
+│   │   │   ├── login/
+│   │   │   │   └── +page.svelte        # Login page with email/password
+│   │   │   └── register/
+│   │   │       └── +page.svelte        # Registration page
 │   │   │
-│   │   ├── profile??/                  # TODO
-│   │   ├── settings??/                 # TODO
-│   │   ├── api/
-│   │   └── api-external/
+│   │   ├── profile/                    # User profile management
+│   │   ├── settings/                   # App settings
+│   │   │
+│   │   ├── api/                        # Internal API endpoints
+│   │   │   ├── auth/
+│   │   │   │   └── [...all]/
+│   │   │   │       └── +server.ts      # Better-auth handler (signup, signin, signout, etc.)
+│   │   │   └── user/
+│   │   │       └── preferences/
+│   │   │           └── +server.ts      # GET/PATCH user preferences
+│   │   │
+│   │   └── api-external/               # External API integrations
 │   │
 │   ├── lib/
-│   │   ├── components/
-│   │   ├── utils/
-│   │   ├── db/
-│   │   ├── auth/
-│   │   ├── types/
-│   │   ├── api/
-│   │   │   ├── internal/
-│   │   │   └── external/
-│   │   └── stores/                     # States
-│   │       ├── user.ts
-│   │       ├── habits.ts
-│   │       ├── ui.ts
-│   │       └── stats.ts
+│   │   ├── components/                 # Reusable Svelte components
+│   │   ├── utils/                      # Client-side utilities
+│   │   ├── types/                      # Shared TypeScript types
+│   │   │
+│   │   ├── server/                     # Server-only code (never sent to client)
+│   │   │   ├── auth.ts                 # Better-auth configuration
+│   │   │   └── db/
+│   │   │       ├── index.ts            # D1 database connection (getDB function)
+│   │   │       └── schema.ts           # Drizzle schema (user, session, account, verification)
+│   │   │
+│   │   ├── auth/                       # Client-side auth utilities (to be implemented)
+│   │   ├── db/                         # Shared database types (if needed on client)
+│   │   │
+│   │   ├── api/                        # API utility functions
+│   │   │   ├── internal/               # Internal API helpers
+│   │   │   └── external/               # External API helpers
+│   │   │
+│   │   └── stores/                     # Svelte stores for state management
+│   │       ├── user.ts                 # User state
+│   │       ├── habits.ts               # Habit tracking state
+│   │       ├── ui.ts                   # UI state
+│   │       └── stats.ts                # Statistics state
 │   │
 │   ├── app.d.ts
 │   ├── error.html
@@ -72,11 +91,12 @@ uhabit/
 │
 ├── static/
 ├── tests/
-├── .env
+├── .env                                # Environment variables (DATABASE_URL, BETTER_AUTH_SECRET)
+├── .env.example                        # Example environment configuration
 ├── svelte.config.js
 ├── vite.config.ts
 ├── drizzle.config.ts
-├── wrangler.toml
+├── wrangler.toml                       # Cloudflare D1 configuration
 ├── package.json
 └── tsconfig.json
 ```

@@ -42,7 +42,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PROJECT_NAME }} --env=preview
+          command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PROJECT_NAME }}
 
       - name: Comment deployment URL on PR
         if: github.event_name == 'pull_request'

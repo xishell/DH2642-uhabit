@@ -11,10 +11,10 @@ database_name = "uhabit-db"
 database_id = "441a9bc3-d73d-41c0-b95d-54cdb4b04b8a"
 
 # Environment configuration
-[env.preview]
+[env.staging]
 name = "uhabit-staging"
 
-[[env.preview.d1_databases]]
+[[env.staging.d1_databases]]
 binding = "DB"
 database_name = "uhabit-db-staging"
 database_id = "c1b6383c-5932-4187-bb5a-9d350832a255"

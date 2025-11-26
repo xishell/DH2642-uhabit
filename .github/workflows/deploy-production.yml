@@ -46,7 +46,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PROJECT_NAME }} --branch=main --env=production
+          command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PROJECT_NAME }} --branch=main
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1

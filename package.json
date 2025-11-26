@@ -20,6 +20,7 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20251126.0",
 		"@libsql/client": "^0.15.15",
 		"@sveltejs/adapter-cloudflare": "^7.2.4",
 		"@sveltejs/kit": "^2.48.5",

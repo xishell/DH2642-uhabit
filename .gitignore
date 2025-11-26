@@ -24,3 +24,43 @@ vite.config.ts.timestamp-*
 
 # SQLite
 *.db
+*.db-shm
+*.db-wal
+
+# Drizzle ORM
+drizzle/
+.drizzle/
+
+# Testing
+coverage/
+*.lcov
+.nyc_output
+test-results/
+playwright-report/
+playwright/.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+*.pdf
+

@@ -20,7 +20,7 @@ Which file(s) or section(s) need to be updated?
 - [ ] docs/cloudflare-setup.md
 - [ ] docs/pre-pr-checklist.md
 - [ ] Code comments
-- [ ] Other: ___________
+- [ ] Other: \***\*\_\_\_\*\***
 
 ## Suggested Improvement
 

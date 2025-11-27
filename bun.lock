@@ -10,6 +10,7 @@
         "autoprefixer": "^10.4.22",
         "better-auth": "^1.4.3",
         "postcss": "^8.5.6",
+        "zod": "^4.1.13",
       },
       "devDependencies": {
         "@cloudflare/workers-types": "^4.20251126.0",

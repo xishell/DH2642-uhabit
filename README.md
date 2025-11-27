@@ -31,7 +31,6 @@ A habit tracking application built with SvelteKit.
 - **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
 - **[Vite](https://vitejs.dev/)** - Fast build tool and dev server
 - **[Vitest](https://vitest.dev/)** - Unit testing framework
-- **[Playwright](https://playwright.dev/)** - Browser testing
 - **[Prettier](https://prettier.io/)** - Code formatter
 
 ### Deployment

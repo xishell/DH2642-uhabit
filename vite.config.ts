@@ -6,8 +6,7 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	test: {
 		expect: { requireAssertions: true },
-		environment: 'node',
-		include: ['tests/**/*.{test,spec}.{js,ts}'],
-		exclude: ['tests/**/*.svelte.{test,spec}.{js,ts}']
+		environment: 'jsdom',
+		include: ['tests/**/*.{test,spec}.{js,ts}']
 	}
 });

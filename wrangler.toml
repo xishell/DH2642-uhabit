@@ -11,8 +11,8 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 [[d1_databases]]
 binding = "DB"
 database_name = "uhabit-db"
-# database_id - Each developer should set this in wrangler.local.toml
-# For CI/CD and shared testing, this can be set via environment or left commented
+database_id = "local-dev-db"
+migrations_dir = "drizzle"
 
 # Environment configuration
 [env.preview]

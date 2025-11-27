@@ -1,0 +1,15 @@
+# Local Development Configuration
+# Copy this file to wrangler.local.toml and add your own database_id
+# This file should NOT be committed to git
+
+# D1 Database binding for local development
+[[d1_databases]]
+binding = "DB"
+database_name = "uhabit-db"
+database_id = "your-database-id-here"
+
+# To get your database_id:
+# 1. Create a D1 database: bunx wrangler d1 create uhabit-db-local
+# 2. Copy the database_id from the output
+# 3. Paste it above
+# 4. Run migrations: bunx wrangler d1 execute <database-name> --local --file=./drizzle/0000_initial_schema.sql

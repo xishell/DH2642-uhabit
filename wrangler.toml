@@ -1,14 +1,18 @@
 name = "uhabit"
 compatibility_date = "2025-11-26"
+compatibility_flags = ["nodejs_compat"]
 
 # Pages configuration
 pages_build_output_dir = ".svelte-kit/cloudflare"
 
 # D1 Database binding
+# For local development, create a wrangler.local.toml file with your own database_id
+# See docs/cloudflare-setup.md for setup instructions
 [[d1_databases]]
 binding = "DB"
 database_name = "uhabit-db"
-database_id = "441a9bc3-d73d-41c0-b95d-54cdb4b04b8a"
+# database_id - Each developer should set this in wrangler.local.toml
+# For CI/CD and shared testing, this can be set via environment or left commented
 
 # Environment configuration
 [env.preview]

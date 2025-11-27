@@ -12,17 +12,26 @@ export const load: LayoutServerLoad = async (event) => {
 		return { user: null };
 	}
 
-	const auth = createAuth(db, secret, baseUrl);
+	try {
+		const auth = createAuth(db, secret, baseUrl);
+		const session = await auth.api.getSession(event.request);
 
-	const session = await auth.api.getSession(event.request);
+		// Protect all routes except /auth/* by default
+		const isPublicRoute = event.route.id?.startsWith('/auth');
 
-	const isProtected = event.route.id && !event.route.id.startsWith('/auth');
+		if (!session && !isPublicRoute) {
+			throw redirect(302, '/auth/login');
+		}
 
-	if (!session && isProtected) {
-		throw redirect(302, '/auth/login');
+		return {
+			user: session?.user ?? null
+		};
+	} catch (error) {
+		// Re-throw redirects (they're expected)
+		if (error instanceof Response && error.status === 302) {
+			throw error;
+		}
+		console.error('Auth error:', error);
+		return { user: null };
 	}
-
-	return {
-		user: session?.user ?? null
-	};
 };

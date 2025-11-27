@@ -1,5 +1,7 @@
 import type { Handle } from '@sveltejs/kit';
 import { createAuth } from '$lib/server/auth';
+import { svelteKitHandler } from 'better-auth/svelte-kit';
+import { building } from '$app/environment';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Get D1 database from platform
@@ -8,41 +10,30 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const url = event.platform?.env?.BETTER_AUTH_URL || event.url.origin;
 
 	if (!db || !secret) {
-		console.error('Missing DB or BETTER_AUTH_SECRET in platform.env');
+		console.error('[HOOKS] Missing DB or BETTER_AUTH_SECRET in platform.env');
 		event.locals.user = null;
 		event.locals.session = null;
+		event.locals.auth = null as any;
 		return resolve(event);
 	}
 
-	// Create auth instance for this request
+	// Create auth instance
 	const auth = createAuth(db, secret, url);
+	event.locals.auth = auth;
 
-	// Get session from cookie
-	const sessionToken = event.cookies.get('better-auth.session_token');
+	// Fetch current session and populate locals
+	const session = await auth.api.getSession({
+		headers: event.request.headers
+	});
 
-	if (sessionToken) {
-		try {
-			// Validate session
-			const session = await auth.api.getSession({
-				headers: event.request.headers
-			});
-
-			if (session) {
-				event.locals.user = session.user;
-				event.locals.session = session.session;
-			} else {
-				event.locals.user = null;
-				event.locals.session = null;
-			}
-		} catch (error) {
-			console.error('Session validation error:', error);
-			event.locals.user = null;
-			event.locals.session = null;
-		}
+	if (session) {
+		event.locals.user = session.user;
+		event.locals.session = session.session;
 	} else {
 		event.locals.user = null;
 		event.locals.session = null;
 	}
 
-	return resolve(event);
+	// Use svelteKitHandler to handle all auth routes automatically
+	return svelteKitHandler({ event, resolve, auth, building });
 };

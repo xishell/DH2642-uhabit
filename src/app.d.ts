@@ -4,6 +4,7 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
+			auth: import('$lib/server/auth').Auth;
 			user: {
 				id: string;
 				name: string;

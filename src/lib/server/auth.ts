@@ -27,7 +27,7 @@ export function createAuth(db: D1Database, secret: string, url: string) {
 			}
 		},
 		secret,
-		baseURL: url,
+		baseURL: `${url}/api/auth`,
 		// Custom user fields
 		user: {
 			additionalFields: {

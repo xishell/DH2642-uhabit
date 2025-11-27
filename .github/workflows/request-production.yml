@@ -1,0 +1,17 @@
+name: Request Production Deployment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-deployment-request:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Request Production Deployment
+        uses: chrnorm/deployment-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: production
+          ref: main
+          description: 'Request approval to deploy Uhabit to production'

@@ -50,7 +50,10 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 	const validationResult = updateHabitSchema.safeParse(body);
 
 	if (!validationResult.success) {
-		throw error(400, 'Invalid input: ' + validationResult.error.issues.map((e) => e.message).join(', '));
+		throw error(
+			400,
+			'Invalid input: ' + validationResult.error.issues.map((e) => e.message).join(', ')
+		);
 	}
 
 	const data = validationResult.data;

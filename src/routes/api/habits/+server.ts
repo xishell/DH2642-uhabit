@@ -25,10 +25,7 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 	const db = getDB(platform!.env.DB);
 
 	// Fetch all habits for the current user
-	const habits = await db
-		.select()
-		.from(habit)
-		.where(eq(habit.userId, locals.user.id));
+	const habits = await db.select().from(habit).where(eq(habit.userId, locals.user.id));
 
 	return json(habits);
 };
@@ -45,7 +42,10 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const validationResult = createHabitSchema.safeParse(body);
 
 	if (!validationResult.success) {
-		throw error(400, 'Invalid input: ' + validationResult.error.issues.map((e) => e.message).join(', '));
+		throw error(
+			400,
+			'Invalid input: ' + validationResult.error.issues.map((e) => e.message).join(', ')
+		);
 	}
 
 	const data = validationResult.data;

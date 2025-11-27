@@ -22,7 +22,6 @@ jobs:
           bunx wrangler d1 migrations apply DB --env=preview \
             --account-id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }} \
             --token=${{ secrets.CLOUDFLARE_API_TOKEN }}
-
       - name: Deploy to Cloudflare Pages (staging)
         uses: cloudflare/wrangler-action@v3
         with:

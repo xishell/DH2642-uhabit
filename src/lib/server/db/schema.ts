@@ -101,10 +101,7 @@ export const habitCompletion = sqliteTable(
 		// Index for querying completions by user and date range
 		userDateIdx: index('habit_completion_user_date_idx').on(table.userId, table.completedAt),
 		// Index for querying completions by habit and date
-		habitDateIdx: index('habit_completion_habit_date_idx').on(
-			table.habitId,
-			table.completedAt
-		),
+		habitDateIdx: index('habit_completion_habit_date_idx').on(table.habitId, table.completedAt),
 		// Unique constraint for single-step habits (one completion per habit per day)
 		// This will be enforced at the application layer for the date part
 		uniqueHabitDate: unique('habit_completion_unique').on(table.habitId, table.completedAt)

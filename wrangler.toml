@@ -22,6 +22,7 @@ name = "uhabit-staging"
 binding = "DB"
 database_name = "uhabit-db-staging"
 database_id = "c1b6383c-5932-4187-bb5a-9d350832a255"
+migrations_dir = "drizzle"
 
 [env.production]
 name = "uhabit"
@@ -30,3 +31,4 @@ name = "uhabit"
 binding = "DB"
 database_name = "uhabit-db-production"
 database_id = "947d30fd-474e-4e78-b65d-2d89b41212f4"
+migrations_dir = "drizzle"

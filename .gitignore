@@ -14,10 +14,13 @@ Thumbs.db
 
 # Env
 .env
-.env.*
-!.env.example
-!.env.test
 .dev.vars
+wrangler.local.toml
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Vite
 vite.config.js.timestamp-*

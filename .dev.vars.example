@@ -1,0 +1,9 @@
+# Local development environment variables for Wrangler/Cloudflare Workers
+# Copy this file to .dev.vars and update with your own values
+# This file should NOT be committed to git
+
+# Generate a secure secret with: openssl rand -base64 32
+BETTER_AUTH_SECRET=your-secret-here
+
+# Local dev server URL (default port for Cloudflare Pages dev)
+BETTER_AUTH_URL=http://localhost:8788

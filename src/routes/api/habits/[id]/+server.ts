@@ -12,7 +12,11 @@ const updateHabitSchema = z.object({
 	color: z.string().optional(),
 	frequency: z.enum(['daily', 'weekly', 'monthly']).optional(),
 	measurement: z.enum(['boolean', 'numeric']).optional(),
-	period: z.string().optional()
+	period: z.string().optional(),
+	targetAmount: z.number().int().positive().optional(),
+	unit: z.string().optional(),
+	categoryId: z.string().uuid().optional(),
+	goalId: z.string().uuid().optional()
 });
 
 // GET /api/habits/[id] - Get single habit by ID

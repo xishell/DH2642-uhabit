@@ -17,7 +17,7 @@
 		'Walk in the woods',
 		'wash clothes'
 	];
-	let habitType = 0; //0 for progressive habit, 1 for single-step habit
+	let habitType: 0 | 1 = 0; //0 for progressive habit, 1 for single-step habit
 	let isNewBtnClicked = false;
 
 	function handleHabitTypeChange(event: CustomEvent<0 | 1>) {

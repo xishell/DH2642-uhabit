@@ -6,14 +6,32 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 // Validation schema for habit creation
-const createHabitSchema = z.object({
-	title: z.string().min(1).max(255),
-	notes: z.string().optional(),
-	color: z.string().optional(),
-	frequency: z.enum(['daily', 'weekly', 'monthly']).default('daily'),
-	measurement: z.enum(['boolean', 'numeric']).default('boolean'),
-	period: z.string().optional()
-});
+const createHabitSchema = z
+	.object({
+		title: z.string().min(1).max(255),
+		notes: z.string().optional(),
+		color: z.string().optional(),
+		frequency: z.enum(['daily', 'weekly', 'monthly']).default('daily'),
+		measurement: z.enum(['boolean', 'numeric']).default('boolean'),
+		period: z.string().optional(),
+		targetAmount: z.number().int().positive().optional(),
+		unit: z.string().optional(),
+		categoryId: z.string().uuid().optional(),
+		goalId: z.string().uuid().optional()
+	})
+	.refine(
+		(data) => {
+			// For numeric habits, require targetAmount and unit
+			if (data.measurement === 'numeric') {
+				return data.targetAmount !== undefined && data.unit !== undefined;
+			}
+			return true;
+		},
+		{
+			message: 'Numeric habits require both targetAmount and unit',
+			path: ['targetAmount']
+		}
+	);
 
 // GET /api/habits - List all habits for authenticated user
 export const GET: RequestHandler = async ({ locals, platform }) => {
@@ -80,6 +98,10 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			frequency: data.frequency,
 			measurement: data.measurement,
 			period: data.period || null,
+			targetAmount: data.targetAmount || null,
+			unit: data.unit || null,
+			categoryId: data.categoryId || null,
+			goalId: data.goalId || null,
 			createdAt: now,
 			updatedAt: now
 		});

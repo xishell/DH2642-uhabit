@@ -17,7 +17,10 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate:local": "wrangler d1 execute DB --local --file=drizzle/0000_dizzy_giant_girl.sql && wrangler d1 execute DB --local --file=drizzle/0001_groovy_pandemic.sql",
+		"db:migrate": "bun run scripts/migrate.ts",
+		"db:migrate:remote": "bun run scripts/migrate.ts --remote",
+		"db:status": "wrangler d1 execute DB --local --command 'SELECT * FROM __drizzle_migrations ORDER BY applied_at'",
+		"db:status:remote": "wrangler d1 execute DB --remote --command 'SELECT * FROM __drizzle_migrations ORDER BY applied_at'",
 		"db:execute:local": "wrangler d1 execute DB --local",
 		"db:shell:local": "wrangler d1 execute DB --local --command",
 		"db:studio": "drizzle-kit studio"

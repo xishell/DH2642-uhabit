@@ -113,25 +113,37 @@ database_id = "<paste-your-database-id-here>"
 
 ### 5. Run Migrations
 
-Apply your database schema to your local database:
+Apply your database schema using the smart migration system:
+
+**Local database:**
 
 ```bash
-bunx wrangler d1 execute uhabit-db-local --local --file=./drizzle/0000_initial_schema.sql
+bun run db:migrate
 ```
 
-For remote databases (staging/production), use `--remote`:
+**Staging database:**
 
 ```bash
-bunx wrangler d1 execute uhabit-db-staging --remote --file=./drizzle/0000_initial_schema.sql
+bun run db:migrate:staging
 ```
+
+**Production database:**
+
+```bash
+bun run db:migrate:production
+```
+
+The migration system automatically tracks which migrations have been applied and only runs new ones. Each environment has its own migration tracking. See [migrations.md](./migrations.md) for more details.
 
 ### 6. Verify Database
 
-Check that tables were created:
+Check that migrations were applied:
 
 ```bash
-bunx wrangler d1 execute uhabit-db-local --local --command="SELECT name FROM sqlite_master WHERE type='table';"
+bun run db:status
 ```
+
+This shows all applied migrations with timestamps.
 
 ## Running the Development Server
 

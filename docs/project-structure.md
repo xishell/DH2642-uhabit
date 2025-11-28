@@ -96,11 +96,16 @@ uhabit/
 │
 ├── static/                             # Static assets served at root
 ├── tests/                              # Test files (unit & integration)
+├── scripts/                            # Build and utility scripts
+│   └── migrate.ts                      # Smart migration runner
+│
 ├── docs/                               # Project documentation
 │   ├── project-structure.md            # This file
 │   ├── local-development-setup.md      # Development tools & formatting
 │   ├── cloudflare-setup.md             # Cloudflare Workers & D1 setup
-│   └── authentication.md               # Auth integration guide
+│   ├── authentication.md               # Auth integration guide
+│   ├── api-habits.md                   # Habit API documentation
+│   └── migrations.md                   # Database migration workflow
 │
 ├── drizzle/                            # Database migrations
 │   └── 0000_*.sql                      # SQL migration files
@@ -125,3 +130,5 @@ uhabit/
 - [Local Development Setup](./local-development-setup.md) - Code formatting and development tools
 - [Cloudflare Local Setup](./cloudflare-setup.md) - Configure Cloudflare Workers and D1 locally
 - [Authentication Integration](./authentication.md) - Implement sign-up/sign-in with Better Auth
+- [Database Migrations](./migrations.md) - Database migration workflow and best practices
+- [Habit API](./api-habits.md) - API documentation for habit management

@@ -202,27 +202,29 @@ git commit -m "changes"
 
 If you modified database schema or added migrations:
 
-#### Verify Migration Files
+#### Generate and Verify Migrations
 
 ```bash
-ls drizzle/
+# After updating schema.ts, generate migration
+bun run db:generate
+
+# Review the generated SQL
+cat drizzle/XXXX_*.sql
+
+# Test migration locally
+bun run db:migrate
+
+# Verify migrations applied
+bun run db:status
 ```
 
 Ensure migration files are committed and named correctly.
 
-#### Test Migrations Locally
-
-```bash
-# Test local migration
-bunx wrangler d1 execute uhabit-db --local --file=./drizzle/XXXX_your_migration.sql
-
-# Verify tables
-bunx wrangler d1 execute uhabit-db --local --command="SELECT name FROM sqlite_master WHERE type='table';"
-```
-
 #### Document Schema Changes
 
 Update `src/lib/server/db/schema.ts` with clear comments for new fields or tables.
+
+See [migrations.md](./migrations.md) for detailed migration workflow.
 
 ### 7. Documentation
 

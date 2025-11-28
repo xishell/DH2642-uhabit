@@ -1,15 +1,40 @@
 name: Deploy to Staging
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'static/**'
+      - 'drizzle/**'
+      - 'package.json'
+      - 'bun.lockb'
+      - 'svelte.config.js'
+      - 'vite.config.*'
+      - 'tailwind.config.*'
+      - 'tsconfig.json'
+      - 'wrangler.toml'
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'static/**'
+      - 'drizzle/**'
+      - 'package.json'
+      - 'bun.lockb'
+      - 'svelte.config.js'
+      - 'vite.config.*'
+      - 'tailwind.config.*'
+      - 'tsconfig.json'
+      - 'wrangler.toml'
+  workflow_dispatch:
 
 jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     environment:
-      name: staging
-      url: ${{ vars.APP_URL }}
+      name: ${{ github.event_name == 'pull_request' && 'preview' || 'staging' }}
+      url: ${{ github.event_name == 'pull_request' && format('https://preview-{0}.uhabit.pages.dev', github.event.pull_request.number) || vars.APP_URL }}
 
     steps:
       - name: Checkout code
@@ -39,4 +64,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PROJECT_NAME }} --branch=staging
+          command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PROJECT_NAME }} --branch=${{ github.event_name == 'pull_request' && format('preview-{0}', github.event.pull_request.number) || 'staging' }}

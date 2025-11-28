@@ -1,0 +1,17 @@
+name: Request Production Deployment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  request:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create deployment request
+        uses: chrnorm/deployment-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: production
+          ref: main
+          description: 'Requesting approval to deploy to production.'

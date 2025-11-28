@@ -5,7 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
+		"dev:cf": "bun run build && bunx wrangler pages dev .svelte-kit/cloudflare --compatibility-flag=nodejs_compat --live-reload",
 		"build": "vite build",
+		"build:watch": "vite build --watch",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -14,12 +16,14 @@
 		"lint": "prettier --check .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
-		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit migrate",
+		"db:migrate:local": "wrangler d1 execute DB --local --file=drizzle/0000_dizzy_giant_girl.sql && wrangler d1 execute DB --local --file=drizzle/0001_groovy_pandemic.sql",
+		"db:execute:local": "wrangler d1 execute DB --local",
+		"db:shell:local": "wrangler d1 execute DB --local --command",
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20251126.0",
 		"@libsql/client": "^0.15.15",
 		"@sveltejs/adapter-cloudflare": "^7.2.4",
 		"@sveltejs/kit": "^2.48.5",
@@ -41,6 +45,8 @@
 		"@skeletonlabs/skeleton": "^4.5.3",
 		"@skeletonlabs/tw-plugin": "^0.4.1",
 		"autoprefixer": "^10.4.22",
-		"postcss": "^8.5.6"
+		"better-auth": "^1.4.3",
+		"postcss": "^8.5.6",
+		"zod": "^4.1.13"
 	}
 }

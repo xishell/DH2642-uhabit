@@ -14,10 +14,13 @@ Thumbs.db
 
 # Env
 .env
-.env.*
-!.env.example
-!.env.test
 .dev.vars
+wrangler.local.toml
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Vite
 vite.config.js.timestamp-*
@@ -27,10 +30,6 @@ vite.config.ts.timestamp-*
 *.db
 *.db-shm
 *.db-wal
-
-# Drizzle ORM
-drizzle/
-.drizzle/
 
 # Testing
 coverage/

@@ -1,0 +1,20 @@
+{
+	"version": "7",
+	"dialect": "sqlite",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "6",
+			"when": 1764191685162,
+			"tag": "0000_dizzy_giant_girl",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "6",
+			"when": 1764251571170,
+			"tag": "0001_groovy_pandemic",
+			"breakpoints": true
+		}
+	]
+}

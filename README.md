@@ -23,14 +23,14 @@ A habit tracking application built with SvelteKit.
 
 - **[Drizzle ORM](https://orm.drizzle.team/)** - TypeScript ORM for SQL databases
 - **[libSQL](https://github.com/tursodatabase/libsql)** - SQLite-compatible database client
-- **SQLite** - Database dialect
+- **[Cloudflare D1](https://developers.cloudflare.com/d1/)** - Serverless SQLite database
+- **[Better Auth](https://www.better-auth.com/)** - Type-safe authentication library
 
 ### Development Tools
 
 - **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
 - **[Vite](https://vitejs.dev/)** - Fast build tool and dev server
 - **[Vitest](https://vitest.dev/)** - Unit testing framework
-- **[Playwright](https://playwright.dev/)** - Browser testing
 - **[Prettier](https://prettier.io/)** - Code formatter
 
 ### Deployment
@@ -39,17 +39,9 @@ A habit tracking application built with SvelteKit.
 
 ## Getting Started
 
-This project supports both **npm** and **[Bun](https://bun.sh/)** as package managers.
+This project uses **[Bun](https://bun.sh/)** as package manager.
 
 ### Install dependencies:
-
-Using npm:
-
-```sh
-npm install
-```
-
-Using Bun:
 
 ```sh
 bun install
@@ -57,17 +49,25 @@ bun install
 
 ### Start the development server:
 
-Using npm:
-
-```sh
-npm run dev
-```
-
-Using Bun:
+**Standard Development** (without Cloudflare features):
 
 ```sh
 bun dev
 ```
+
+**Cloudflare Development** (with Workers, D1, and auth features):
+
+```sh
+bun run dev:cf
+```
+
+This command builds the project and runs it with Cloudflare Pages/Workers locally, enabling:
+
+- D1 database access
+- Better-auth authentication
+- Cloudflare Workers environment
+
+See [Cloudflare Local Setup](docs/cloudflare-setup.md) for configuration details.
 
 ## Development Workflow
 
@@ -94,19 +94,13 @@ This project follows a trunk-based development model with weekly development cyc
 
 - [Project Structure](docs/project-structure.md) - Overview of the codebase organization
 - [Local Development Setup](docs/local-development-setup.md) - Code formatting and development tools
+- [Cloudflare Local Setup](docs/cloudflare-setup.md) - Configure Cloudflare Workers and D1 locally
+- [Authentication Integration](docs/authentication.md) - Implement sign-up/sign-in with Better Auth
 - [GitHub Actions Workflows](.github/WORKFLOWS.md) - CI/CD pipeline configuration
 
 ## Building
 
 Create a production build:
-
-Using npm:
-
-```sh
-npm run build
-```
-
-Using Bun:
 
 ```sh
 bun build

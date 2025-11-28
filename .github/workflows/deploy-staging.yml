@@ -5,55 +5,38 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
+  deploy-staging:
     runs-on: ubuntu-latest
     environment:
       name: staging
       url: ${{ vars.APP_URL }}
 
     steps:
-      - name: Validate required environment variables
-        run: |
-          if [ -z "${{ vars.APP_URL }}" ]; then
-            echo "Error: APP_URL is not set in the 'staging' environment."
-            exit 1
-          fi
-          if [ -z "${{ vars.PROJECT_NAME }}" ]; then
-            echo "Error: PROJECT_NAME is not set in the 'staging' environment."
-            exit 1
-          fi
-
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
 
       - name: Install dependencies
         run: bun install
 
+      - name: Run tests
+        run: bun run test
+
       - name: Build project
         run: bun run build
 
-      - name: Deploy to Cloudflare Pages (Staging)
+      - name: Apply D1 migrations (staging)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          bunx wrangler d1 migrations apply DB --env=preview --remote
+
+      - name: Deploy to Cloudflare Pages (staging)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PROJECT_NAME }} --branch=staging
-
-      - name: Comment deployment URL on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        env:
-          APP_URL: ${{ vars.APP_URL }}
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `Deployed to staging: ${process.env.APP_URL}`
-            })

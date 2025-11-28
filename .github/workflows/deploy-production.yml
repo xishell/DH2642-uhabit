@@ -1,36 +1,23 @@
 name: Deploy to Production
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  deployment:
+    types: [created]
 
 jobs:
-  deploy:
+  deploy-production:
+    if: github.event.deployment.environment == 'production'
     runs-on: ubuntu-latest
     environment:
       name: production
       url: ${{ vars.APP_URL }}
 
     steps:
-      - name: Validate required environment variables
-        run: |
-          if [ -z "${{ vars.APP_URL }}" ]; then
-            echo "Error: APP_URL is not set in the 'production' environment."
-            exit 1
-          fi
-          if [ -z "${{ vars.PROJECT_NAME }}" ]; then
-            echo "Error: PROJECT_NAME is not set in the 'production' environment."
-            exit 1
-          fi
-
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
 
       - name: Install dependencies
         run: bun install
@@ -41,16 +28,23 @@ jobs:
       - name: Build project
         run: bun run build
 
-      - name: Deploy to Cloudflare Pages (Production)
+      - name: Apply D1 migrations (production)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          bunx wrangler d1 migrations apply DB --env=production --remote
+
+      - name: Deploy to Cloudflare Pages (production)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy .svelte-kit/cloudflare --project-name=${{ vars.PROJECT_NAME }} --branch=main
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Mark deployment as successful
+        uses: chrnorm/deployment-status@v2
         with:
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          state: success
+          deployment_id: ${{ github.event.deployment.id }}

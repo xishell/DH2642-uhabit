@@ -3,17 +3,11 @@
 	export let habitType: 0 | 1;
 	const dispatch = createEventDispatcher();
 
-	// let isPActive = true;
-	// let isSActive = false;
 	const activateP = () => {
-		// isPActive = true;
-		// isSActive = false;
 		dispatch('change', 0);
 	};
 
 	const activateS = () => {
-		// isPActive = false;
-		// isSActive = true;
 		dispatch('change', 1);
 	};
 </script>

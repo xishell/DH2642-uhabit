@@ -2,6 +2,7 @@
 	import ToggleBar from './components/ToggleBar.svelte';
 	import HabitCard from './components/HabitCard.svelte';
 	import Btn from '$lib/components/Btn.svelte';
+	import { fade } from 'svelte/transition';
 	const progressiveHabitList = [
 		'Drink Water',
 		'Read Book',
@@ -22,6 +23,12 @@
 
 	function handleHabitTypeChange(event: CustomEvent<0 | 1>) {
 		habitType = event.detail;
+	}
+	function addProgressiveHabit() {
+		// TODO jump to add progressive habit subpage
+	}
+	function addSingleStepHabit() {
+		// TODO jump to add single-step habit subpage
 	}
 </script>
 
@@ -54,38 +61,37 @@
 		</div>
 	{/if}
 
+	<!-- blur layer -->
+	{#if isNewBtnClicked}
+		<div
+			class="absolute top-0 w-full h-full bg-gray-900 opacity-30"
+			transition:fade={{ duration: 300 }}
+		></div>
+	{/if}
+
 	<!-- add new habit btn -->
 	<div
-		class="new-btn-ctn absolute bottom-[40px] right-[45px] flex gap-1.5 justify-between items-center"
+		class="new-btn-ctn absolute bottom-[40px] right-[45px] flex flex-col gap-4 justify-between items-end"
 	>
-		<button
-			class="text-3xl w-[70px] h-[70px] bg-gray-300 rounded-full hover:bg-gray-200 transition-colors duration-300 cursor-pointer"
-			on:click={() => {
-				isNewBtnClicked = !isNewBtnClicked;
-			}}>+</button
-		>
 		{#if isNewBtnClicked}
-			<div class=" flex h-[90px] flex-col justify-between">
+			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
 				<button
-					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer"
-					>Progressive</button
+					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-xl"
 				>
+					Progressive
+				</button>
 				<button
-					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer"
-					>Single-Step</button
+					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-xl"
 				>
-			</div>
-		{:else}
-			<div class=" flex h-[90px] flex-col justify-between">
-				<button
-					class="opacity-0 text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer"
-					>Progressive</button
-				>
-				<button
-					class="opacity-0 text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer"
-					>Single-Step</button
-				>
+					Single-Step
+				</button>
 			</div>
 		{/if}
+		<button
+			class="text-3xl w-[64px] h-[64px] bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-300 cursor-pointer shadow-xl"
+			on:click={() => {
+				isNewBtnClicked = !isNewBtnClicked;
+			}}>{isNewBtnClicked ? 'x' : '+'}</button
+		>
 	</div>
 </div>

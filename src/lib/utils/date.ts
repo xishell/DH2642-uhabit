@@ -68,7 +68,7 @@ export function getMonthName(date: Date = new Date()): string {
 		'September',
 		'October',
 		'November',
-		'December',
+		'December'
 	];
 	return monthNames[date.getMonth()];
 }

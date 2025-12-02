@@ -51,3 +51,24 @@ export function getDaysBetween(start: Date, end: Date): number {
 	const diffMs = endDay.getTime() - startDay.getTime();
 	return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
+
+/**
+ * Get the month name for a given date (defaults to current date)
+ */
+export function getMonthName(date: Date = new Date()): string {
+	const monthNames = [
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December',
+	];
+	return monthNames[date.getMonth()];
+}

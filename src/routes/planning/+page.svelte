@@ -3,6 +3,7 @@
 	import HabitCard from './components/HabitCard.svelte';
 	import Btn from '$lib/components/Btn.svelte';
 	import { fade } from 'svelte/transition';
+	import { Plus } from 'lucide-svelte';
 	const progressiveHabitList = [
 		'Drink Water',
 		'Read Book',
@@ -64,14 +65,22 @@
 	<!-- blur layer -->
 	{#if isNewBtnClicked}
 		<div
-			class="absolute top-0 w-full h-full bg-gray-900 opacity-30"
+			on:click={() => {
+				isNewBtnClicked = !isNewBtnClicked;
+			}}
+			role="button"
+			tabindex="0"
+			on:keydown={(e) => {
+				e.key === 'Enter' ? (isNewBtnClicked = !isNewBtnClicked) : null;
+			}}
+			class="absolute top-0 w-full h-screen bg-gray-900 opacity-30"
 			transition:fade={{ duration: 300 }}
 		></div>
 	{/if}
 
 	<!-- add new habit btn -->
 	<div
-		class="new-btn-ctn absolute bottom-[40px] right-[45px] flex flex-col gap-4 justify-between items-end"
+		class="new-btn-ctn fixed bottom-[40px] right-[45px] flex flex-col gap-4 justify-between items-end"
 	>
 		{#if isNewBtnClicked}
 			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
@@ -88,10 +97,17 @@
 			</div>
 		{/if}
 		<button
-			class="text-3xl w-[64px] h-[64px] bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-300 cursor-pointer shadow-xl"
+			class="text-3xl w-[64px] h-[64px] bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-300 cursor-pointer shadow-xl flex justify-center items-center"
 			on:click={() => {
 				isNewBtnClicked = !isNewBtnClicked;
-			}}>{isNewBtnClicked ? 'x' : '+'}</button
+			}}
+			><Plus
+				size={26}
+				strokeWidth={3}
+				class={`pl-[0.04rem] pt-[0.04rem] 
+          transition-transform duration-300 ease-in-out
+          ${isNewBtnClicked ? 'rotate-45' : 'rotate-0'}`}
+			/></button
 		>
 	</div>
 </div>

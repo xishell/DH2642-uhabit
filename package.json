@@ -51,6 +51,7 @@
 		"@skeletonlabs/skeleton-svelte": "^4.7.1",
 		"autoprefixer": "^10.4.22",
 		"better-auth": "^1.4.3",
+		"lucide-svelte": "^0.555.0",
 		"postcss": "^8.5.6",
 		"zod": "^4.1.13"
 	}

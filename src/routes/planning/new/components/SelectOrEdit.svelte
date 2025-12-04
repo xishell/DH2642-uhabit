@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
 	import { SquarePen } from 'lucide-svelte';
 	import { SquareCheckBig } from 'lucide-svelte';
 
 	let isEditing = false;
-	let unit = 'ml';
-	let customUnit = '';
+	let customUnit: string = '';
 	let isIndicatorVisible = true;
+	let unit: string = 'ml';
 
 	function enableEdit() {
 		customUnit = unit;
@@ -28,6 +28,7 @@
 	{#if !isEditing}
 		<select
 			class="border border-gray-300 w-18 h-9 rounded-md text-sm text-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+			name="unit"
 			bind:value={unit}
 		>
 			<option value="times">times</option>
@@ -44,6 +45,7 @@
 	{:else}
 		<input
 			class="border border-gray-300 w-18 h-9 rounded-md text-sm pl-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+			name="unit"
 			bind:value={customUnit}
 			on:blur={save}
 			on:focus={hideUnitIndicator}

@@ -10,7 +10,14 @@
 	let selected = new Set<string>();
 	let isDragging = false;
 	let dragMode: 'select' | 'deselect' | null = null;
+	$: monthdaySelected = Array.from(selected)
+		.map((day) => ordinalToNumber(day))
+		.sort((a, b) => a - b);
 
+	function ordinalToNumber(str: string): number {
+		const match = str.match(/\d+/);
+		return match ? Number(match[0]) : NaN;
+	}
 	function updateSet() {
 		selected = new Set(selected);
 	}
@@ -82,6 +89,7 @@
 		</div>
 	{/each}
 </div>
+<input type="hidden" name="period" value={monthdaySelected} />
 
 <style>
 	[data-day='28th'] {

@@ -73,7 +73,7 @@
 			on:keydown={(e) => {
 				e.key === 'Enter' ? (isNewBtnClicked = !isNewBtnClicked) : null;
 			}}
-			class="absolute top-0 w-full h-screen bg-gray-900 opacity-30"
+			class="fixed top-0 w-full h-screen bg-gray-900 opacity-30"
 			transition:fade={{ duration: 300 }}
 		></div>
 	{/if}

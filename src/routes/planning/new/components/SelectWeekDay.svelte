@@ -1,10 +1,23 @@
 <script lang="ts">
 	const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-	let selected = new Set<string>();
-
 	let isDragging = false;
 	let dragMode: 'select' | 'deselect' | null = null;
+
+	let selected = new Set<string>();
+	const weekdayMap: Record<string, number> = {
+		Sun: 0,
+		Mon: 1,
+		Tue: 2,
+		Wed: 3,
+		Thu: 4,
+		Fri: 5,
+		Sat: 6
+	};
+
+	$: weekdaySelected = Array.from(selected)
+		.map((day) => weekdayMap[day])
+		.sort((a, b) => a - b);
 
 	function updateSet() {
 		selected = new Set(selected);
@@ -32,6 +45,7 @@
 		if (dragMode === 'deselect') selected.delete(day);
 
 		updateSet();
+		console.log(selected);
 	}
 
 	function endDrag() {
@@ -77,3 +91,4 @@
 		</div>
 	{/each}
 </div>
+<input type="hidden" name="period" value={weekdaySelected} />

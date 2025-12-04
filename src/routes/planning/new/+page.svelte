@@ -10,7 +10,7 @@
 	let selectedColor = colors[2];
 	let selectedFrequency = frequencyArr[0];
 
-	function selectColor(color) {
+	function selectColor(color: string) {
 		selectedColor = color;
 		console.log(color);
 	}

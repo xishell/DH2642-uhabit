@@ -1,7 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
 import { createAuth } from '$lib/server/auth';
-import { svelteKitHandler } from 'better-auth/svelte-kit';
-import { building } from '$app/environment';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Get D1 database from platform
@@ -17,36 +15,36 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	// Create auth instance (only once per request)
+	// Create auth instance and store in locals
+	// The route handler at /api/auth/[...all] will use this
 	const auth = createAuth(db, secret, url);
 	event.locals.auth = auth;
 
-	// Handle auth routes first (this is more efficient)
-	const response = await svelteKitHandler({ event, resolve, auth, building });
+	// For non-auth routes, fetch session to populate locals.user
+	// Skip session fetch for auth routes (they don't need it and it saves resources)
+	if (!event.url.pathname.startsWith('/api/auth/')) {
+		try {
+			const session = await auth.api.getSession({
+				headers: event.request.headers
+			});
 
-	// If this was an auth route, svelteKitHandler already handled it
-	if (event.url.pathname.startsWith('/api/auth/')) {
-		return response;
-	}
-
-	// For non-auth routes, fetch session only if needed
-	try {
-		const session = await auth.api.getSession({
-			headers: event.request.headers
-		});
-
-		if (session) {
-			event.locals.user = session.user;
-			event.locals.session = session.session;
-		} else {
+			if (session) {
+				event.locals.user = session.user;
+				event.locals.session = session.session;
+			} else {
+				event.locals.user = null;
+				event.locals.session = null;
+			}
+		} catch (error) {
+			console.error('[HOOKS] Session fetch error:', error);
 			event.locals.user = null;
 			event.locals.session = null;
 		}
-	} catch (error) {
-		console.error('[HOOKS] Session fetch error:', error);
+	} else {
+		// For auth routes, set to null (the auth handler will manage its own session)
 		event.locals.user = null;
 		event.locals.session = null;
 	}
 
-	return response;
+	return resolve(event);
 };

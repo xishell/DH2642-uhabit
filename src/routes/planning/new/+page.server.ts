@@ -11,9 +11,9 @@ export const actions: Actions = {
 			notes: data.get('notes') as string,
 			color: data.get('color') as string,
 			frequency: data.get('frequency') as string,
-			period: periodArray,
+			period: JSON.stringify(periodArray),
 			measurement: data.get('measurement') as string,
-			tartgetAmount: Number(data.get('targetAmount')),
+			targetAmount: Number(data.get('targetAmount')),
 			unit: data.get('unit') as string
 		};
 
@@ -22,7 +22,10 @@ export const actions: Actions = {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(habit)
 		});
+		console.log('Status code from /api/habits POST:', res.status);
+		const resBody = await res.text(); // 先用 text() 打印原始数据
+		console.log('Response body:', resBody);
 
-		return await res.json();
+		return { success: true };
 	}
 };

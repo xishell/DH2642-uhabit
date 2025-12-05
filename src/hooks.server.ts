@@ -2,6 +2,21 @@ import type { Handle } from '@sveltejs/kit';
 import { createAuth } from '$lib/server/auth';
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// Skip auth setup for static assets (huge performance improvement)
+	const isStaticAsset =
+		event.url.pathname.startsWith('/_app/') ||
+		event.url.pathname.startsWith('/favicon') ||
+		event.url.pathname.endsWith('.css') ||
+		event.url.pathname.endsWith('.js') ||
+		event.url.pathname.endsWith('.png') ||
+		event.url.pathname.endsWith('.jpg') ||
+		event.url.pathname.endsWith('.svg') ||
+		event.url.pathname.endsWith('.ico');
+
+	if (isStaticAsset) {
+		return resolve(event);
+	}
+
 	// Get D1 database from platform
 	const db = event.platform?.env?.DB;
 	const secret = event.platform?.env?.BETTER_AUTH_SECRET;

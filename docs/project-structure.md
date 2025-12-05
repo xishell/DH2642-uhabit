@@ -42,11 +42,13 @@ uhabit/
 │   │   │       ├── +page.svelte
 │   │   │       └── +page.server.ts
 │   │   │
-│   │   ├── auth/
-│   │   │   ├── login/
-│   │   │   │   └── +page.svelte        # Login page with email/password
-│   │   │   └── register/
-│   │   │       └── +page.svelte        # Registration page
+│   │   ├── login/
+│   │   │   ├── +page.svelte            # Login page wrapper
+│   │   │   └── LoginForm.svelte        # Login form component with email/password
+│   │   │
+│   │   ├── register/
+│   │   │   ├── +page.svelte            # Registration page wrapper
+│   │   │   └── RegisterForm.svelte     # Registration form component
 │   │   │
 │   │   ├── profile/                    # User profile management
 │   │   ├── settings/                   # App settings

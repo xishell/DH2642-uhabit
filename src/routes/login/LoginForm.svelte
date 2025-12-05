@@ -1,8 +1,7 @@
 <script lang="ts">
-	import '@skeletonlabs/skeleton-svelte';
-	import { signUp } from '$lib/auth/client';
+	import '@skeletonlabs/skeleton-svelte'; // ensure skeleton is imported
+	import { signIn } from '$lib/auth/client';
 
-	let name = '';
 	let email = '';
 	let password = '';
 	let loading = false;
@@ -12,7 +11,7 @@
 		errorMessage = null;
 		loading = true;
 		try {
-			await signUp(email, password, name);
+			await signIn(email, password);
 			window.location.href = '/overview';
 		} catch (err) {
 			// Display the actual error message from the API
@@ -23,7 +22,7 @@
 			} else if (err && typeof err === 'object' && 'message' in err) {
 				errorMessage = String(err.message);
 			} else {
-				errorMessage = 'Registration failed. Please try again.';
+				errorMessage = 'Login failed. Please try again.';
 			}
 		} finally {
 			loading = false;
@@ -35,25 +34,13 @@
 	class="space-y-6 max-w-md mx-auto p-6 bg-surface-100 dark:bg-surface-800 rounded-xl shadow-md"
 	on:submit|preventDefault={handleSubmit}
 >
-	<h1 class="text-2xl font-semibold text-center">Create an Account</h1>
+	<h1 class="text-2xl font-semibold text-center">Login</h1>
 
 	{#if errorMessage}
-		<div class="p-3 bg-error-100 text-error-700 rounded">{errorMessage}</div>
+		<div class="p-3 bg-error-100 text-error-700 rounded">
+			{errorMessage}
+		</div>
 	{/if}
-
-	<div class="flex flex-col space-y-1">
-		<label for="name" class="text-sm font-medium text-surface-700 dark:text-surface-200">Name</label
-		>
-		<input
-			id="name"
-			type="text"
-			bind:value={name}
-			placeholder="Your name"
-			required
-			class="input px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-md
-                  bg-surface-50 dark:bg-surface-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
-		/>
-	</div>
 
 	<div class="flex flex-col space-y-1">
 		<label for="email" class="text-sm font-medium text-surface-700 dark:text-surface-200"
@@ -63,7 +50,6 @@
 			id="email"
 			type="email"
 			bind:value={email}
-			placeholder="you@example.com"
 			required
 			class="input px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-md
                   bg-surface-50 dark:bg-surface-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -78,7 +64,6 @@
 			id="password"
 			type="password"
 			bind:value={password}
-			placeholder="••••••••"
 			required
 			class="input px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-md
                   bg-surface-50 dark:bg-surface-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -91,14 +76,14 @@
 		disabled={loading}
 	>
 		{#if loading}
-			Creating...
+			Loading...
 		{:else}
-			Create Account
+			Login
 		{/if}
 	</button>
 
 	<p class="text-center text-sm text-surface-500 mt-4">
-		Already have an account?
-		<a href="/auth/login" class="text-primary-600 hover:underline">Sign in</a>
+		New here? <a href="/register" class="text-primary-600 hover:underline">Create an account</a
+		>
 	</p>
 </form>

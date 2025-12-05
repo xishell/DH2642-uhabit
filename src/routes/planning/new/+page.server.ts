@@ -17,14 +17,12 @@ export const actions: Actions = {
 			unit: data.get('unit') as string
 		};
 
-		console.log(habit);
+		const res = await fetch('/api/habits', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(habit)
+		});
 
-		// const res = await fetch('/api/habits', {
-		// 	method: 'POST',
-		// 	headers: { 'Content-Type': 'application/json' },
-		// 	body: JSON.stringify(habit)
-		// });
-
-		// return await res.json();
+		return await res.json();
 	}
 };

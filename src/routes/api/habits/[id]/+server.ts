@@ -22,13 +22,11 @@ const updateHabitSchema = z.object({
 // GET /api/habits/[id] - Get single habit by ID
 export const GET: RequestHandler = async ({ params, locals, platform }) => {
 	// Check authentication
-	// TODO: Re-enable auth after implementing login UI
-	// if (!locals.user) {
-	// 	throw error(401, 'Unauthorized');
-	// }
+	if (!locals.user) {
+		throw error(401, 'Unauthorized');
+	}
 
-	// TEMP: Use mock user for testing
-	const userId = locals.user?.id || 'test-user-123';
+	const userId = locals.user.id;
 
 	const db = getDB(platform!.env.DB);
 
@@ -49,13 +47,11 @@ export const GET: RequestHandler = async ({ params, locals, platform }) => {
 // PATCH /api/habits/[id] - Update existing habit
 export const PATCH: RequestHandler = async ({ params, request, locals, platform }) => {
 	// Check authentication
-	// TODO: Re-enable auth after implementing login UI
-	// if (!locals.user) {
-	// 	throw error(401, 'Unauthorized');
-	// }
+	if (!locals.user) {
+		throw error(401, 'Unauthorized');
+	}
 
-	// TEMP: Use mock user for testing
-	const userId = locals.user?.id || 'test-user-123';
+	const userId = locals.user.id;
 
 	// Parse and validate request body
 	const body = await request.json();
@@ -100,13 +96,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 // DELETE /api/habits/[id] - Delete habit
 export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
 	// Check authentication
-	// TODO: Re-enable auth after implementing login UI
-	// if (!locals.user) {
-	// 	throw error(401, 'Unauthorized');
-	// }
+	if (!locals.user) {
+		throw error(401, 'Unauthorized');
+	}
 
-	// TEMP: Use mock user for testing
-	const userId = locals.user?.id || 'test-user-123';
+	const userId = locals.user.id;
 
 	const db = getDB(platform!.env.DB);
 

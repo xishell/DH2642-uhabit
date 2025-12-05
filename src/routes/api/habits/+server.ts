@@ -36,13 +36,11 @@ const createHabitSchema = z
 // GET /api/habits - List all habits for authenticated user
 export const GET: RequestHandler = async ({ locals, platform }) => {
 	// Check authentication
-	// TODO: Re-enable auth after implementing login UI
-	// if (!locals.user) {
-	// 	throw error(401, 'Unauthorized');
-	// }
+	if (!locals.user) {
+		throw error(401, 'Unauthorized');
+	}
 
-	// TEMP: Use mock user for testing
-	const userId = locals.user?.id || 'test-user-123';
+	const userId = locals.user.id;
 
 	const db = getDB(platform!.env.DB);
 
@@ -55,13 +53,11 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 // POST /api/habits - Create new habit
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	// Check authentication
-	// TODO: Re-enable auth after implementing login UI
-	// if (!locals.user) {
-	// 	throw error(401, 'Unauthorized');
-	// }
+	if (!locals.user) {
+		throw error(401, 'Unauthorized');
+	}
 
-	// TEMP: Use mock user for testing
-	const userId = locals.user?.id || 'test-user-123';
+	const userId = locals.user.id;
 
 	// Parse and validate request body
 	const body = await request.json();

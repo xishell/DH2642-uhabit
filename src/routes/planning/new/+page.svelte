@@ -3,11 +3,15 @@
 	import SelectMonthDay from './components/SelectMonthDay.svelte';
 	import SelectOrEdit from './components/SelectOrEdit.svelte';
 	import { fade } from 'svelte/transition';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+
+	$: type = $page.url.searchParams.get('type');
 
 	const colors = ['#E0E0E0', '#CCCCCC', '#B8B8B8', '#A4A4A4', '#909090', '#7C7C7C', '#686868'];
 	const frequencyArr = ['daily', 'weekly', 'monthly'];
 
-	let measurement: string = 'numeric';
+	$: measurement = type === 'progressive' ? 'numeric' : 'boolean';
 	let selectedColor: string = colors[2];
 	let selectedFrequency: string = frequencyArr[0];
 	let unit: string = 'ml';
@@ -111,6 +115,7 @@
 			<button
 				type="button"
 				class="text-sm w-24 bg-gray-100 rounded-[50px] py-3 px-6 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-sm"
+				on:click={() => goto('/planning')}
 			>
 				Cancel
 			</button>
@@ -123,4 +128,3 @@
 		</div>
 	</div>
 </form>
-<p>unit:{unit}</p>

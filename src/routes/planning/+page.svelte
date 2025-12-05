@@ -4,21 +4,11 @@
 	import Btn from '$lib/components/Btn.svelte';
 	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
-	const progressiveHabitList = [
-		'Drink Water',
-		'Read Book',
-		'Play with cat',
-		'take 10 pictures',
-		'play computer games'
-	];
-	const singleStepHabitList = [
-		'push up once',
-		'practice dance',
-		'write diary',
-		'Meditation',
-		'Walk in the woods',
-		'wash clothes'
-	];
+	import { goto } from '$app/navigation';
+	export let data;
+
+	const { progressiveHabitList, singleStepHabitList } = data;
+
 	let habitType: 0 | 1 = 0; //0 for progressive habit, 1 for single-step habit
 	let isNewBtnClicked = false;
 
@@ -86,11 +76,13 @@
 			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
 				<button
 					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-xl"
+					on:click={() => goto('/planning/new?type=progressive')}
 				>
 					Progressive
 				</button>
 				<button
 					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-xl"
+					on:click={() => goto('/planning/new?type=single')}
 				>
 					Single-Step
 				</button>

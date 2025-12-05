@@ -7,7 +7,7 @@ A habit tracking application built with SvelteKit.
 | Name              | Email           | ID     |
 | ----------------- | --------------- | ------ |
 | Elliot Steffensen | ellste@kth.se   | 142612 |
-| Geonna Dahore     | dahore@kth.se   | 187167 |
+| Geoanna Dahore     | dahore@kth.se   | 187167 |
 | Jintong Jiang     | jintongj@kth.se | 200160 |
 
 ## Tech Stack

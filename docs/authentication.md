@@ -86,7 +86,7 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals }) => {
 	// Check if user is authenticated
 	if (!locals.user) {
-		throw redirect(302, '/sign-in');
+		throw redirect(302, '/login');
 	}
 
 	// Return user data to the page
@@ -111,7 +111,7 @@ For client-side navigation guards:
 
 	onMount(() => {
 		if (!$session.data) {
-			goto('/sign-in');
+			goto('/login');
 		}
 	});
 </script>
@@ -148,7 +148,7 @@ For client-side navigation guards:
 		<button onclick={handleSignOut} class="text-red-600 hover:underline"> Sign Out </button>
 	</div>
 {:else}
-	<a href="/sign-in" class="text-blue-600 hover:underline"> Sign In </a>
+	<a href="/login" class="text-blue-600 hover:underline"> Sign In </a>
 {/if}
 ```
 

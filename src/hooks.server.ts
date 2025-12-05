@@ -1,9 +1,22 @@
 import type { Handle } from '@sveltejs/kit';
 import { createAuth } from '$lib/server/auth';
-import { svelteKitHandler } from 'better-auth/svelte-kit';
-import { building } from '$app/environment';
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// Skip auth setup for static assets (huge performance improvement)
+	const isStaticAsset =
+		event.url.pathname.startsWith('/_app/') ||
+		event.url.pathname.startsWith('/favicon') ||
+		event.url.pathname.endsWith('.css') ||
+		event.url.pathname.endsWith('.js') ||
+		event.url.pathname.endsWith('.png') ||
+		event.url.pathname.endsWith('.jpg') ||
+		event.url.pathname.endsWith('.svg') ||
+		event.url.pathname.endsWith('.ico');
+
+	if (isStaticAsset) {
+		return resolve(event);
+	}
+
 	// Get D1 database from platform
 	const db = event.platform?.env?.DB;
 	const secret = event.platform?.env?.BETTER_AUTH_SECRET;
@@ -17,23 +30,36 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	// Create auth instance
+	// Create auth instance and store in locals
+	// The route handler at /api/auth/[...all] will use this
 	const auth = createAuth(db, secret, url);
 	event.locals.auth = auth;
 
-	// Fetch current session and populate locals
-	const session = await auth.api.getSession({
-		headers: event.request.headers
-	});
+	// For non-auth routes, fetch session to populate locals.user
+	// Skip session fetch for auth routes (they don't need it and it saves resources)
+	if (!event.url.pathname.startsWith('/api/auth/')) {
+		try {
+			const session = await auth.api.getSession({
+				headers: event.request.headers
+			});
 
-	if (session) {
-		event.locals.user = session.user;
-		event.locals.session = session.session;
+			if (session) {
+				event.locals.user = session.user;
+				event.locals.session = session.session;
+			} else {
+				event.locals.user = null;
+				event.locals.session = null;
+			}
+		} catch (error) {
+			console.error('[HOOKS] Session fetch error:', error);
+			event.locals.user = null;
+			event.locals.session = null;
+		}
 	} else {
+		// For auth routes, set to null (the auth handler will manage its own session)
 		event.locals.user = null;
 		event.locals.session = null;
 	}
 
-	// Use svelteKitHandler to handle all auth routes automatically
-	return svelteKitHandler({ event, resolve, auth, building });
+	return resolve(event);
 };

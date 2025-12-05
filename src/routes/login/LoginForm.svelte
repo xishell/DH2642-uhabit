@@ -83,7 +83,6 @@
 	</button>
 
 	<p class="text-center text-sm text-surface-500 mt-4">
-		New here? <a href="/register" class="text-primary-600 hover:underline">Create an account</a
-		>
+		New here? <a href="/register" class="text-primary-600 hover:underline">Create an account</a>
 	</p>
 </form>

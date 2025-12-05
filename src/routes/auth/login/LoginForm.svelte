@@ -14,7 +14,16 @@
 			await signIn(email, password);
 			window.location.href = '/overview';
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Login failed';
+			// Display the actual error message from the API
+			if (err instanceof Error) {
+				errorMessage = err.message;
+			} else if (typeof err === 'string') {
+				errorMessage = err;
+			} else if (err && typeof err === 'object' && 'message' in err) {
+				errorMessage = String(err.message);
+			} else {
+				errorMessage = 'Login failed. Please try again.';
+			}
 		} finally {
 			loading = false;
 		}

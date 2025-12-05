@@ -17,23 +17,36 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	// Create auth instance
+	// Create auth instance (only once per request)
 	const auth = createAuth(db, secret, url);
 	event.locals.auth = auth;
 
-	// Fetch current session and populate locals
-	const session = await auth.api.getSession({
-		headers: event.request.headers
-	});
+	// Handle auth routes first (this is more efficient)
+	const response = await svelteKitHandler({ event, resolve, auth, building });
 
-	if (session) {
-		event.locals.user = session.user;
-		event.locals.session = session.session;
-	} else {
+	// If this was an auth route, svelteKitHandler already handled it
+	if (event.url.pathname.startsWith('/api/auth/')) {
+		return response;
+	}
+
+	// For non-auth routes, fetch session only if needed
+	try {
+		const session = await auth.api.getSession({
+			headers: event.request.headers
+		});
+
+		if (session) {
+			event.locals.user = session.user;
+			event.locals.session = session.session;
+		} else {
+			event.locals.user = null;
+			event.locals.session = null;
+		}
+	} catch (error) {
+		console.error('[HOOKS] Session fetch error:', error);
 		event.locals.user = null;
 		event.locals.session = null;
 	}
 
-	// Use svelteKitHandler to handle all auth routes automatically
-	return svelteKitHandler({ event, resolve, auth, building });
+	return response;
 };

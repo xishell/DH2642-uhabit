@@ -11,7 +11,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler",
-		"types": ["@cloudflare/workers-types", "@skeletonlabs/skeleton"]
+		"types": ["@cloudflare/workers-types"]
 	}
 	// Path aliases are handled by https://svelte.kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files

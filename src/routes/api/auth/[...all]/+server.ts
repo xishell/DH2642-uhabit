@@ -4,7 +4,7 @@
 
 import { toSvelteKitHandler } from 'better-auth/svelte-kit';
 import type { RequestHandler } from './$types';
-import { checkRateLimit, getClientIP, RATE_LIMITS } from '$lib/server/ratelimit';
+import { checkRateLimit, getClientIP, getRateLimits } from '$lib/server/ratelimit';
 import { validatePassword } from '$lib/server/password-validator';
 import { json } from '@sveltejs/kit';
 
@@ -25,17 +25,27 @@ export const POST: RequestHandler = async (event) => {
 	// Apply rate limiting to sensitive endpoints
 	const path = event.url.pathname;
 	const clientIP = getClientIP(event.request);
+	const url = event.url.origin;
+
+	// Detect staging/preview environments for relaxed rate limits
+	const isStagingOrPreview =
+		/preview-\d+\..*\.pages\.dev/.test(url) ||
+		url.includes('staging.') ||
+		url.includes('localhost') ||
+		url.includes('127.0.0.1');
+
+	const rateLimits = getRateLimits(isStagingOrPreview);
 
 	// Determine which rate limit to apply based on endpoint
 	let rateLimitConfig = null;
 	let identifier = clientIP;
 
 	if (path.includes('/sign-in/email')) {
-		rateLimitConfig = RATE_LIMITS.LOGIN;
+		rateLimitConfig = rateLimits.LOGIN;
 	} else if (path.includes('/sign-up/email')) {
-		rateLimitConfig = RATE_LIMITS.REGISTER;
+		rateLimitConfig = rateLimits.REGISTER;
 	} else if (path.includes('/forget-password') || path.includes('/reset-password')) {
-		rateLimitConfig = RATE_LIMITS.PASSWORD_RESET;
+		rateLimitConfig = rateLimits.PASSWORD_RESET;
 	}
 
 	// Check rate limit if applicable

@@ -120,7 +120,7 @@ export function cleanupExpired() {
 	}
 }
 
-// Predefined rate limit configs
+// Predefined rate limit configs for production
 export const RATE_LIMITS = {
 	/** 5 login attempts per 15 minutes per IP */
 	LOGIN: { maxRequests: 5, windowSeconds: 15 * 60 },
@@ -134,3 +134,25 @@ export const RATE_LIMITS = {
 	/** 100 API calls per minute per IP */
 	API: { maxRequests: 100, windowSeconds: 60 }
 } as const;
+
+// Relaxed rate limits for staging/preview environments
+export const RATE_LIMITS_DEV = {
+	/** 20 login attempts per 15 minutes per IP */
+	LOGIN: { maxRequests: 20, windowSeconds: 15 * 60 },
+
+	/** 20 registrations per hour per IP */
+	REGISTER: { maxRequests: 20, windowSeconds: 60 * 60 },
+
+	/** 10 password resets per hour per IP */
+	PASSWORD_RESET: { maxRequests: 10, windowSeconds: 60 * 60 },
+
+	/** 500 API calls per minute per IP */
+	API: { maxRequests: 500, windowSeconds: 60 }
+} as const;
+
+/**
+ * Get rate limits based on environment
+ */
+export function getRateLimits(isDevMode: boolean) {
+	return isDevMode ? RATE_LIMITS_DEV : RATE_LIMITS;
+}

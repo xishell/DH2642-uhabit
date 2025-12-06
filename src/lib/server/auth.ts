@@ -69,9 +69,22 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 			// requireEmailVerification: !isDev
 
 			// Password requirements (enforced by Better Auth)
-			minPasswordLength: isDev ? 4 : 8
+			minPasswordLength: isDev ? 4 : 8,
 			// Note: Additional password validation happens client-side
 			// via PasswordStrengthIndicator component
+
+			// Lower bcrypt cost for Cloudflare Workers (10ms CPU limit)
+			// Default is 10, but that exceeds Workers CPU limits
+			password: {
+				hash: async (password: string) => {
+					const bcrypt = await import('bcryptjs');
+					return bcrypt.hash(password, 6);
+				},
+				verify: async (data: { password: string; hash: string }) => {
+					const bcrypt = await import('bcryptjs');
+					return bcrypt.compare(data.password, data.hash);
+				}
+			}
 		},
 		session: {
 			// Extended session in dev mode for convenience

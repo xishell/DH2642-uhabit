@@ -1,30 +1,66 @@
 <script lang="ts">
 	import '@skeletonlabs/skeleton-svelte';
 	import { signUp } from '$lib/auth/client';
+	import PasswordStrengthIndicator from '$lib/components/PasswordStrengthIndicator.svelte';
+	import { z } from 'zod';
 
 	let name = '';
 	let email = '';
 	let password = '';
 	let loading = false;
 	let errorMessage: string | null = null;
+	let emailError: string | null = null;
+
+	// Email validation schema
+	const emailSchema = z.string().email('Please enter a valid email address').toLowerCase();
+
+	// Validate email on blur for immediate feedback
+	function validateEmail() {
+		emailError = null;
+		try {
+			emailSchema.parse(email);
+		} catch (err) {
+			if (err instanceof z.ZodError) {
+				emailError = err.issues[0].message;
+			}
+		}
+	}
 
 	async function handleSubmit() {
 		errorMessage = null;
+		emailError = null;
 		loading = true;
+
+		// Validate email before submission
+		try {
+			email = emailSchema.parse(email);
+		} catch (err) {
+			if (err instanceof z.ZodError) {
+				emailError = err.issues[0].message;
+				loading = false;
+				return;
+			}
+		}
+
 		try {
 			await signUp(email, password, name);
 			window.location.href = '/overview';
 		} catch (err) {
-			// Display the actual error message from the API
 			if (err instanceof Error) {
-				errorMessage = err.message;
-			} else if (typeof err === 'string') {
-				errorMessage = err;
-			} else if (err && typeof err === 'object' && 'message' in err) {
-				errorMessage = String(err.message);
+				const msg = err.message.toLowerCase();
+				// If it's a password validation error, show it
+				if (msg.includes('password') && (msg.includes('must') || msg.includes('character'))) {
+					errorMessage = err.message;
+				} else if (msg.includes('email') && msg.includes('already')) {
+					// Generic message - don't confirm email exists
+					errorMessage = 'Registration failed. Please try a different email.';
+				} else {
+					errorMessage = 'Registration failed. Please check your information and try again.';
+				}
 			} else {
 				errorMessage = 'Registration failed. Please try again.';
 			}
+			console.error('Registration error:', err); // Log for debugging
 		} finally {
 			loading = false;
 		}
@@ -63,11 +99,17 @@
 			id="email"
 			type="email"
 			bind:value={email}
+			on:blur={validateEmail}
 			placeholder="you@example.com"
 			required
-			class="input px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-md
-                  bg-surface-50 dark:bg-surface-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+			class="input px-4 py-2 border rounded-md bg-surface-50 dark:bg-surface-900 focus:outline-none focus:ring-2
+                  {emailError
+				? 'border-error-500 focus:ring-error-500'
+				: 'border-surface-300 dark:border-surface-600 focus:ring-primary-500'}"
 		/>
+		{#if emailError}
+			<p class="text-sm text-error-600">{emailError}</p>
+		{/if}
 	</div>
 
 	<div class="flex flex-col space-y-1">
@@ -80,9 +122,11 @@
 			bind:value={password}
 			placeholder="••••••••"
 			required
+			minlength="8"
 			class="input px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-md
                   bg-surface-50 dark:bg-surface-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
 		/>
+		<PasswordStrengthIndicator {password} />
 	</div>
 
 	<button

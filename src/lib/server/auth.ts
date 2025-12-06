@@ -1,5 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { haveIBeenPwned } from 'better-auth/plugins';
+import { APIError } from 'better-auth/api';
 import { getDB } from './db';
 import * as schema from './db/schema';
 
@@ -21,16 +23,29 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 				verification: schema.verification
 			}
 		}),
+		plugins: [
+			// Check passwords against 800M+ breached passwords
+			// Only enabled in production (dev mode allows weak passwords for testing)
+			...(!isDev
+				? [
+						haveIBeenPwned({
+							customPasswordCompromisedMessage:
+								'This password has been exposed in a data breach. Please choose a different password.'
+						})
+					]
+				: [])
+		],
 		emailAndPassword: {
 			enabled: true,
 			// In dev mode, skip email verification for easier testing
 			requireEmailVerification: false,
-			// In production, you should enable this:
+			// In production enable this:
 			// requireEmailVerification: !isDev
-			...(isDev && {
-				// Relaxed password requirements for dev/staging
-				minPasswordLength: 4
-			})
+
+			// Password requirements (enforced by Better Auth)
+			minPasswordLength: isDev ? 4 : 8
+			// Note: Additional password validation happens client-side
+			// via PasswordStrengthIndicator component
 		},
 		session: {
 			// Extended session in dev mode for convenience
@@ -66,13 +81,35 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 			}
 		},
 		advanced: {
-			// Enable debug logging in dev mode
+			// CSRF Protection is enabled by default in Better Auth
+			// Cookie security settings
+			useSecureCookies: url.startsWith('https://'),
 			...(isDev && {
-				useSecureCookies: url.startsWith('https://'),
 				crossSubDomainCookies: {
 					enabled: false
 				}
 			})
+		},
+		databaseHooks: {
+			user: {
+				create: {
+					before: async (user) => {
+						// Validate and normalize email
+						const email = user.email?.toLowerCase().trim() ?? '';
+
+						// Email format validation
+						const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+						if (!emailRegex.test(email)) {
+							throw new APIError('BAD_REQUEST', {
+								message: 'Please enter a valid email address'
+							});
+						}
+
+						// Normalize the email (lowercase + trim whitespace)
+						user.email = email;
+					}
+				}
+			}
 		}
 	});
 }

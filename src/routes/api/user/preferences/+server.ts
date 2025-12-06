@@ -21,12 +21,12 @@ const preferencesSchema = z.object({
 
 export const GET: RequestHandler = async ({ locals, platform }) => {
 	if (!locals.user) {
-		return error(401, 'Unauthorized');
+		return error(401, 'Authentication required');
 	}
 
 	const db = platform?.env?.DB;
 	if (!db) {
-		return error(500, 'Database not available');
+		return error(500, 'Service temporarily unavailable');
 	}
 
 	const drizzle = getDB(db);
@@ -42,17 +42,15 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 		.where(eq(user.id, locals.user.id));
 
 	if (!userData) {
-		return error(404, 'User not found');
+		return error(401, 'Authentication required');
 	}
 
-	// Parse preferences JSON if it exists
 	let preferences = {};
 	if (userData.preferences) {
 		try {
 			preferences = JSON.parse(userData.preferences as string);
 		} catch (e) {
 			console.error('Failed to parse user preferences JSON:', e);
-			// Return empty preferences if JSON is invalid
 		}
 	}
 
@@ -66,17 +64,16 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 
 export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	if (!locals.user) {
-		return error(401, 'Unauthorized');
+		return error(401, 'Authentication required');
 	}
 
 	const db = platform?.env?.DB;
 	if (!db) {
-		return error(500, 'Database not available');
+		return error(500, 'Service temporarily unavailable');
 	}
 
 	const drizzle = getDB(db);
 
-	// Parse and validate request body with Zod
 	let body;
 	try {
 		const rawBody = await request.json();
@@ -88,7 +85,6 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		return error(400, 'Invalid request body');
 	}
 
-	// Validate and extract allowed fields
 	const updates: {
 		displayName?: string;
 		theme?: string;
@@ -109,7 +105,6 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	}
 
 	if (body.preferences !== undefined) {
-		// Merge with existing preferences
 		const [currentUser] = await drizzle
 			.select({ preferences: user.preferences })
 			.from(user)
@@ -121,7 +116,6 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 				currentPrefs = JSON.parse(currentUser.preferences as string);
 			} catch (e) {
 				console.error('Failed to parse existing preferences JSON:', e);
-				// Continue with empty preferences
 			}
 		}
 
@@ -129,10 +123,8 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		updates.preferences = JSON.stringify(mergedPrefs);
 	}
 
-	// Update the user
 	await drizzle.update(user).set(updates).where(eq(user.id, locals.user.id));
 
-	// Fetch updated data
 	const [updatedUser] = await drizzle
 		.select({
 			displayName: user.displayName,
@@ -149,7 +141,6 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 			preferences = JSON.parse(updatedUser.preferences as string);
 		} catch (e) {
 			console.error('Failed to parse updated preferences JSON:', e);
-			// Return empty preferences if JSON is invalid
 		}
 	}
 

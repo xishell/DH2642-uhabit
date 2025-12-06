@@ -32,6 +32,8 @@ declare global {
 				DB: D1Database;
 				BETTER_AUTH_SECRET: string;
 				BETTER_AUTH_URL?: string; // Optional: auto-detects from request if not set
+				DEV_MODE?: string; // Optional: set to "true" for dev mode
+				RATE_LIMIT?: KVNamespace; // Optional: KV namespace for rate limiting
 			};
 			context: {
 				waitUntil(promise: Promise<unknown>): void;

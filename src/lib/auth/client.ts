@@ -69,7 +69,7 @@ export async function updatePreferences(preferences: {
 		weekStartsOn?: number;
 	};
 }) {
-	const response = await fetch('api/user/preferences', {
+	const response = await fetch('/api/user/preferences', {
 		method: 'PATCH',
 		headers: {
 			'Content-Type': 'application/json'

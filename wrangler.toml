@@ -14,7 +14,16 @@ database_name = "uhabit-db"
 database_id = "local-dev-db"
 migrations_dir = "drizzle"
 
+# KV Namespace for rate limiting (persistent, distributed storage)
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "e007eb2bd5f1461aa48027aa85328a01"
+
 # Environment configuration
+# Note: Secrets like BETTER_AUTH_SECRET should be set via:
+#   npx wrangler secret put BETTER_AUTH_SECRET --env preview
+#   npx wrangler secret put BETTER_AUTH_SECRET --env production
+
 [env.preview]
 name = "uhabit-staging"
 
@@ -24,6 +33,13 @@ database_name = "uhabit-db-staging"
 database_id = "c1b6383c-5932-4187-bb5a-9d350832a255"
 migrations_dir = "drizzle"
 
+[[env.preview.kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "c9e24aece36444eab3d8d708f8a90590"
+
+[env.preview.vars]
+DEV_MODE = "true"
+
 [env.production]
 name = "uhabit"
 
@@ -32,3 +48,10 @@ binding = "DB"
 database_name = "uhabit-db-production"
 database_id = "947d30fd-474e-4e78-b65d-2d89b41212f4"
 migrations_dir = "drizzle"
+
+[[env.production.kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "92c7011c659d4a01a759cab698729751"
+
+[env.production.vars]
+DEV_MODE = "false"

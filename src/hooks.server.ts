@@ -21,6 +21,28 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const db = event.platform?.env?.DB;
 	const secret = event.platform?.env?.BETTER_AUTH_SECRET;
 	const url = event.platform?.env?.BETTER_AUTH_URL || event.url.origin;
+	const devModeEnv = event.platform?.env?.DEV_MODE === 'true';
+
+	// Detect staging/preview environments
+	const isStagingOrPreview =
+		/preview-\d+\..*\.pages\.dev/.test(url) || url.includes('staging.') || url.includes('preview.');
+
+	// Validate secret strength in production only (not staging/preview)
+	const isProduction =
+		url.startsWith('https://') &&
+		!url.includes('localhost') &&
+		!url.includes('127.0.0.1') &&
+		!isStagingOrPreview;
+
+	if (isProduction && secret && secret.length < 32) {
+		console.error(
+			'[HOOKS] SECURITY WARNING: BETTER_AUTH_SECRET is too short for production. ' +
+				'Use at least 32 characters.'
+		);
+	}
+
+	// Pass devMode flag (auth.ts will validate and potentially override)
+	const devMode = devModeEnv;
 
 	if (!db || !secret) {
 		console.error('[HOOKS] Missing DB or BETTER_AUTH_SECRET in platform.env');
@@ -32,7 +54,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Create auth instance and store in locals
 	// The route handler at /api/auth/[...all] will use this
-	const auth = createAuth(db, secret, url);
+	const auth = createAuth(db, secret, url, devMode);
 	event.locals.auth = auth;
 
 	// For non-auth routes, fetch session to populate locals.user
@@ -61,5 +83,22 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.session = null;
 	}
 
-	return resolve(event);
+	// Resolve the request
+	const response = await resolve(event);
+
+	// Add security headers to all responses
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+	response.headers.set('X-XSS-Protection', '1; mode=block');
+	response.headers.set(
+		'Permissions-Policy',
+		'geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()'
+	);
+	// Strict Transport Security (HSTS) - only for HTTPS
+	if (event.url.protocol === 'https:') {
+		response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+	}
+
+	return response;
 };

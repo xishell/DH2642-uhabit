@@ -3,15 +3,30 @@ import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
+
+// Validation schema for user preferences
+const preferencesSchema = z.object({
+	displayName: z.string().min(1).max(100).optional(),
+	theme: z.enum(['light', 'dark', 'system']).optional(),
+	country: z.string().length(2).optional(), // ISO 3166-1 alpha-2 country codes
+	preferences: z
+		.object({
+			notifications: z.boolean().optional(),
+			emailNotifications: z.boolean().optional(),
+			weekStartsOn: z.number().int().min(0).max(6).optional()
+		})
+		.optional()
+});
 
 export const GET: RequestHandler = async ({ locals, platform }) => {
 	if (!locals.user) {
-		return error(401, 'Unauthorized');
+		return error(401, 'Authentication required');
 	}
 
 	const db = platform?.env?.DB;
 	if (!db) {
-		return error(500, 'Database not available');
+		return error(500, 'Service temporarily unavailable');
 	}
 
 	const drizzle = getDB(db);
@@ -27,11 +42,17 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 		.where(eq(user.id, locals.user.id));
 
 	if (!userData) {
-		return error(404, 'User not found');
+		return error(401, 'Authentication required');
 	}
 
-	// Parse preferences JSON if it exists
-	const preferences = userData.preferences ? JSON.parse(userData.preferences as string) : {};
+	let preferences = {};
+	if (userData.preferences) {
+		try {
+			preferences = JSON.parse(userData.preferences as string);
+		} catch (e) {
+			console.error('Failed to parse user preferences JSON:', e);
+		}
+	}
 
 	return json({
 		displayName: userData.displayName,
@@ -43,28 +64,27 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 
 export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	if (!locals.user) {
-		return error(401, 'Unauthorized');
+		return error(401, 'Authentication required');
 	}
 
 	const db = platform?.env?.DB;
 	if (!db) {
-		return error(500, 'Database not available');
+		return error(500, 'Service temporarily unavailable');
 	}
 
 	const drizzle = getDB(db);
 
-	const body = (await request.json()) as {
-		displayName?: string;
-		theme?: string;
-		country?: string;
-		preferences?: {
-			notifications?: boolean;
-			emailNotifications?: boolean;
-			weekStartsOn?: number;
-		};
-	};
+	let body;
+	try {
+		const rawBody = await request.json();
+		body = preferencesSchema.parse(rawBody);
+	} catch (e) {
+		if (e instanceof z.ZodError) {
+			return error(400, `Validation error: ${e.issues.map((err) => err.message).join(', ')}`);
+		}
+		return error(400, 'Invalid request body');
+	}
 
-	// Validate and extract allowed fields
 	const updates: {
 		displayName?: string;
 		theme?: string;
@@ -77,9 +97,6 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	}
 
 	if (body.theme !== undefined) {
-		if (!['light', 'dark', 'system'].includes(body.theme)) {
-			return error(400, 'Invalid theme value');
-		}
 		updates.theme = body.theme;
 	}
 
@@ -88,24 +105,26 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	}
 
 	if (body.preferences !== undefined) {
-		// Merge with existing preferences
 		const [currentUser] = await drizzle
 			.select({ preferences: user.preferences })
 			.from(user)
 			.where(eq(user.id, locals.user.id));
 
-		const currentPrefs = currentUser?.preferences
-			? JSON.parse(currentUser.preferences as string)
-			: {};
+		let currentPrefs = {};
+		if (currentUser?.preferences) {
+			try {
+				currentPrefs = JSON.parse(currentUser.preferences as string);
+			} catch (e) {
+				console.error('Failed to parse existing preferences JSON:', e);
+			}
+		}
 
 		const mergedPrefs = { ...currentPrefs, ...body.preferences };
 		updates.preferences = JSON.stringify(mergedPrefs);
 	}
 
-	// Update the user
 	await drizzle.update(user).set(updates).where(eq(user.id, locals.user.id));
 
-	// Fetch updated data
 	const [updatedUser] = await drizzle
 		.select({
 			displayName: user.displayName,
@@ -116,7 +135,14 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		.from(user)
 		.where(eq(user.id, locals.user.id));
 
-	const preferences = updatedUser.preferences ? JSON.parse(updatedUser.preferences as string) : {};
+	let preferences = {};
+	if (updatedUser.preferences) {
+		try {
+			preferences = JSON.parse(updatedUser.preferences as string);
+		} catch (e) {
+			console.error('Failed to parse updated preferences JSON:', e);
+		}
+	}
 
 	return json({
 		displayName: updatedUser.displayName,

@@ -1,26 +1,26 @@
 import type { LayoutServerLoad } from './$types';
-import { createAuth } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 
 export const load: LayoutServerLoad = async (event) => {
-	const db = event.platform?.env?.DB;
-	const secret = event.platform?.env?.BETTER_AUTH_SECRET;
-	const baseUrl = event.url.origin;
-
-	if (!db || !secret) {
-		console.error('Missing DB or BETTER_AUTH_SECRET in runtime environment');
+	// Auth instance is already created in hooks.server.ts and available in event.locals.auth
+	if (!event.locals.auth) {
+		console.error('Auth instance not available in locals');
 		return { user: null };
 	}
 
 	try {
-		const auth = createAuth(db, secret, baseUrl);
-		const session = await auth.api.getSession(event.request);
+		// Session is already fetched in hooks.server.ts and available in event.locals
+		const session = event.locals.user ? { user: event.locals.user } : null;
 
-		// Protect all routes except /auth/* by default
-		const isPublicRoute = event.route.id?.startsWith('/auth');
+		// Protect all routes except /login and /register by default
+		const isPublicRoute =
+			event.route.id === '/login' ||
+			event.route.id === '/register' ||
+			event.route.id === '/' ||
+			event.url.pathname.startsWith('/api/');
 
 		if (!session && !isPublicRoute) {
-			throw redirect(302, '/auth/login');
+			throw redirect(302, '/login');
 		}
 
 		return {

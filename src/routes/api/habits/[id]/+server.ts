@@ -85,7 +85,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 			...data,
 			updatedAt: new Date()
 		})
-		.where(eq(habit.id, params.id));
+		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)));
 
 	// Fetch the updated habit
 	const updatedHabit = await db.select().from(habit).where(eq(habit.id, params.id)).limit(1);
@@ -116,7 +116,7 @@ export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
 	}
 
 	// Delete habit
-	await db.delete(habit).where(eq(habit.id, params.id));
+	await db.delete(habit).where(and(eq(habit.id, params.id), eq(habit.userId, userId)));
 
 	return new Response(null, { status: 204 });
 };

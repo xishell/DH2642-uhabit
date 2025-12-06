@@ -5,6 +5,7 @@
 import { toSvelteKitHandler } from 'better-auth/svelte-kit';
 import type { RequestHandler } from './$types';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '$lib/server/ratelimit';
+import { validatePassword } from '$lib/server/password-validator';
 import { json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async (event) => {
@@ -59,6 +60,29 @@ export const POST: RequestHandler = async (event) => {
 					}
 				}
 			);
+		}
+	}
+
+	// Server-side password validation for registration
+	if (path.includes('/sign-up/email')) {
+		try {
+			const clonedRequest = event.request.clone();
+			const body = (await clonedRequest.json()) as { password?: string };
+
+			if (body.password) {
+				const validation = validatePassword(body.password);
+				if (!validation.valid) {
+					return json(
+						{
+							message: validation.errors[0],
+							code: 'WEAK_PASSWORD'
+						},
+						{ status: 400 }
+					);
+				}
+			}
+		} catch {
+			// If we can't parse the body, let Better Auth handle the error
 		}
 	}
 

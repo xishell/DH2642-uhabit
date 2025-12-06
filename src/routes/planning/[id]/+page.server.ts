@@ -35,7 +35,7 @@ export const actions: Actions = {
 	}
 };
 
-//GET habits
+//GET habit
 import type { PageServerLoad } from './$types';
 export type Habit = {
 	id: string;
@@ -54,15 +54,19 @@ export type Habit = {
 	updatedAt: Date;
 };
 
-export const load: PageServerLoad = async ({ fetch }) => {
-	const habits = (await fetch('/api/habits').then((r) => r.json())) as Habit[];
+export const load: PageServerLoad = async ({ fetch, params }) => {
+	const { id } = params;
+	const res = await fetch(`/api/habits/${id}`);
 
-	const progressiveHabitList = habits.filter((h: any) => h.measurement === 'numeric');
+	if (!res.ok) {
+		return {
+			habit: null
+		};
+	}
 
-	const singleStepHabitList = habits.filter((h: any) => h.measurement === 'boolean');
+	const targetHabit: Habit = await res.json();
 
 	return {
-		progressiveHabitList,
-		singleStepHabitList
+		targetHabit
 	};
 };

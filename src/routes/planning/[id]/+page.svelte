@@ -7,14 +7,9 @@
 	import { page } from '$app/stores';
 	export let data;
 
-	const { progressiveHabitList, singleStepHabitList } = data;
+	const { targetHabit } = data;
 	$: id = $page.params.id;
 	$: type = $page.url.searchParams.get('type');
-
-	let targetHabit =
-		type === 'progressive'
-			? progressiveHabitList.find((h) => h.id === id)
-			: singleStepHabitList.find((h) => h.id === id);
 
 	const colors = ['#E0E0E0', '#CCCCCC', '#B8B8B8', '#A4A4A4', '#909090', '#7C7C7C', '#686868'];
 	const frequencyArr = ['daily', 'weekly', 'monthly'];

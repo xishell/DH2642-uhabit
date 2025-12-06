@@ -21,7 +21,7 @@ export const actions: Actions = {
 			unit: isNumeric ? data.get('unit') : null
 		};
 
-		const res = await fetch('/api/habits/{$id}', {
+		const res = await fetch(`/api/habits/${id}`, {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(habit)

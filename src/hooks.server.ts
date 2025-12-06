@@ -21,7 +21,28 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const db = event.platform?.env?.DB;
 	const secret = event.platform?.env?.BETTER_AUTH_SECRET;
 	const url = event.platform?.env?.BETTER_AUTH_URL || event.url.origin;
-	const devMode = event.platform?.env?.DEV_MODE === 'true';
+	const devModeEnv = event.platform?.env?.DEV_MODE === 'true';
+
+	// Detect staging/preview environments
+	const isStagingOrPreview =
+		/preview-\d+\..*\.pages\.dev/.test(url) || url.includes('staging.') || url.includes('preview.');
+
+	// Validate secret strength in production only (not staging/preview)
+	const isProduction =
+		url.startsWith('https://') &&
+		!url.includes('localhost') &&
+		!url.includes('127.0.0.1') &&
+		!isStagingOrPreview;
+
+	if (isProduction && secret && secret.length < 32) {
+		console.error(
+			'[HOOKS] SECURITY WARNING: BETTER_AUTH_SECRET is too short for production. ' +
+				'Use at least 32 characters.'
+		);
+	}
+
+	// Pass devMode flag (auth.ts will validate and potentially override)
+	const devMode = devModeEnv;
 
 	if (!db || !secret) {
 		console.error('[HOOKS] Missing DB or BETTER_AUTH_SECRET in platform.env');

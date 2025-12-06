@@ -12,7 +12,7 @@
 	let isDragging = false;
 	let dragMode: 'select' | 'deselect' | null = null;
 
-	$: if (selectDays.length > 0) {
+	$: if (selectDays?.length > 0) {
 		selected = new Set(days.filter((d) => selectDays.includes(ordinalToNumber(d))));
 	}
 	$: monthdaySelected = Array.from(selected)

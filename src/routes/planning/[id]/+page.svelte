@@ -1,7 +1,7 @@
 <script lang="ts">
-	import SelectWeekDay from './components/SelectWeekDay.svelte';
-	import SelectMonthDay from './components/SelectMonthDay.svelte';
-	import SelectOrEdit from './components/SelectOrEdit.svelte';
+	import SelectWeekDay from '../new/components/SelectWeekDay.svelte';
+	import SelectMonthDay from '../new/components/SelectMonthDay.svelte';
+	import SelectOrEdit from '../new/components/SelectOrEdit.svelte';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -11,7 +11,7 @@
 	$: id = $page.params.id;
 	$: type = $page.url.searchParams.get('type');
 
-	$: targetHabit =
+	let targetHabit =
 		type === 'progressive'
 			? progressiveHabitList.find((h) => h.id === id)
 			: singleStepHabitList.find((h) => h.id === id);
@@ -21,9 +21,10 @@
 
 	$: measurement = type === 'progressive' ? 'numeric' : 'boolean';
 
-	let selectedColor: string = targetHabit.color;
-	let selectedFrequency: string = targetHabit.frequency;
-	let unit: string = targetHabit.unit;
+	if (!targetHabit) throw new Error('Habit not found');
+	let selectedColor: string | null = targetHabit.color;
+	let selectedFrequency: string | null = targetHabit.frequency;
+	let unit: string | null = targetHabit.unit;
 
 	function selectColor(color: string) {
 		selectedColor = color;
@@ -91,9 +92,9 @@
 						{/each}
 					</div>
 					{#if selectedFrequency === 'weekly'}
-						<SelectWeekDay selectDays={targetHabit.period} />
+						<SelectWeekDay selectDays={targetHabit?.period ?? []} />
 					{:else if selectedFrequency === 'monthly'}
-						<SelectMonthDay selectDays={targetHabit.period} />
+						<SelectMonthDay selectDays={targetHabit?.period ?? []} />
 					{:else}{/if}
 				</div>
 				<input type="hidden" name="frequency" value={selectedFrequency} />

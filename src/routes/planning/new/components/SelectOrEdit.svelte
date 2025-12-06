@@ -3,9 +3,9 @@
 	import { SquareCheckBig } from 'lucide-svelte';
 
 	let isEditing = false;
-	let customUnit: string = '';
+	let customUnit: string | null = '';
 	let isIndicatorVisible = true;
-	export let unit: string = 'ml';
+	export let unit: string | null = 'ml';
 
 	$: if (!isEditing) {
 		customUnit = unit;
@@ -16,8 +16,8 @@
 	}
 
 	function save() {
-		if (customUnit.trim()) {
-			unit = customUnit.trim();
+		if (customUnit?.trim()) {
+			unit = customUnit?.trim();
 		}
 		isEditing = false;
 		isIndicatorVisible = true;

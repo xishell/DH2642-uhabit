@@ -21,6 +21,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const db = event.platform?.env?.DB;
 	const secret = event.platform?.env?.BETTER_AUTH_SECRET;
 	const url = event.platform?.env?.BETTER_AUTH_URL || event.url.origin;
+	const devMode = event.platform?.env?.DEV_MODE === 'true';
 
 	if (!db || !secret) {
 		console.error('[HOOKS] Missing DB or BETTER_AUTH_SECRET in platform.env');
@@ -32,7 +33,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Create auth instance and store in locals
 	// The route handler at /api/auth/[...all] will use this
-	const auth = createAuth(db, secret, url);
+	const auth = createAuth(db, secret, url, devMode);
 	event.locals.auth = auth;
 
 	// For non-auth routes, fetch session to populate locals.user

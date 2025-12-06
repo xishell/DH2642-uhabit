@@ -11,6 +11,10 @@ This guide shows how to integrate Better Auth authentication into your SvelteKit
 5. [Protected Routes](#protected-routes)
 6. [Session Management](#session-management)
 7. [Server-Side Auth](#server-side-auth)
+8. [Advanced Features](#advanced-features)
+   - [Development Mode](#development-mode)
+   - [Email Verification](#email-verification)
+   - [Custom User Fields](#custom-user-fields)
 
 ## Architecture Overview
 
@@ -228,6 +232,71 @@ export const actions: Actions = {
 
 ## Advanced Features
 
+### Development Mode
+
+For easier testing on staging environments, you can enable development mode with relaxed security settings.
+
+**⚠️ WARNING: Never enable DEV_MODE in production!**
+
+#### What Dev Mode Does
+
+When enabled, dev mode provides:
+
+- **Relaxed password requirements**: Minimum password length of 4 characters (vs 8+ in production)
+- **Extended sessions**: 30-day session duration (vs 7 days in production)
+- **Extended session updates**: 7-day update age (vs 1 day in production)
+- **No email verification**: Skip email verification for faster testing
+- **Debug logging**: Additional logging to help with troubleshooting
+
+#### Enabling Dev Mode
+
+Dev mode is automatically enabled for localhost development. For staging/preview environments:
+
+1. **Preview environment** (already configured in `wrangler.toml`):
+   ```toml
+   [env.preview.vars]
+   DEV_MODE = "true"
+   ```
+
+2. **Local development** (.env file):
+   ```bash
+   # Optional - auto-detected for localhost
+   DEV_MODE=true
+   ```
+
+3. **Production** (already configured in `wrangler.toml`):
+   ```toml
+   [env.production.vars]
+   DEV_MODE = "false"
+   ```
+
+#### How It Works
+
+The auth configuration automatically detects dev mode:
+
+```typescript
+// src/lib/server/auth.ts
+export function createAuth(db: D1Database, secret: string, url: string, devMode = false) {
+	// Auto-detect localhost or use environment variable
+	const isDev = devMode || url.includes('localhost') || url.includes('127.0.0.1');
+
+	if (isDev) {
+		console.log('[AUTH] Running in DEVELOPMENT mode - relaxed security settings enabled');
+	}
+	// ... applies dev-specific configuration
+}
+```
+
+#### Production Checklist
+
+Before deploying to production, ensure:
+
+- [ ] `DEV_MODE` environment variable is **not set** or set to `false`
+- [ ] URL does not contain `localhost` or `127.0.0.1`
+- [ ] Email verification is enabled (if using email/password auth)
+- [ ] Strong password requirements are enforced
+- [ ] Session duration is appropriately short (7 days)
+
 ### Email Verification
 
 Enable in `src/lib/server/auth.ts`:
@@ -238,12 +307,14 @@ export function createAuth(db: D1Database, secret: string, url: string) {
 		// ... other config
 		emailAndPassword: {
 			enabled: true,
-			requireEmailVerification: true // Enable verification
+			requireEmailVerification: true // Enable verification for production
 		}
 		// ... rest of config
 	});
 }
 ```
+
+**Note**: Email verification is automatically disabled in dev mode. To test email verification, you'll need to configure an email provider and disable dev mode.
 
 ### Custom User Fields
 

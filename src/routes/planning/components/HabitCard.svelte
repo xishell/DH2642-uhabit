@@ -1,5 +1,7 @@
 <script lang="ts">
 	export let title: string = 'Drink Water';
+	export let habitId: string = '';
+	export let type: string = '';
 </script>
 
 <div
@@ -7,6 +9,7 @@
 >
 	<span>{title}</span>
 	<button
+		on:click={() => goto(`/planning/${habitId}?type=${type}`)}
 		class="bg-gray-300 rounded-[10px] py-2 px-6 hover:bg-gray-200 transition-all duration-300 cursor-pointer"
 		>Edit</button
 	>

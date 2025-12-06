@@ -1,4 +1,5 @@
 import type { Actions } from './$types';
+import { redirect } from '@sveltejs/kit';
 
 export const actions: Actions = {
 	default: async ({ request, fetch }) => {
@@ -6,6 +7,7 @@ export const actions: Actions = {
 
 		const raw = data.get('period') as string;
 		const periodArray = raw ? raw.split(',').map(Number) : [];
+		const isNumeric = data.get('measurement') === 'numeric';
 		const habit = {
 			title: data.get('title') as string,
 			notes: data.get('notes') as string,
@@ -13,8 +15,8 @@ export const actions: Actions = {
 			frequency: data.get('frequency') as string,
 			period: JSON.stringify(periodArray),
 			measurement: data.get('measurement') as string,
-			targetAmount: Number(data.get('targetAmount')),
-			unit: data.get('unit') as string
+			targetAmount: isNumeric ? Number(data.get('targetAmount')) : null,
+			unit: isNumeric ? data.get('unit') : null
 		};
 
 		const res = await fetch('/api/habits', {
@@ -23,9 +25,9 @@ export const actions: Actions = {
 			body: JSON.stringify(habit)
 		});
 		console.log('Status code from /api/habits POST:', res.status);
-		const resBody = await res.text(); // 先用 text() 打印原始数据
+		const resBody = await res.text();
 		console.log('Response body:', resBody);
 
-		return { success: true };
+		throw redirect(303, '/planning');
 	}
 };

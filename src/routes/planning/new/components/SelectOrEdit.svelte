@@ -5,8 +5,11 @@
 	let isEditing = false;
 	let customUnit: string = '';
 	let isIndicatorVisible = true;
-	let unit: string = 'ml';
+	export let unit: string = 'ml';
 
+	$: if (!isEditing) {
+		customUnit = unit;
+	}
 	function enableEdit() {
 		customUnit = unit;
 		isEditing = true;

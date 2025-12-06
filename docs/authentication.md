@@ -253,12 +253,14 @@ When enabled, dev mode provides:
 Dev mode is automatically enabled for localhost development. For staging/preview environments:
 
 1. **Preview environment** (already configured in `wrangler.toml`):
+
    ```toml
    [env.preview.vars]
    DEV_MODE = "true"
    ```
 
 2. **Local development** (.env file):
+
    ```bash
    # Optional - auto-detected for localhost
    DEV_MODE=true

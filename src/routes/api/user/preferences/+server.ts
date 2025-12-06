@@ -83,7 +83,7 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		body = preferencesSchema.parse(rawBody);
 	} catch (e) {
 		if (e instanceof z.ZodError) {
-			return error(400, `Validation error: ${e.errors.map((err) => err.message).join(', ')}`);
+			return error(400, `Validation error: ${e.issues.map((err) => err.message).join(', ')}`);
 		}
 		return error(400, 'Invalid request body');
 	}

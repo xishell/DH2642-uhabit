@@ -19,13 +19,9 @@ export type Habit = {
 export const load: PageServerLoad = async ({ fetch }) => {
 	const habits = (await fetch('/api/habits').then((r) => r.json())) as Habit[];
 
-	const progressiveHabitList = habits
-		.filter((h: any) => h.measurement === 'numeric')
-		.map((h: any) => h.title);
+	const progressiveHabitList = habits.filter((h: any) => h.measurement === 'numeric');
 
-	const singleStepHabitList = habits
-		.filter((h: any) => h.measurement === 'boolean')
-		.map((h: any) => h.title);
+	const singleStepHabitList = habits.filter((h: any) => h.measurement === 'boolean');
 
 	return {
 		progressiveHabitList,

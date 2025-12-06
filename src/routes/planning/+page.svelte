@@ -41,13 +41,13 @@
 	{#if habitType === 0}
 		<div class="habit-list w-full grid grid-cols-1 sm:grid-cols-2 justify-between gap-7 mt-6">
 			{#each progressiveHabitList as habit}
-				<HabitCard title={habit} />
+				<HabitCard title={habit.title} habitId={habit.id} type={'progressive'} />
 			{/each}
 		</div>
 	{:else}
 		<div class="habit-list w-full grid grid-cols-1 sm:grid-cols-2 justify-between gap-7 mt-6">
 			{#each singleStepHabitList as habit}
-				<HabitCard title={habit} />
+				<HabitCard title={habit.title} habitId={habit.id} type={'single'} />
 			{/each}
 		</div>
 	{/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	export let selectDays: number[] = [];
 	const getOrdinal = (n: number) => {
 		if (n % 10 === 1 && n % 100 !== 11) return `${n}st`;
 		if (n % 10 === 2 && n % 100 !== 12) return `${n}nd`;
@@ -10,6 +11,10 @@
 	let selected = new Set<string>();
 	let isDragging = false;
 	let dragMode: 'select' | 'deselect' | null = null;
+
+	$: if (selectDays.length > 0) {
+		selected = new Set(days.filter((d) => selectDays.includes(ordinalToNumber(d))));
+	}
 	$: monthdaySelected = Array.from(selected)
 		.map((day) => ordinalToNumber(day))
 		.sort((a, b) => a - b);

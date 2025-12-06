@@ -1,4 +1,5 @@
 <script lang="ts">
+	export let selectDays: number[] = [];
 	const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 	let isDragging = false;
@@ -14,6 +15,10 @@
 		Fri: 5,
 		Sat: 6
 	};
+
+	$: if (selectDays.length > 0) {
+		selected = new Set(days.filter((d) => selectDays.includes(weekdayMap[d])));
+	}
 
 	$: weekdaySelected = Array.from(selected)
 		.map((day) => weekdayMap[day])

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	export let title: string = 'Drink Water';
 	export let habitId: string = '';
 	export let type: string = '';

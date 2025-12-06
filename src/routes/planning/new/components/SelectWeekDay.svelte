@@ -16,7 +16,7 @@
 		Sat: 6
 	};
 
-	$: if (selectDays.length > 0) {
+	$: if (selectDays?.length > 0) {
 		selected = new Set(days.filter((d) => selectDays.includes(weekdayMap[d])));
 	}
 

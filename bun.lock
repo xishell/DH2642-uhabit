@@ -10,7 +10,7 @@
         "autoprefixer": "^10.4.22",
         "bcryptjs": "^3.0.3",
         "better-auth": "^1.4.3",
-        "lucide-svelte": "^0.555.0",
+        "lucide-svelte": "^0.556.0",
         "postcss": "^8.5.6",
         "zod": "^4.1.13",
       },
@@ -585,7 +585,7 @@
 
     "locate-character": ["locate-character@3.0.0", "", {}, "sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA=="],
 
-    "lucide-svelte": ["lucide-svelte@0.555.0", "", { "peerDependencies": { "svelte": "^3 || ^4 || ^5.0.0-next.42" } }, "sha512-2kWIcstKGgQObLGpYXmcYwm/Y83Am+AQcP7MnybrmaRU1+QUJ/WSEpv/wAbwaSkrWUiN1TX/9FuWQKLeEeWCrQ=="],
+    "lucide-svelte": ["lucide-svelte@0.556.0", "", { "peerDependencies": { "svelte": "^3 || ^4 || ^5.0.0-next.42" } }, "sha512-OUj2xk403WslZAIGnEF5wvw/A7QAUXebDWNFajU/INY9XPWRZZZdcr+h6zB6XAzd84F7lPZqiEi42JVjXtcBYw=="],
 
     "magic-string": ["magic-string@0.30.21", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.5" } }, "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ=="],
 

@@ -8,15 +8,15 @@ import { z } from 'zod';
 // Validation schema for habit updates
 const updateHabitSchema = z.object({
 	title: z.string().min(1).max(255).optional(),
-	notes: z.string().optional(),
-	color: z.string().optional(),
+	notes: z.string().nullish(),
+	color: z.string().nullish(),
 	frequency: z.enum(['daily', 'weekly', 'monthly']).optional(),
 	measurement: z.enum(['boolean', 'numeric']).optional(),
-	period: z.string().optional(),
-	targetAmount: z.number().int().positive().optional(),
-	unit: z.string().optional(),
-	categoryId: z.string().uuid().optional(),
-	goalId: z.string().uuid().optional()
+	period: z.string().nullish(),
+	targetAmount: z.number().int().positive().nullish(),
+	unit: z.string().nullish(),
+	categoryId: z.string().uuid().nullish(),
+	goalId: z.string().uuid().nullish()
 });
 
 // GET /api/habits/[id] - Get single habit by ID

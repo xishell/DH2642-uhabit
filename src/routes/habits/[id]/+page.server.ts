@@ -21,7 +21,6 @@ export const load: PageServerLoad = async ({ fetch, params }) => {
 };
 
 export const actions: Actions = {
-	// UPDATE habit
 	default: async ({ request, fetch, params, url }) => {
 		const id = params.id;
 		const type = (url.searchParams.get('type') as HabitType) || 'progressive';
@@ -55,23 +54,6 @@ export const actions: Actions = {
 		}
 
 		// Redirect back to habits list with correct tab
-		throw redirect(303, routes.habits.listWithTab(type));
-	},
-
-	// DELETE habit
-	delete: async ({ fetch, params, url }) => {
-		const id = params.id;
-		const type = (url.searchParams.get('type') as HabitType) || 'progressive';
-
-		const res = await fetch(`/api/habits/${id}`, {
-			method: 'DELETE'
-		});
-
-		if (!res.ok) {
-			const text = await res.text();
-			return fail(res.status, { error: text || 'Failed to delete habit' });
-		}
-
 		throw redirect(303, routes.habits.listWithTab(type));
 	}
 };

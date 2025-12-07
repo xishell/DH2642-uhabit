@@ -301,22 +301,101 @@ Before deploying to production, ensure:
 
 ### Email Verification
 
-Enable in `src/lib/server/auth.ts`:
+Email verification and password reset are configured in `src/lib/server/auth.ts` using Resend as the email provider.
 
-```typescript
-export function createAuth(db: D1Database, secret: string, url: string) {
-	return betterAuth({
-		// ... other config
-		emailAndPassword: {
-			enabled: true,
-			requireEmailVerification: true // Enable verification for production
-		}
-		// ... rest of config
-	});
-}
-```
+#### Setup
 
-**Note**: Email verification is automatically disabled in dev mode. To test email verification, you'll need to configure an email provider and disable dev mode.
+1. **Get a Resend API Key**
+   - Sign up at [resend.com](https://resend.com)
+   - Create an API key in your dashboard
+   - Verify your domain (or use their test domain for development)
+
+2. **Configure the Secret in Cloudflare**
+
+   For **production**:
+
+   ```bash
+   wrangler secret put RESEND_API_KEY --env production
+   ```
+
+   For **preview/staging**:
+
+   ```bash
+   wrangler secret put RESEND_API_KEY --env preview
+   ```
+
+   For **local development**:
+   Add to `.dev.vars` (create if doesn't exist):
+
+   ```
+   RESEND_API_KEY=re_your_api_key_here
+   ```
+
+3. **Email Configuration**
+
+   The email functions are configured in `src/lib/server/auth.ts`:
+
+   ```typescript
+   emailAndPassword: {
+     enabled: true,
+     requireEmailVerification: !!resendApiKey, // Auto-enabled when Resend is configured
+
+     sendVerificationEmail: async ({ user, url }) => {
+       const resend = new Resend(resendApiKey);
+       await resend.emails.send({
+         from: 'UHabit <noreply@uhabit.xyz>',
+         to: user.email,
+         subject: 'Verify your email',
+         html: `...`
+       });
+     },
+
+     sendResetPassword: async ({ user, url }) => {
+       const resend = new Resend(resendApiKey);
+       await resend.emails.send({
+         from: 'UHabit <noreply@uhabit.xyz>',
+         to: user.email,
+         subject: 'Reset your password',
+         html: `...`
+       });
+     }
+   }
+   ```
+
+#### Email Verification Flow
+
+1. User signs up
+2. Better Auth creates unverified account
+3. Verification email sent via Resend
+4. User clicks link in email → `/api/auth/verify-email?token=...`
+5. Better Auth verifies token and marks email as verified
+6. User redirected to login or dashboard
+
+#### Password Reset Flow
+
+1. User clicks "Forgot Password"
+2. Frontend calls `authClient.forgetPassword({ email })`
+3. Better Auth generates reset token
+4. Reset email sent via Resend
+5. User clicks link → `/api/auth/reset-password?token=...`
+6. User enters new password
+7. Better Auth validates token and updates password
+
+#### Testing Locally
+
+Without a Resend API key:
+
+- Email verification is disabled
+- Users can sign up and log in immediately
+- Password reset won't work
+
+With Resend (development mode):
+
+- Use Resend's test domain or verify your own domain
+- Emails will be sent normally
+- Check Resend dashboard for sent emails
+
+**Note**: Better Auth handles all the routing and logic automatically. You don't need to create custom pages unless you want to customize the UI.
 
 ### Custom User Fields
 

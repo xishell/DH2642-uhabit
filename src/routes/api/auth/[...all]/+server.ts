@@ -73,8 +73,8 @@ export const POST: RequestHandler = async (event) => {
 		}
 	}
 
-	// Server-side password validation for registration
-	if (path.includes('/sign-up/email')) {
+	// Server-side password validation for registration (skip in dev/staging/preview)
+	if (path.includes('/sign-up/email') && !isStagingOrPreview) {
 		try {
 			const clonedRequest = event.request.clone();
 			const body = (await clonedRequest.json()) as { password?: string };

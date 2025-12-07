@@ -38,7 +38,7 @@
 				<span>Title <span class="text-red-500">*</span></span>
 				<input
 					type="text"
-					class=" border border-gray-300 rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+					class="border border-primary-400-600 rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
 					placeholder="e.g. drink water"
 					name="title"
 					required
@@ -46,8 +46,7 @@
 
 				<span>Notes</span>
 				<textarea
-					class="w-full rounded-md border border-gray-300 px-2 py-2 text-sm
-         focus:outline-none focus:ring-2 focus:ring-blue-500"
+					class="w-full rounded-md border border-primary-400-600 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
 					rows="4"
 					placeholder="write down your notes for this habit..."
 					name="notes"
@@ -98,7 +97,7 @@
 					<div class="inputs-ctn flex gap-4">
 						<input
 							type="number"
-							class="border border-gray-300 w-28 h-11 rounded-md text-base px-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-right"
+							class="border border-primary-400-600 w-28 h-11 rounded-md text-base px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
 							placeholder="100"
 							name="targetAmount"
 							required
@@ -122,14 +121,14 @@
 		<div class="form-btn flex justify-center gap-8">
 			<button
 				type="button"
-				class="text-sm w-24 bg-gray-100 rounded-[50px] py-3 px-6 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-sm"
+				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm"
 				on:click={() => goto(routes.habits.list)}
 			>
 				Cancel
 			</button>
 			<button
 				type="submit"
-				class="text-md w-24 bg-gray-100 rounded-[50px] py-2 px-5 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-sm"
+				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm"
 			>
 				Create
 			</button>

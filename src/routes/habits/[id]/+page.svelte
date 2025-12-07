@@ -62,6 +62,26 @@
 	function selectColor(color: string) {
 		selectedColor = color;
 	}
+
+	async function handleDelete() {
+		if (!confirm('Are you sure you want to delete this habit? This action cannot be undone.')) {
+			return;
+		}
+
+		try {
+			const res = await fetch(`/api/habits/${id}`, {
+				method: 'DELETE'
+			});
+
+			if (res.ok) {
+				goto(routes.habits.list);
+			} else {
+				alert('Failed to delete habit. Please try again.');
+			}
+		} catch (error) {
+			alert('Failed to delete habit. Please try again.');
+		}
+	}
 </script>
 
 <form method="POST">
@@ -194,7 +214,7 @@
 			<button
 				type="button"
 				class="flex justify-center items-center w-12 h-12 rounded-full border border-surface-600-400 hover:text-surface-contrast-800 hover:bg-error-700 hover:border-error-700 transition-colors duration-300 cursor-pointer"
-				><Trash2 strokeWidth={1.5} /></button
+				on:click={handleDelete}><Trash2 strokeWidth={1.5} /></button
 			>
 			<button
 				type="submit"

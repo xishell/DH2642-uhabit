@@ -12,7 +12,7 @@
 	<span>{title}</span>
 	<button
 		on:click={() => goto(routes.habits.edit(habitId, type))}
-		class="bg-primary-300-700 text-surface-50 rounded-[10px] py-2 px-6 hover:bg-primary-400-600 transition-all duration-200 cursor-pointer"
+		class="bg-primary-500 text-surface-50 rounded-[10px] py-2 px-6 hover:bg-primary-400 transition-all duration-200 cursor-pointer"
 		>Edit</button
 	>
 </div>

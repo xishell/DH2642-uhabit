@@ -50,6 +50,7 @@
 			<SquarePen strokeWidth={1.4} />
 		</button>
 	{:else}
+		<!-- svelte-ignore a11y-autofocus -->
 		<input
 			class="border border-gray-300 w-18 h-9 rounded-md text-sm pl-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
 			name="unit"

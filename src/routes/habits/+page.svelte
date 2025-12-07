@@ -4,6 +4,7 @@
 	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { routes } from '$lib/routes';
 	import { habitsStore } from '$lib/stores/habits';
@@ -19,9 +20,31 @@
 
 	let habitType: 0 | 1 = 0; //0 for progressive habit, 1 for single-step habit
 	let isNewBtnClicked = false;
-	let quote = 'Let your days echo with the steps you choose to take.';
-	let author = '';
-	let isQuoteLoading = true;
+	let quote = data.quote ?? 'Let your days echo with the steps you choose to take.';
+	let author = data.author ?? '';
+	let isQuoteLoading = !data.quote;
+
+	if (browser) {
+		// Prefer SSR-provided quote, fall back to cached client quote
+		if (!data.quote) {
+			const cachedQuoteRaw = sessionStorage.getItem('uhabit-quote');
+			if (cachedQuoteRaw) {
+				try {
+					const cached = JSON.parse(cachedQuoteRaw) as { quote?: string; author?: string };
+					if (cached.quote) {
+						quote = cached.quote;
+						author = cached.author ?? '';
+						isQuoteLoading = false;
+					}
+				} catch (e) {
+					console.error('Failed to parse cached quote', e);
+					sessionStorage.removeItem('uhabit-quote');
+				}
+			}
+		} else {
+			sessionStorage.setItem('uhabit-quote', JSON.stringify({ quote, author }));
+		}
+	}
 
 	// Read hash on mount to restore tab state
 	onMount(() => {
@@ -52,6 +75,7 @@
 				if (data?.quote) {
 					quote = data.quote;
 					author = data.author ?? '';
+					sessionStorage.setItem('uhabit-quote', JSON.stringify({ quote, author }));
 				}
 			})
 			.catch(() => {

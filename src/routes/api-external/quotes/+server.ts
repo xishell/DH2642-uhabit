@@ -9,8 +9,9 @@ type QuoteData = {
 const CACHE_KEY = 'daily-quote';
 const CACHE_TTL = 300; // 5 minutes in seconds
 
-export const GET: RequestHandler = async ({ platform }) => {
+export const GET: RequestHandler = async ({ platform, url }) => {
 	const kv = platform?.env?.QUOTES_CACHE;
+	const cacheOnly = url.searchParams.get('cacheOnly') === '1';
 
 	// Try KV cache first
 	if (kv) {
@@ -21,9 +22,17 @@ export const GET: RequestHandler = async ({ platform }) => {
 					headers: { 'Cache-Control': 'public, max-age=60' }
 				});
 			}
+
+			// If cache-only requested and nothing in KV, return early
+			if (cacheOnly) {
+				return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+			}
 		} catch {
 			// KV read failed, continue to fetch
 		}
+	} else if (cacheOnly) {
+		// No KV available and cache-only requested
+		return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
 	}
 
 	// Fetch fresh quote

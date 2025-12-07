@@ -133,9 +133,6 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 	});
 };
 
-// Some clients or proxies may downgrade PATCH to POST; accept POST as an alias to PATCH
-export const POST: RequestHandler = (event) => PATCH(event);
-
 // DELETE /api/habits/[id] - Delete habit
 export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
 	// Check authentication

@@ -5,10 +5,7 @@ import { APIError } from 'better-auth/api';
 import { Resend } from 'resend';
 import { getDB } from './db';
 import * as schema from './db/schema';
-import {
-	getVerificationEmailTemplate,
-	getPasswordResetEmailTemplate
-} from './email-templates';
+import { getVerificationEmailTemplate, getPasswordResetEmailTemplate } from './email-templates';
 
 export function createAuth(
 	db: D1Database,

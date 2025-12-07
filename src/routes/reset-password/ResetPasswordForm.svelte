@@ -108,8 +108,7 @@
 		<div class="flex flex-col space-y-1">
 			<label
 				for="confirm-password"
-				class="text-sm font-medium text-surface-700 dark:text-surface-200"
-				>Confirm Password</label
+				class="text-sm font-medium text-surface-700 dark:text-surface-200">Confirm Password</label
 			>
 			<input
 				id="confirm-password"
@@ -137,7 +136,6 @@
 	{/if}
 
 	<p class="text-center text-sm text-surface-500 mt-4">
-		Remember your password? <a href="/login" class="text-primary-600 hover:underline">Sign in</a
-		>
+		Remember your password? <a href="/login" class="text-primary-600 hover:underline">Sign in</a>
 	</p>
 </form>

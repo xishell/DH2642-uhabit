@@ -41,6 +41,8 @@ export async function signOut() {
 }
 
 export async function forgetPassword(email: string) {
+	// Better Auth uses forgetPassword method from the email/password plugin
+	// @ts-ignore - Type definitions may be incomplete for this method
 	const result = await authClient.forgetPassword({
 		email,
 		redirectTo: '/reset-password'

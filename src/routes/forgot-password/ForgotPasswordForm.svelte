@@ -112,7 +112,6 @@
 	</button>
 
 	<p class="text-center text-sm text-surface-500 mt-4">
-		Remember your password? <a href="/login" class="text-primary-600 hover:underline">Sign in</a
-		>
+		Remember your password? <a href="/login" class="text-primary-600 hover:underline">Sign in</a>
 	</p>
 </form>

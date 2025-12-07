@@ -1,5 +1,6 @@
 import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
+import { routes } from '$lib/routes';
 
 export const load: LayoutServerLoad = async (event) => {
 	// Auth instance is already created in hooks.server.ts and available in event.locals.auth
@@ -20,7 +21,7 @@ export const load: LayoutServerLoad = async (event) => {
 			event.url.pathname.startsWith('/api/');
 
 		if (!session && !isPublicRoute) {
-			throw redirect(302, '/login');
+			throw redirect(302, routes.login);
 		}
 
 		return {

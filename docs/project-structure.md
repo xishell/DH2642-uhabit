@@ -10,26 +10,18 @@ uhabit/
 │   │   ├── + (more files come later...?)
 │   │   │
 │   │   ├── overview/
-│   │   │   ├── +page.svelte            # Contains defaults like the navbar and default placements of components, renders conditionally
-│   │   │   ├── +page.server.ts
-│   │   │   └── components/
-│   │   │       ├── ProgressiveList.svelte
-│   │   │       ├── TaskList.svelte
-│   │   │       └── ProgressBar.svelte
+│   │   │   ├── +page.svelte            # Daily overview with habit tracking
+│   │   │   └── +page.server.ts
 │   │   │
-│   │   ├── planning/
-│   │   │   ├── +page.svelte            # Contains overview defaults like the navbar and default placements of components, renders conditionally
+│   │   ├── habits/
+│   │   │   ├── +page.svelte            # Habit planning/management page
 │   │   │   ├── +page.server.ts
-│   │   │   ├── [id]/                   # Editing page of habits
+│   │   │   ├── [id]/                   # Edit existing habit
 │   │   │   │   ├── +page.svelte
 │   │   │   │   └── +page.server.ts
 │   │   │   └── new/
-│   │   │       ├── +page.svelte
-│   │   │       ├── +page.server.ts
-│   │   │       └── components/
-│   │   │           ├── ProgressiveList.svelte
-│   │   │           ├── TaskList.svelte
-│   │   │           └── ProgressBar.svelte
+│   │   │       ├── +page.svelte        # Create new habit
+│   │   │       └── +page.server.ts
 │   │   │
 │   │   ├── statistics/
 │   │   │   ├── +page.svelte            # Contains overview defaults like the navbar and default placements of components, renders conditionally
@@ -65,8 +57,16 @@ uhabit/
 │   │
 │   ├── lib/
 │   │   ├── components/                 # Reusable Svelte components
+│   │   │   ├── Btn.svelte
+│   │   │   ├── HabitCard.svelte
+│   │   │   ├── PasswordStrengthIndicator.svelte
+│   │   │   ├── SelectMonthDay.svelte
+│   │   │   ├── SelectOrEdit.svelte
+│   │   │   ├── SelectWeekDay.svelte
+│   │   │   └── ToggleBar.svelte
 │   │   ├── utils/                      # Client-side utilities
 │   │   ├── types/                      # Shared TypeScript types
+│   │   │   └── habit.ts                # Habit type definition
 │   │   ├── assets/                     # Static assets (images, icons)
 │   │   │
 │   │   ├── server/                     # Server-only code (never sent to client)

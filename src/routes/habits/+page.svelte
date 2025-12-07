@@ -1,12 +1,13 @@
 <script lang="ts">
-	import ToggleBar from './components/ToggleBar.svelte';
-	import HabitCard from './components/HabitCard.svelte';
+	import ToggleBar from '$lib/components/ToggleBar.svelte';
+	import HabitCard from '$lib/components/HabitCard.svelte';
 	import Btn from '$lib/components/Btn.svelte';
 	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
+	import { routes } from '$lib/routes';
 	export let data;
 
 	const { progressiveHabitList, singleStepHabitList } = data;
@@ -83,13 +84,13 @@
 			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
 				<button
 					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-xl"
-					on:click={() => goto('/planning/new?type=progressive')}
+					on:click={() => goto(routes.habits.new('progressive'))}
 				>
 					Progressive
 				</button>
 				<button
 					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-xl"
-					on:click={() => goto('/planning/new?type=single')}
+					on:click={() => goto(routes.habits.new('single'))}
 				>
 					Single-Step
 				</button>

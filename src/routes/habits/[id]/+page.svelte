@@ -1,20 +1,26 @@
 <script lang="ts">
-	import SelectWeekDay from './components/SelectWeekDay.svelte';
-	import SelectMonthDay from './components/SelectMonthDay.svelte';
-	import SelectOrEdit from './components/SelectOrEdit.svelte';
+	import SelectWeekDay from '$lib/components/SelectWeekDay.svelte';
+	import SelectMonthDay from '$lib/components/SelectMonthDay.svelte';
+	import SelectOrEdit from '$lib/components/SelectOrEdit.svelte';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { routes } from '$lib/routes';
+	export let data;
 
+	const { targetHabit } = data;
+	$: id = $page.params.id;
 	$: type = $page.url.searchParams.get('type');
 
 	const colors = ['#E0E0E0', '#CCCCCC', '#B8B8B8', '#A4A4A4', '#909090', '#7C7C7C', '#686868'];
 	const frequencyArr = ['daily', 'weekly', 'monthly'];
 
 	$: measurement = type === 'progressive' ? 'numeric' : 'boolean';
-	let selectedColor: string = colors[2];
-	let selectedFrequency: string = frequencyArr[0];
-	let unit: string = 'ml';
+
+	if (!targetHabit) throw new Error('Habit not found');
+	let selectedColor: string | null = targetHabit.color;
+	let selectedFrequency: string | null = targetHabit.frequency;
+	let unit: string | null = targetHabit.unit;
 
 	function selectColor(color: string) {
 		selectedColor = color;
@@ -24,7 +30,7 @@
 
 <form method="POST">
 	<div class="add-habit-view w-full flex flex-col gap-12 p-7 max-w-[800px] m-auto">
-		<h1 class="hidden sm:block text-center text-xl">New Habit</h1>
+		<h1 class="hidden sm:block text-center text-xl">Edit Habit</h1>
 		<!-- form body -->
 		<div
 			class="form-info grid grid-cols-1 gap-3 sm:gap-0 sm:grid-cols-2 sm:border sm:border-gray-300 sm:rounded-[10px] sm:py-[50px] sm:px-[50px]"
@@ -36,6 +42,7 @@
 					class=" border border-gray-300 rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
 					placeholder="e.g. drink water"
 					name="title"
+					bind:value={targetHabit.title}
 				/>
 
 				<span>Notes</span>
@@ -45,6 +52,7 @@
 					rows="4"
 					placeholder="write down your notes for this habit..."
 					name="notes"
+					bind:value={targetHabit.notes}
 				></textarea>
 
 				<span>Color</span>
@@ -80,9 +88,9 @@
 						{/each}
 					</div>
 					{#if selectedFrequency === 'weekly'}
-						<SelectWeekDay />
+						<SelectWeekDay selectDays={targetHabit?.period ?? []} />
 					{:else if selectedFrequency === 'monthly'}
-						<SelectMonthDay />
+						<SelectMonthDay selectDays={targetHabit?.period ?? []} />
 					{:else}{/if}
 				</div>
 				<input type="hidden" name="frequency" value={selectedFrequency} />
@@ -95,8 +103,9 @@
 							class="border border-gray-300 w-18 h-9 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-right pr-2"
 							placeholder="100"
 							name="targetAmount"
+							bind:value={targetHabit.targetAmount}
 						/>
-						<SelectOrEdit />
+						<SelectOrEdit unit={targetHabit.unit} />
 					</div>
 				{/if}
 				<input type="hidden" name="measurement" value={measurement} />
@@ -115,7 +124,7 @@
 			<button
 				type="button"
 				class="text-sm w-24 bg-gray-100 rounded-[50px] py-3 px-6 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-sm"
-				on:click={() => goto('/planning')}
+				on:click={() => goto(routes.habits.list)}
 			>
 				Cancel
 			</button>
@@ -123,7 +132,7 @@
 				type="submit"
 				class="text-md w-24 bg-gray-100 rounded-[50px] py-2 px-5 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-sm"
 			>
-				Create
+				Edit
 			</button>
 		</div>
 	</div>

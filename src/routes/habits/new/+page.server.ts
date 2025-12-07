@@ -1,10 +1,11 @@
 import type { Actions } from './$types';
 import { redirect } from '@sveltejs/kit';
+import { routes, type HabitType } from '$lib/routes';
 
 export const actions: Actions = {
 	default: async ({ request, fetch, url }) => {
 		const data = await request.formData();
-		const type = url.searchParams.get('type');
+		const type = (url.searchParams.get('type') as HabitType) || 'progressive';
 
 		const raw = data.get('period') as string;
 		const periodArray = raw ? raw.split(',').map(Number) : [];
@@ -26,8 +27,7 @@ export const actions: Actions = {
 			body: JSON.stringify(habit)
 		});
 
-		// Redirect back to planning with correct tab
-		const hash = type === 'single' ? '#single-step' : '#progressive';
-		throw redirect(303, `/planning${hash}`);
+		// Redirect back to habits list with correct tab
+		throw redirect(303, routes.habits.listWithTab(type));
 	}
 };

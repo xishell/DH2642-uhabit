@@ -97,12 +97,12 @@
 		{:else}
 			<!-- form body -->
 			<div
-				class="form-info grid grid-cols-1 gap-3 sm:gap-0 sm:grid-cols-2 sm:border sm:border-surface-500 sm:rounded-[10px] sm:py-[50px] sm:px-[50px]"
+				class="form-info grid grid-cols-1 gap-3 sm:gap-0 sm:grid-cols-2 sm:border sm:border-gray-300 sm:rounded-[10px] sm:py-[50px] sm:px-[50px]"
 			>
 				{#if isLoading}
 					<!-- Skeletons -->
 					<div
-						class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-surface-500 sm:border-r animate-pulse"
+						class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-gray-300 sm:border-r animate-pulse"
 					>
 						<div class="h-5 w-1/2 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
 						<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-[12px]"></div>
@@ -121,16 +121,15 @@
 						<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-[12px]"></div>
 					</div>
 				{:else if targetHabit}
-					<div
-						class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-surface-500 sm:border-r"
-					>
-						<span>Title</span>
+					<div class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-gray-300 sm:border-r">
+						<span>Title <span class="text-red-500">*</span></span>
 						<input
 							type="text"
-							class=" border border-primary-400-600 rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+							class="border border-primary-400-600 rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
 							placeholder="e.g. drink water"
 							name="title"
 							bind:value={targetHabit.title}
+							required
 						/>
 
 						<span>Notes</span>
@@ -184,16 +183,18 @@
 						<input type="hidden" name="frequency" value={selectedFrequency} />
 
 						{#if measurement === 'numeric'}
-							<span>Measurement</span>
+							<span>Measurement <span class="text-red-500">*</span></span>
 							<div class="inputs-ctn flex gap-4">
 								<input
-									type="text"
-									class="border border-primary-400-600 w-18 h-9 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-right pr-2"
+									type="number"
+									class="border border-primary-400-600 w-28 h-11 rounded-md text-base px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
 									placeholder="100"
 									name="targetAmount"
 									bind:value={targetHabit.targetAmount}
+									required
+									min="1"
 								/>
-								<SelectOrEdit {unit} />
+								<SelectOrEdit {unit} required />
 							</div>
 						{/if}
 						<input type="hidden" name="measurement" value={measurement} />

@@ -34,7 +34,7 @@ Prerequisites: [Bun](https://bun.sh/), [Wrangler](https://developers.cloudflare.
 
 More detail: `docs/cloudflare-setup.md` and `docs/migrations.md`.
 
-## Scripts You’ll Use
+## Common Commands
 
 | Command                              | Purpose                                      |
 | ------------------------------------ | -------------------------------------------- | ----------------------- |

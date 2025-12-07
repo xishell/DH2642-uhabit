@@ -34,7 +34,7 @@ const createHabitSchema = z
 	);
 
 // GET /api/habits - List all habits for authenticated user
-export const GET: RequestHandler = async ({ locals, platform }) => {
+export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 	// Check authentication
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
@@ -46,6 +46,11 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 
 	// Fetch all habits for the current user
 	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
+
+	// Cache privately to cut repeated reads while keeping data user-specific
+	setHeaders({
+		'Cache-Control': 'private, max-age=300, stale-while-revalidate=60'
+	});
 
 	return json(
 		habits.map((h) => ({

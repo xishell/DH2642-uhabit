@@ -20,7 +20,7 @@ const updateHabitSchema = z.object({
 });
 
 // GET /api/habits/[id] - Get single habit by ID
-export const GET: RequestHandler = async ({ params, locals, platform }) => {
+export const GET: RequestHandler = async ({ params, locals, platform, setHeaders }) => {
 	// Check authentication
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
@@ -42,6 +42,11 @@ export const GET: RequestHandler = async ({ params, locals, platform }) => {
 	}
 
 	const [found] = habits;
+
+	// Cache privately to reduce repeat DB hits for the same habit
+	setHeaders({
+		'Cache-Control': 'private, max-age=300, stale-while-revalidate=60'
+	});
 
 	return json({
 		...found,

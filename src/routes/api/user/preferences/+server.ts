@@ -19,7 +19,7 @@ const preferencesSchema = z.object({
 		.optional()
 });
 
-export const GET: RequestHandler = async ({ locals, platform }) => {
+export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 	if (!locals.user) {
 		return error(401, 'Authentication required');
 	}
@@ -44,6 +44,11 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 	if (!userData) {
 		return error(401, 'Authentication required');
 	}
+
+	// Cache privately for the user to avoid re-fetching on each request
+	setHeaders({
+		'Cache-Control': 'private, max-age=300, stale-while-revalidate=60'
+	});
 
 	let preferences = {};
 	if (userData.preferences) {

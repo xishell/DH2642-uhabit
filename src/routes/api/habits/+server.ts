@@ -15,7 +15,10 @@ const createHabitSchema = z
 		measurement: z.enum(['boolean', 'numeric']).default('boolean'),
 		period: z.array(z.number().int()).nullish(),
 		targetAmount: z.number().int().positive().nullish(),
-		unit: z.string().nullish(),
+		unit: z
+			.string()
+			.nullish()
+			.transform((val) => val?.trim().toLowerCase() || null),
 		categoryId: z.string().uuid().nullish(),
 		goalId: z.string().uuid().nullish()
 	})

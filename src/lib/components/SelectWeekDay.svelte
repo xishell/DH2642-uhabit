@@ -83,10 +83,10 @@
 			data-day={day}
 			class="
 				 h-10 text-sm sm:text-[13px] sm:h-8 flex items-center justify-center
-				cursor-pointer transition-all duration-150
+				cursor-pointer transition-all duration-150 opacity-80
 				{selected.has(day)
-				? 'bg-secondary-400 text-white border border-secondary-400'
-				: 'bg-primary-50 text-primary-700 hover:bg-gray-200'}
+				? 'bg-primary-500 text-primary-50  hover:bg-primary-400'
+				: 'bg-primary-50 text-primary-700  hover:bg-primary-100'}
 			"
 			on:mousedown={(e) => startDrag(day, e)}
 			on:touchstart={(e) => startDrag(day, e)}

@@ -12,16 +12,20 @@
 	};
 </script>
 
-<div class="text-[14px] p-[5px] rounded-[40px] bg-gray-100 flex justify-between gap-2">
+<div
+	class="text-[14px] p-[5px] rounded-[40px] border border-primary-500 flex justify-between gap-2"
+>
 	<button
-		class="py-1 px-3 rounded-[40px] hover:bg-gray-300 transition-[1s] cursor-pointer"
-		class:bg-gray-300={habitType == 0}
+		class="py-1 px-3 rounded-[40px] hover:bg-primary-500 transition-[1s] cursor-pointer"
+		class:bg-primary-500={habitType == 0}
+		class:text-surface-50={habitType == 0}
 		on:click={activateP}
 		>Progressive
 	</button>
 	<button
-		class="py-1 px-3 rounded-[40px] hover:bg-gray-300 transition-[1s] cursor-pointer"
-		class:bg-gray-300={habitType == 1}
+		class="py-1 px-3 rounded-[40px] hover:bg-primary-500 transition-[1s] cursor-pointer"
+		class:bg-primary-500={habitType == 1}
+		class:text-surface-50={habitType == 1}
 		on:click={activateS}>Single-Step</button
 	>
 </div>

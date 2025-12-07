@@ -10,7 +10,10 @@
 	import { routes } from '$lib/routes';
 	export let data;
 
-	const { progressiveHabitList, singleStepHabitList } = data;
+	// const { progressiveHabitList, singleStepHabitList } = data;
+
+	const progressiveHabitList = [{ title: 'sadf', habitId: 'asdf', type: 'progressive' }];
+	const singleStepHabitList = [{ title: 'sadf', habitId: 'asdf', type: 'single' }];
 
 	let habitType: 0 | 1 = 0; //0 for progressive habit, 1 for single-step habit
 	let isNewBtnClicked = false;
@@ -37,7 +40,7 @@
 
 	<!-- motivation-card -->
 	<div
-		class="motivation-card w-full h-40 text-[20px] text-center flex justify-center items-center px-[30px] mt-[45px] mb-[30px] bg-gray-200 rounded-[10px]"
+		class="motivation-card w-full h-40 text-[20px] text-center flex justify-center items-center px-[30px] mt-[45px] mb-[30px] bg-primary-300-700 text-white opacity-80 rounded-[10px]"
 	>
 		“Let your days echo with the steps you choose to take.”
 	</div>
@@ -78,18 +81,18 @@
 
 	<!-- add new habit btn -->
 	<div
-		class="new-btn-ctn fixed bottom-[40px] right-[45px] flex flex-col gap-4 justify-between items-end"
+		class="new-btn-ctn fixed bottom-[40px] right-[45px] flex flex-col gap-4 justify-between items-end text-surface-50"
 	>
 		{#if isNewBtnClicked}
 			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
 				<button
-					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-xl"
+					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
 					on:click={() => goto(routes.habits.new('progressive'))}
 				>
 					Progressive
 				</button>
 				<button
-					class="text-sm bg-gray-200 rounded-[50px] py-2 px-4 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-xl"
+					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
 					on:click={() => goto(routes.habits.new('single'))}
 				>
 					Single-Step
@@ -97,7 +100,7 @@
 			</div>
 		{/if}
 		<button
-			class="text-3xl w-[64px] h-[64px] bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-300 cursor-pointer shadow-xl flex justify-center items-center"
+			class="text-3xl w-[64px] h-[64px] bg-primary-500 rounded-full hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl flex justify-center items-center"
 			on:click={() => {
 				isNewBtnClicked = !isNewBtnClicked;
 			}}

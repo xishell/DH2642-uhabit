@@ -34,7 +34,7 @@
 <div class="flex items-center gap-1 relative">
 	{#if !isEditing}
 		<select
-			class="border border-gray-300 w-18 h-9 rounded-md text-sm text-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+			class="border border-primary-400-600 w-18 h-9 rounded-md text-sm text-transparent focus:outline-none focus:ring-2 focus:ring-primary-500 text-center"
 			name="unit"
 			bind:value={unit}
 		>
@@ -44,14 +44,14 @@
 		</select>
 
 		<button
-			class="text-xs w-10 h-9 rounded hover:bg-gray-100 flex justify-center items-center"
+			class="text-xs w-10 h-9 rounded hover:bg-primary-300-700 flex justify-center items-center"
 			on:click={enableEdit}
 		>
 			<SquarePen strokeWidth={1.4} />
 		</button>
 	{:else}
 		<input
-			class="border border-gray-300 w-18 h-9 rounded-md text-sm pl-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+			class="border border-gray-300 w-18 h-9 rounded-md text-sm pl-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
 			name="unit"
 			bind:value={customUnit}
 			bind:this={inputEl}
@@ -60,7 +60,9 @@
 			on:keydown={(e) => e.key === 'Enter' && save()}
 		/>
 
-		<button class="text-xs w-10 h-9 rounded hover:bg-gray-100 flex justify-center items-center">
+		<button
+			class="text-xs w-10 h-9 rounded hover:bg-primary-300-700 flex justify-center items-center"
+		>
 			<SquareCheckBig strokeWidth={1.4} /></button
 		>
 	{/if}

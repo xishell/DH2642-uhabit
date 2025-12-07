@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { routes } from '$lib/routes';
+	import { Trash2 } from 'lucide-svelte';
 	export let form;
 
 	$: type = $page.url.searchParams.get('type');
@@ -32,21 +33,21 @@
 		{/if}
 		<!-- form body -->
 		<div
-			class="form-info grid grid-cols-1 gap-3 sm:gap-0 sm:grid-cols-2 sm:border sm:border-gray-300 sm:rounded-[10px] sm:py-[50px] sm:px-[50px]"
+			class="form-info grid grid-cols-1 gap-3 sm:gap-0 sm:grid-cols-2 sm:border sm:border-surface-500 sm:rounded-[10px] sm:py-[50px] sm:px-[50px]"
 		>
-			<div class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-gray-300 sm:border-r">
+			<div class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-surface-500 sm:border-r">
 				<span>Title</span>
 				<input
 					type="text"
-					class=" border border-gray-300 rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+					class=" border border-primary-400-600 rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
 					placeholder="e.g. drink water"
 					name="title"
 				/>
 
 				<span>Notes</span>
 				<textarea
-					class="w-full rounded-md border border-gray-300 px-2 py-2 text-sm
-         focus:outline-none focus:ring-2 focus:ring-blue-500"
+					class="w-full rounded-md border border-primary-400-600 px-2 py-2 text-sm
+         focus:outline-none focus:ring-2 focus:ring-primary-500"
 					rows="4"
 					placeholder="write down your notes for this habit..."
 					name="notes"
@@ -75,9 +76,9 @@
 						{#each frequencyArr as frequency}
 							<button
 								type="button"
-								class="btn capitalize preset-outlined-surface-500 border-primary-600 transition-colors duration-200 sm:text-sm"
+								class="btn capitalize preset-outlined-primary-700-300 border-primary-600 transition-colors duration-200 sm:text-sm"
 								class:border-transparent={!(selectedFrequency === frequency)}
-								class:text-primary-700={selectedFrequency === frequency}
+								class:text-primary-900-100={selectedFrequency === frequency}
 								on:click={() => (selectedFrequency = frequency)}
 							>
 								{frequency}
@@ -97,7 +98,7 @@
 					<div class="inputs-ctn flex gap-4">
 						<input
 							type="text"
-							class="border border-gray-300 w-18 h-9 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-right pr-2"
+							class="border border-primary-400-600 w-18 h-9 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-right pr-2"
 							placeholder="100"
 							name="targetAmount"
 						/>
@@ -119,14 +120,19 @@
 		<div class="form-btn flex justify-center gap-8">
 			<button
 				type="button"
-				class="text-sm w-24 bg-gray-100 rounded-[50px] py-3 px-6 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-sm"
+				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm"
 				on:click={() => goto(routes.habits.list)}
 			>
 				Cancel
 			</button>
 			<button
+				type="button"
+				class="flex justify-center items-center w-12 h-12 rounded-full border border-surface-600-400 hover:text-surface-contrast-800 hover:bg-error-700 hover:border-error-700 transition-colors duration-300 cursor-pointer"
+				><Trash2 strokeWidth={1.5} /></button
+			>
+			<button
 				type="submit"
-				class="text-md w-24 bg-gray-100 rounded-[50px] py-2 px-5 hover:bg-gray-300 transition-colors duration-300 cursor-pointer shadow-sm"
+				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm"
 			>
 				Create
 			</button>

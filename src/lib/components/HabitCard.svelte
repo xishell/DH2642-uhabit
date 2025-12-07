@@ -7,12 +7,12 @@
 </script>
 
 <div
-	class=" w-full h-[64px] rounded-[10px] bg-gray-100 flex justify-between items-center px-[20px]"
+	class=" w-full h-[64px] rounded-[10px] border-[1.6px] border-primary-400-600 flex justify-between items-center px-[20px]"
 >
 	<span>{title}</span>
 	<button
 		on:click={() => goto(routes.habits.edit(habitId, type))}
-		class="bg-gray-300 rounded-[10px] py-2 px-6 hover:bg-gray-200 transition-all duration-300 cursor-pointer"
+		class="bg-primary-300-700 text-surface-50 rounded-[10px] py-2 px-6 hover:bg-primary-400-600 transition-all duration-200 cursor-pointer"
 		>Edit</button
 	>
 </div>

@@ -22,6 +22,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const secret = event.platform?.env?.BETTER_AUTH_SECRET;
 	const url = event.platform?.env?.BETTER_AUTH_URL || event.url.origin;
 	const devModeEnv = event.platform?.env?.DEV_MODE === 'true';
+	const resendApiKey = event.platform?.env?.RESEND_API_KEY;
 
 	// Detect staging/preview environments
 	const isStagingOrPreview =
@@ -54,7 +55,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Create auth instance and store in locals
 	// The route handler at /api/auth/[...all] will use this
-	const auth = createAuth(db, secret, url, devMode);
+	const auth = createAuth(db, secret, url, devMode, resendApiKey);
 	event.locals.auth = auth;
 
 	// For non-auth routes, fetch session to populate locals.user

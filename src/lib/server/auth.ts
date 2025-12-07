@@ -2,10 +2,18 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { haveIBeenPwned } from 'better-auth/plugins';
 import { APIError } from 'better-auth/api';
+import { Resend } from 'resend';
 import { getDB } from './db';
 import * as schema from './db/schema';
+import { getVerificationEmailTemplate, getPasswordResetEmailTemplate } from './email-templates';
 
-export function createAuth(db: D1Database, secret: string, url: string, devMode = false) {
+export function createAuth(
+	db: D1Database,
+	secret: string,
+	url: string,
+	devMode = false,
+	resendApiKey?: string
+) {
 	// Detect if URL is a staging/preview environment (dev mode allowed)
 	// Preview: preview-123.uhabit.pages.dev
 	// Staging: staging.uhabit.pages.dev
@@ -63,18 +71,16 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 		],
 		emailAndPassword: {
 			enabled: true,
-			// In dev mode, skip email verification for easier testing
-			requireEmailVerification: false,
-			// In production enable this:
-			// requireEmailVerification: !isDev
+			// Enable email verification only in production
+			requireEmailVerification: !!resendApiKey && !isDev,
 
 			// Password requirements (enforced by Better Auth)
-			minPasswordLength: isDev ? 4 : 8,
+			minPasswordLength: isDev ? 1 : 8,
 			// Note: Additional password validation happens client-side
 			// via PasswordStrengthIndicator component
 
 			// Lower bcrypt cost for Cloudflare Workers (10ms CPU limit)
-			// Default is 10, but that exceeds Workers CPU limits
+			// Default is 10, that exceeds Workers CPU limits
 			password: {
 				hash: async (password: string) => {
 					const bcrypt = await import('bcryptjs');
@@ -84,7 +90,29 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 					const bcrypt = await import('bcryptjs');
 					return bcrypt.compare(data.password, data.hash);
 				}
-			}
+			},
+
+			// Send verification and password reset emails
+			...(resendApiKey && {
+				sendVerificationEmail: async ({ user, url }: { user: any; url: string }) => {
+					const resend = new Resend(resendApiKey);
+					await resend.emails.send({
+						from: 'UHabit <noreply@uhabit.xyz>',
+						to: user.email,
+						subject: 'Verify your email - UHabit',
+						html: getVerificationEmailTemplate(url, user.name)
+					});
+				},
+				sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
+					const resend = new Resend(resendApiKey);
+					await resend.emails.send({
+						from: 'UHabit <noreply@uhabit.xyz>',
+						to: user.email,
+						subject: 'Reset your password - UHabit',
+						html: getPasswordResetEmailTemplate(url, user.name)
+					});
+				}
+			})
 		},
 		session: {
 			// Extended session in dev mode for convenience

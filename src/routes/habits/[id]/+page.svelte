@@ -192,13 +192,14 @@
 				Cancel
 			</button>
 			<button
-				type="button"
+				type="submit"
 				class="flex justify-center items-center w-12 h-12 rounded-full border border-surface-600-400 hover:text-surface-contrast-800 hover:bg-error-700 hover:border-error-700 transition-colors duration-300 cursor-pointer"
 				formaction="?/delete"><Trash2 strokeWidth={1.5} /></button
 			>
 			<button
 				type="submit"
 				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm"
+				formaction="?/default"
 			>
 				Edit
 			</button>

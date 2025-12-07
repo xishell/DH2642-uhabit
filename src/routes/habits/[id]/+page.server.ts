@@ -1,23 +1,6 @@
-import type { Actions, PageServerLoad } from './$types';
-import type { Habit } from '$lib/types/habit';
+import type { Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { routes, type HabitType } from '$lib/routes';
-
-// GET habit
-export const load: PageServerLoad = async ({ fetch, params }) => {
-	const { id } = params;
-	const res = await fetch(`/api/habits/${id}`);
-
-	if (!res.ok) {
-		throw redirect(303, routes.habits.list);
-	}
-
-	const targetHabit: Habit = await res.json();
-
-	return {
-		targetHabit
-	};
-};
 
 // UPDATE habit
 export const actions: Actions = {

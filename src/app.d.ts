@@ -34,6 +34,7 @@ declare global {
 				BETTER_AUTH_URL?: string; // Optional: auto-detects from request if not set
 				DEV_MODE?: string; // Optional: set to "true" for dev mode
 				RATE_LIMIT?: KVNamespace; // Optional: KV namespace for rate limiting
+				QUOTES_CACHE?: KVNamespace; // Optional: KV namespace for quotes caching
 			};
 			context: {
 				waitUntil(promise: Promise<unknown>): void;

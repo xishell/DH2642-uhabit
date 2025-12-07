@@ -7,7 +7,6 @@ export const load: PageServerLoad = async ({ fetch }) => {
 	const habits = Array.isArray(data) ? (data as Habit[]) : [];
 
 	const progressiveHabitList = habits.filter((h: Habit) => h.measurement === 'numeric');
-
 	const singleStepHabitList = habits.filter((h: Habit) => h.measurement === 'boolean');
 
 	return {

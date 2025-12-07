@@ -19,6 +19,12 @@ migrations_dir = "drizzle"
 binding = "RATE_LIMIT"
 id = "e007eb2bd5f1461aa48027aa85328a01"
 
+# KV Namespace for quotes caching
+[[kv_namespaces]]
+binding = "QUOTES_CACHE"
+id = "2af61397263c4a3aa886234d4fb1e1cd"
+preview_id = "3efa594e3a38437f80337e9655ed707d"
+
 # Environment configuration
 # Note: Secrets like BETTER_AUTH_SECRET should be set via:
 #   npx wrangler secret put BETTER_AUTH_SECRET --env preview
@@ -37,6 +43,10 @@ migrations_dir = "drizzle"
 binding = "RATE_LIMIT"
 id = "c9e24aece36444eab3d8d708f8a90590"
 
+[[env.preview.kv_namespaces]]
+binding = "QUOTES_CACHE"
+id = "d25b20ff2d5c4523ba874e3799a9b89d"
+
 [env.preview.vars]
 DEV_MODE = "true"
 
@@ -52,6 +62,10 @@ migrations_dir = "drizzle"
 [[env.production.kv_namespaces]]
 binding = "RATE_LIMIT"
 id = "92c7011c659d4a01a759cab698729751"
+
+[[env.production.kv_namespaces]]
+binding = "QUOTES_CACHE"
+id = "61404831084147e1b7927aed84882e4b"
 
 [env.production.vars]
 DEV_MODE = "false"

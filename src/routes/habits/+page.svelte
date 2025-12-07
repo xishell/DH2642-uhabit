@@ -1,19 +1,27 @@
 <script lang="ts">
 	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import HabitCard from '$lib/components/HabitCard.svelte';
-	import Btn from '$lib/components/Btn.svelte';
 	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { routes } from '$lib/routes';
+	import { habitsStore } from '$lib/stores/habits';
+	import type { Habit } from '$lib/types/habit';
+
 	export let data;
 
-	const { progressiveHabitList, singleStepHabitList } = data;
+	// Initialize from SSR data
+	let progressiveHabitList: Habit[] = data.progressiveHabitList;
+	let singleStepHabitList: Habit[] = data.singleStepHabitList;
+	let habitsLoading = false;
+	let habitsError: string | null = null;
 
 	let habitType: 0 | 1 = 0; //0 for progressive habit, 1 for single-step habit
 	let isNewBtnClicked = false;
+	let quote = 'Let your days echo with the steps you choose to take.';
+	let author = '';
+	let isQuoteLoading = true;
 
 	// Read hash on mount to restore tab state
 	onMount(() => {
@@ -21,6 +29,43 @@
 		if (hash === '#single-step') {
 			habitType = 1;
 		}
+
+		// Initialize store with SSR data, then subscribe for future updates
+		habitsStore.init(data.progressiveHabitList, data.singleStepHabitList);
+
+		const unsubscribe = habitsStore.subscribe((state) => {
+			progressiveHabitList = state.progressive;
+			singleStepHabitList = state.single;
+			habitsLoading = state.loading;
+			habitsError = state.error;
+		});
+
+		// Fetch quote client-side so SSR isn't blocked
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 1200);
+
+		fetch('/api-external/quotes', { signal: controller.signal })
+			.then(
+				(res) => (res.ok ? res.json() : null) as Promise<{ quote?: string; author?: string } | null>
+			)
+			.then((data) => {
+				if (data?.quote) {
+					quote = data.quote;
+					author = data.author ?? '';
+				}
+			})
+			.catch(() => {
+				// Keep fallback quote on error/timeout
+			})
+			.finally(() => {
+				isQuoteLoading = false;
+				clearTimeout(timeout);
+			});
+
+		return () => {
+			controller.abort();
+			unsubscribe();
+		};
 	});
 
 	function handleHabitTypeChange(event: CustomEvent<0 | 1>) {
@@ -39,26 +84,44 @@
 	<div
 		class="motivation-card w-full h-40 text-[20px] text-center flex justify-center items-center px-[30px] mt-[45px] mb-[30px] bg-primary-300-700 text-white opacity-80 rounded-[10px]"
 	>
-		“Let your days echo with the steps you choose to take.”
+		{#if isQuoteLoading}
+			<div class="w-full max-w-[560px] space-y-3 animate-pulse">
+				<div class="h-5 w-4/5 mx-auto rounded-full bg-white/25"></div>
+				<div class="h-5 w-11/12 mx-auto rounded-full bg-white/15"></div>
+				<div class="h-4 w-1/3 mx-auto rounded-full bg-white/20"></div>
+			</div>
+		{:else}
+			<p class="leading-snug">
+				“{quote}”
+				{#if author}
+					<br />
+					<span class="text-sm opacity-80">— {author}</span>
+				{/if}
+			</p>
+		{/if}
 	</div>
 
 	<!-- ToggleBar -->
 	<ToggleBar {habitType} on:change={handleHabitTypeChange} />
 
 	<!-- Habit List -->
-	{#if habitType === 0}
-		<div class="habit-list w-full grid grid-cols-1 sm:grid-cols-2 justify-between gap-7 mt-6">
+	<div class="habit-list w-full grid grid-cols-1 sm:grid-cols-2 justify-between gap-7 mt-6">
+		{#if habitsLoading}
+			{#each Array(4) as _}
+				<div class="h-24 rounded-xl bg-surface-200 dark:bg-surface-700 animate-pulse"></div>
+			{/each}
+		{:else if habitsError}
+			<p class="col-span-full text-center text-sm text-red-600">{habitsError}</p>
+		{:else if habitType === 0}
 			{#each progressiveHabitList as habit}
 				<HabitCard title={habit.title} habitId={habit.id} type={'progressive'} />
 			{/each}
-		</div>
-	{:else}
-		<div class="habit-list w-full grid grid-cols-1 sm:grid-cols-2 justify-between gap-7 mt-6">
+		{:else}
 			{#each singleStepHabitList as habit}
 				<HabitCard title={habit.title} habitId={habit.id} type={'single'} />
 			{/each}
-		</div>
-	{/if}
+		{/if}
+	</div>
 
 	<!-- blur layer -->
 	{#if isNewBtnClicked}

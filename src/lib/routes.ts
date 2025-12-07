@@ -7,6 +7,9 @@ export type HabitType = 'progressive' | 'single';
 
 export const routes = {
 	login: '/login',
+	register: '/register',
+	forgotPassword: '/forgot-password',
+	resetPassword: '/reset-password',
 	overview: '/overview',
 
 	habits: {

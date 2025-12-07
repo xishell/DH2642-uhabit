@@ -40,6 +40,19 @@ export async function signOut() {
 	return result.data;
 }
 
+export async function forgetPassword(email: string) {
+	const result = await authClient.forgetPassword({
+		email,
+		redirectTo: '/reset-password'
+	});
+
+	if (result.error) {
+		throw new Error(result.error.message || 'Failed to send reset email');
+	}
+
+	return result.data;
+}
+
 export async function getSession() {
 	const result = await authClient.getSession();
 	return result.data;

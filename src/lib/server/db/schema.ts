@@ -78,44 +78,56 @@ export const verification = sqliteTable(
 );
 
 // Category table for organizing habits
-export const category = sqliteTable('category', {
-	id: text('id').primaryKey(),
-	userId: text('userId')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	name: text('name').notNull(),
-	color: text('color'),
-	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull()
-});
+export const category = sqliteTable(
+	'category',
+	{
+		id: text('id').primaryKey(),
+		userId: text('userId')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		color: text('color'),
+		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull()
+	},
+	(table) => ({
+		userIdx: index('category_user_id_idx').on(table.userId)
+	})
+);
 
 // Habit table for tracking user habits
-export const habit = sqliteTable('habit', {
-	id: text('id').primaryKey(),
-	userId: text('userId')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	title: text('title').notNull(),
-	notes: text('notes'),
-	color: text('color'),
-	// Frequency: 'daily', 'weekly', 'monthly', or custom interval
-	frequency: text('frequency').notNull().default('daily'),
-	// Measurement type: 'boolean' (single-step) or 'numeric' (progressive)
-	measurement: text('measurement').notNull().default('boolean'),
-	// Period for frequency - JSON array of selected days
-	// Weekly: [0,2,4] for Sunday, Tuesday, Thursday (0=Sunday, 6=Saturday)
-	// Monthly: [1,15,30] for 1st, 15th, and 30th of month
-	period: text('period'),
-	// Target amount for numeric habits (e.g., 5 for "5 cups of water")
-	targetAmount: integer('targetAmount'),
-	// Unit for numeric habits (e.g., "cups", "liters", "steps")
-	unit: text('unit'),
-	// Category for organizing habits
-	categoryId: text('categoryId').references(() => category.id, { onDelete: 'set null' }),
-	// Goal this habit contributes to (for future goal system)
-	goalId: text('goalId'), // Will reference goal table when implemented
-	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
-	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull()
-});
+export const habit = sqliteTable(
+	'habit',
+	{
+		id: text('id').primaryKey(),
+		userId: text('userId')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		notes: text('notes'),
+		color: text('color'),
+		// Frequency: 'daily', 'weekly', 'monthly', or custom interval
+		frequency: text('frequency').notNull().default('daily'),
+		// Measurement type: 'boolean' (single-step) or 'numeric' (progressive)
+		measurement: text('measurement').notNull().default('boolean'),
+		// Period for frequency - JSON array of selected days
+		// Weekly: [0,2,4] for Sunday, Tuesday, Thursday (0=Sunday, 6=Saturday)
+		// Monthly: [1,15,30] for 1st, 15th, and 30th of month
+		period: text('period'),
+		// Target amount for numeric habits (e.g., 5 for "5 cups of water")
+		targetAmount: integer('targetAmount'),
+		// Unit for numeric habits (e.g., "cups", "liters", "steps")
+		unit: text('unit'),
+		// Category for organizing habits
+		categoryId: text('categoryId').references(() => category.id, { onDelete: 'set null' }),
+		// Goal this habit contributes to (for future goal system)
+		goalId: text('goalId'), // Will reference goal table when implemented
+		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+		updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull()
+	},
+	(table) => ({
+		userFrequencyIdx: index('habit_user_frequency_idx').on(table.userId, table.frequency)
+	})
+);
 
 // Habit completions table for tracking when users complete habits
 export const habitCompletion = sqliteTable(

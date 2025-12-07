@@ -1,0 +1,1 @@
+CREATE INDEX `habit_user_frequency_idx` ON `habit` (`userId`,`frequency`);

@@ -1,0 +1,1 @@
+CREATE INDEX `category_user_id_idx` ON `category` (`userId`);

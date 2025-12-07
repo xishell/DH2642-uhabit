@@ -96,36 +96,36 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const habitId = crypto.randomUUID();
 	const now = new Date();
 
+	const habitData = {
+		id: habitId,
+		userId,
+		title: data.title,
+		notes: data.notes || null,
+		color: data.color || null,
+		frequency: data.frequency,
+		measurement: data.measurement,
+		period: serializedPeriod,
+		targetAmount: data.targetAmount || null,
+		unit: data.unit || null,
+		categoryId: data.categoryId || null,
+		goalId: data.goalId || null,
+		createdAt: now,
+		updatedAt: now
+	};
+
 	try {
-		await db.insert(habit).values({
-			id: habitId,
-			userId,
-			title: data.title,
-			notes: data.notes || null,
-			color: data.color || null,
-			frequency: data.frequency,
-			measurement: data.measurement,
-			period: serializedPeriod,
-			targetAmount: data.targetAmount || null,
-			unit: data.unit || null,
-			categoryId: data.categoryId || null,
-			goalId: data.goalId || null,
-			createdAt: now,
-			updatedAt: now
-		});
+		await db.insert(habit).values(habitData);
 	} catch (err) {
 		console.error('Insert error:', err);
 		console.error('Error details:', JSON.stringify(err, null, 2));
 		throw error(500, 'Failed to create habit: ' + (err as Error).message);
 	}
 
-	// Fetch the created habit
-	const newHabit = await db.select().from(habit).where(eq(habit.id, habitId)).limit(1);
-
+	// Return the created habit data without an extra SELECT query
 	return json(
 		{
-			...newHabit[0],
-			period: newHabit[0].period ? JSON.parse(newHabit[0].period) : null
+			...habitData,
+			period: data.period || null
 		},
 		{ status: 201 }
 	);

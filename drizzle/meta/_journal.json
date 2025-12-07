@@ -1,34 +1,48 @@
 {
-	"version": "7",
-	"dialect": "sqlite",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "6",
-			"when": 1764191685162,
-			"tag": "0000_dizzy_giant_girl",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "6",
-			"when": 1764251571170,
-			"tag": "0001_groovy_pandemic",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "6",
-			"when": 1764319805204,
-			"tag": "0002_redundant_union_jack",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "6",
-			"when": 1765098342009,
-			"tag": "0003_simple_deathbird",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1764191685162,
+      "tag": "0000_dizzy_giant_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1764251571170,
+      "tag": "0001_groovy_pandemic",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1764319805204,
+      "tag": "0002_redundant_union_jack",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1765098342009,
+      "tag": "0003_simple_deathbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1765124239891,
+      "tag": "0004_living_vance_astro",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1765124324054,
+      "tag": "0005_loving_garia",
+      "breakpoints": true
+    }
+  ]
 }

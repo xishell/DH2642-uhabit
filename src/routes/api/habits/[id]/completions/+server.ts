@@ -4,28 +4,15 @@ import { getDB } from '$lib/server/db';
 import { habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { startOfDay, endOfDay } from '$lib/utils/date';
+import { requireAuth, verifyHabitOwnership } from '$lib/server/api-helpers';
 
 // GET /api/habits/[id]/completions - Get completion history with optional date range
 export const GET: RequestHandler = async ({ params, url, locals, platform, setHeaders }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
 	// Verify habit exists and belongs to user
-	const habits = await db
-		.select()
-		.from(habit)
-		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)))
-		.limit(1);
-
-	if (habits.length === 0) {
-		throw error(404, 'Habit not found');
-	}
+	await verifyHabitOwnership(db, params.id, userId);
 
 	// Parse optional date range query parameters
 	const fromParam = url.searchParams.get('from');

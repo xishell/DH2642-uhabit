@@ -4,6 +4,7 @@ import { getDB } from '$lib/server/db';
 import { habit } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
+import { requireAuth, verifyHabitOwnership } from '$lib/server/api-helpers';
 
 // Validation schema for habit updates
 const updateHabitSchema = z.object({
@@ -24,27 +25,11 @@ const updateHabitSchema = z.object({
 
 // GET /api/habits/[id] - Get single habit by ID
 export const GET: RequestHandler = async ({ params, locals, platform, setHeaders }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
 	// Fetch habit - ensure it belongs to the current user
-	const habits = await db
-		.select()
-		.from(habit)
-		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)))
-		.limit(1);
-
-	if (habits.length === 0) {
-		throw error(404, 'Habit not found');
-	}
-
-	const [found] = habits;
+	const found = await verifyHabitOwnership(db, params.id, userId);
 
 	// Cache privately to reduce repeat DB hits for the same habit
 	setHeaders({
@@ -59,12 +44,7 @@ export const GET: RequestHandler = async ({ params, locals, platform, setHeaders
 
 // PATCH /api/habits/[id] - Update existing habit
 export const PATCH: RequestHandler = async ({ params, request, locals, platform }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
+	const userId = requireAuth(locals);
 
 	// Parse and validate request body
 	const body = await request.json();
@@ -81,17 +61,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 	const db = getDB(platform!.env.DB);
 
 	// Check if habit exists and belongs to user
-	const existingHabits = await db
-		.select()
-		.from(habit)
-		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)))
-		.limit(1);
-
-	if (existingHabits.length === 0) {
-		throw error(404, 'Habit not found');
-	}
-
-	const existingHabit = existingHabits[0];
+	const existingHabit = await verifyHabitOwnership(db, params.id, userId);
 	const effectiveMeasurement = data.measurement ?? existingHabit.measurement;
 	const effectiveTargetAmount = data.targetAmount ?? existingHabit.targetAmount;
 	const effectiveUnit = data.unit ?? existingHabit.unit;
@@ -138,25 +108,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 
 // DELETE /api/habits/[id] - Delete habit
 export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
 	// Check if habit exists and belongs to user
-	const existingHabits = await db
-		.select()
-		.from(habit)
-		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)))
-		.limit(1);
-
-	if (existingHabits.length === 0) {
-		throw error(404, 'Habit not found');
-	}
+	await verifyHabitOwnership(db, params.id, userId);
 
 	// Delete habit
 	await db.delete(habit).where(and(eq(habit.id, params.id), eq(habit.userId, userId)));

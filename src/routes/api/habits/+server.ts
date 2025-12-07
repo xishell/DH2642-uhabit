@@ -4,6 +4,7 @@ import { getDB } from '$lib/server/db';
 import { habit } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { requireAuth } from '$lib/server/api-helpers';
 
 // Validation schema for habit creation
 const createHabitSchema = z
@@ -38,12 +39,7 @@ const createHabitSchema = z
 
 // GET /api/habits - List all habits for authenticated user
 export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
+	const userId = requireAuth(locals);
 
 	const db = getDB(platform!.env.DB);
 
@@ -65,12 +61,7 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 
 // POST /api/habits - Create new habit
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
+	const userId = requireAuth(locals);
 
 	// Parse and validate request body
 	const body = await request.json();

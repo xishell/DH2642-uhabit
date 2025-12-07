@@ -5,6 +5,7 @@ import { habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 import { startOfDay, endOfDay } from '$lib/utils/date';
+import { requireAuth, verifyHabitOwnership } from '$lib/server/api-helpers';
 
 // Validation schema for adding progress
 const addProgressSchema = z.object({
@@ -16,27 +17,11 @@ const addProgressSchema = z.object({
 
 // POST /api/habits/[id]/progress - Add progress to a numeric habit
 export const POST: RequestHandler = async ({ params, request, locals, platform }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
 	// Verify habit exists and belongs to user
-	const habits = await db
-		.select()
-		.from(habit)
-		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)))
-		.limit(1);
-
-	if (habits.length === 0) {
-		throw error(404, 'Habit not found');
-	}
-
-	const targetHabit = habits[0];
+	const targetHabit = await verifyHabitOwnership(db, params.id, userId);
 
 	// Only allow progress on numeric habits
 	if (targetHabit.measurement !== 'numeric') {

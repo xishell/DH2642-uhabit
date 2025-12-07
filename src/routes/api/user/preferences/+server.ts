@@ -4,6 +4,7 @@ import { getDB } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { requireAuth } from '$lib/server/api-helpers';
 
 // Validation schema for user preferences
 const preferencesSchema = z.object({
@@ -20,9 +21,7 @@ const preferencesSchema = z.object({
 });
 
 export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
-	if (!locals.user) {
-		return error(401, 'Authentication required');
-	}
+	const userId = requireAuth(locals);
 
 	const db = platform?.env?.DB;
 	if (!db) {
@@ -39,7 +38,7 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 			preferences: user.preferences
 		})
 		.from(user)
-		.where(eq(user.id, locals.user.id));
+		.where(eq(user.id, userId));
 
 	if (!userData) {
 		return error(401, 'Authentication required');
@@ -68,9 +67,7 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 };
 
 export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
-	if (!locals.user) {
-		return error(401, 'Authentication required');
-	}
+	const userId = requireAuth(locals);
 
 	const db = platform?.env?.DB;
 	if (!db) {
@@ -113,7 +110,7 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		const [currentUser] = await drizzle
 			.select({ preferences: user.preferences })
 			.from(user)
-			.where(eq(user.id, locals.user.id));
+			.where(eq(user.id, userId));
 
 		let currentPrefs = {};
 		if (currentUser?.preferences) {
@@ -128,7 +125,7 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		updates.preferences = JSON.stringify(mergedPrefs);
 	}
 
-	await drizzle.update(user).set(updates).where(eq(user.id, locals.user.id));
+	await drizzle.update(user).set(updates).where(eq(user.id, userId));
 
 	const [updatedUser] = await drizzle
 		.select({
@@ -138,7 +135,7 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 			preferences: user.preferences
 		})
 		.from(user)
-		.where(eq(user.id, locals.user.id));
+		.where(eq(user.id, userId));
 
 	let preferences = {};
 	if (updatedUser.preferences) {

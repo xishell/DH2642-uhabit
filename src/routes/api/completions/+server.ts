@@ -4,15 +4,11 @@ import { getDB } from '$lib/server/db';
 import { habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { startOfDay, endOfDay, formatDate } from '$lib/utils/date';
+import { requireAuth } from '$lib/server/api-helpers';
 
 // GET /api/completions - Get all completions for user with optional date filter
 export const GET: RequestHandler = async ({ url, locals, platform, setHeaders }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
+	const userId = requireAuth(locals);
 
 	const db = getDB(platform!.env.DB);
 

@@ -5,6 +5,7 @@ import { habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 import { startOfDay, endOfDay } from '$lib/utils/date';
+import { requireAuth, verifyHabitOwnership } from '$lib/server/api-helpers';
 
 // Validation schema for completing a habit
 const completeHabitSchema = z.object({
@@ -21,27 +22,11 @@ const completeHabitSchema = z.object({
 
 // POST /api/habits/[id]/complete - Mark habit as complete
 export const POST: RequestHandler = async ({ params, request, locals, platform }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
 	// Verify habit exists and belongs to user
-	const habits = await db
-		.select()
-		.from(habit)
-		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)))
-		.limit(1);
-
-	if (habits.length === 0) {
-		throw error(404, 'Habit not found');
-	}
-
-	const targetHabit = habits[0];
+	const targetHabit = await verifyHabitOwnership(db, params.id, userId);
 
 	// Parse and validate request body
 	const body = await request.json().catch(() => ({}));

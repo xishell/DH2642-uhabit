@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import HabitCard from '$lib/components/HabitCard.svelte';
-	import { fade } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
@@ -100,50 +100,43 @@
 	}
 </script>
 
-<div class="planning-view flex flex-col items-center p-7 max-w-[800px] m-auto">
-	<!-- page title -->
-	<h3 class="text-2xl self-start">Plan UHabit</h3>
-
-	<!-- motivation-card -->
-	<div
-		class="motivation-card w-full h-40 text-[20px] text-center flex justify-center items-center px-[30px] mt-[45px] mb-[30px] bg-primary-300-700 text-white opacity-80 rounded-[10px]"
-	>
-		{#if isQuoteLoading}
-			<div class="w-full max-w-[560px] space-y-3 animate-pulse">
-				<div class="h-5 w-4/5 mx-auto rounded-full bg-white/25"></div>
-				<div class="h-5 w-11/12 mx-auto rounded-full bg-white/15"></div>
-				<div class="h-4 w-1/3 mx-auto rounded-full bg-white/20"></div>
-			</div>
-		{:else}
-			<p class="leading-snug">
-				“{quote}”
-				{#if author}
-					<br />
-					<span class="text-sm opacity-80">— {author}</span>
-				{/if}
-			</p>
-		{/if}
-	</div>
+<div class="max-w-3xl mx-auto px-6 py-8">
+	<!-- Quote -->
+	{#if !isQuoteLoading}
+		<p class="text-surface-500 text-sm italic mb-8 text-center">
+			"{quote}"{#if author}<span class="text-surface-400"> — {author}</span>{/if}
+		</p>
+	{/if}
 
 	<!-- ToggleBar -->
-	<ToggleBar {habitType} on:change={handleHabitTypeChange} />
+	<div class="flex justify-center mb-6">
+		<ToggleBar {habitType} on:change={handleHabitTypeChange} />
+	</div>
 
 	<!-- Habit List -->
-	<div class="habit-list w-full grid grid-cols-1 sm:grid-cols-2 justify-between gap-7 mt-6">
+	<div class="border border-surface-200-800 rounded-lg overflow-hidden shadow-md">
 		{#if habitsLoading}
 			{#each Array(4) as _}
-				<div class="h-24 rounded-xl bg-surface-200 dark:bg-surface-700 animate-pulse"></div>
+				<div class="h-14 border-b border-surface-200-800 animate-pulse bg-surface-100-900"></div>
 			{/each}
 		{:else if habitsError}
-			<p class="col-span-full text-center text-sm text-red-600">{habitsError}</p>
+			<p class="py-8 text-center text-sm text-surface-500">{habitsError}</p>
 		{:else if habitType === 0}
-			{#each progressiveHabitList as habit}
-				<HabitCard title={habit.title} habitId={habit.id} type={'progressive'} />
-			{/each}
+			{#if progressiveHabitList.length === 0}
+				<p class="py-8 text-center text-sm text-surface-500">No progressive habits yet</p>
+			{:else}
+				{#each progressiveHabitList as habit}
+					<HabitCard title={habit.title} habitId={habit.id} type={'progressive'} />
+				{/each}
+			{/if}
 		{:else}
-			{#each singleStepHabitList as habit}
-				<HabitCard title={habit.title} habitId={habit.id} type={'single'} />
-			{/each}
+			{#if singleStepHabitList.length === 0}
+				<p class="py-8 text-center text-sm text-surface-500">No single-step habits yet</p>
+			{:else}
+				{#each singleStepHabitList as habit}
+					<HabitCard title={habit.title} habitId={habit.id} type={'single'} />
+				{/each}
+			{/if}
 		{/if}
 	</div>
 
@@ -158,43 +151,40 @@
 			on:keydown={(e) => {
 				e.key === 'Enter' ? (isNewBtnClicked = !isNewBtnClicked) : null;
 			}}
-			class="fixed top-0 w-full h-screen bg-gray-900 opacity-30"
-			transition:fade={{ duration: 300 }}
+			class="fixed inset-0 bg-surface-950/20"
+			transition:fade={{ duration: 200 }}
 		></div>
 	{/if}
 
 	<!-- add new habit btn -->
-	<div
-		class="new-btn-ctn fixed bottom-[40px] right-[45px] flex flex-col gap-4 justify-between items-end text-surface-50"
-	>
+	<div class="fixed bottom-6 right-6 flex flex-col items-end gap-2">
 		{#if isNewBtnClicked}
-			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
-				<button
-					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
-					on:click={() => goto(routes.habits.new('progressive'))}
-				>
-					Progressive
-				</button>
-				<button
-					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
-					on:click={() => goto(routes.habits.new('single'))}
-				>
-					Single-Step
-				</button>
-			</div>
+			<button
+				class="px-4 py-2 text-sm bg-surface-800-100 text-surface-50-900 rounded-full hover:opacity-90 shadow-md hover:shadow-lg transition-all"
+				transition:fly={{ y: 10, duration: 150 }}
+				on:click={() => goto(routes.habits.new('progressive'))}
+			>
+				Progressive
+			</button>
+			<button
+				class="px-4 py-2 text-sm bg-surface-800-100 text-surface-50-900 rounded-full hover:opacity-90 shadow-md hover:shadow-lg transition-all"
+				transition:fly={{ y: 10, duration: 100 }}
+				on:click={() => goto(routes.habits.new('single'))}
+			>
+				Single-Step
+			</button>
 		{/if}
 		<button
-			class="text-3xl w-[64px] h-[64px] bg-primary-500 rounded-full hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl flex justify-center items-center"
+			class="size-11 rounded-full bg-surface-900-50 text-surface-50-900 flex items-center justify-center hover:opacity-80 hover:glow-primary shadow-lg hover:shadow-xl transition-all"
 			on:click={() => {
 				isNewBtnClicked = !isNewBtnClicked;
 			}}
-			><Plus
-				size={26}
-				strokeWidth={3}
-				class={`pl-[0.04rem] pt-[0.04rem] 
-          transition-transform duration-300 ease-in-out
-          ${isNewBtnClicked ? 'rotate-45' : 'rotate-0'}`}
-			/></button
 		>
+			<Plus
+				size={28}
+				strokeWidth={2}
+				class="transition-transform duration-200 {isNewBtnClicked ? 'rotate-45' : 'rotate-0'}"
+			/>
+		</button>
 	</div>
 </div>

@@ -69,7 +69,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="grid grid-cols-7 gap-[1px] select-none touch-none rounded-md overflow-clip"
+	class="grid grid-cols-7 gap-1.5 select-none touch-none"
 	on:mouseup={endDrag}
 	on:mouseleave={endDrag}
 	on:touchend={endDrag}
@@ -79,13 +79,11 @@
 	{#each days as day, i}
 		<div
 			data-day={day}
-			class="
-				 h-10 sm:h-8 flex items-center justify-center text-sm sm:text-[13px]
-				cursor-pointer transition-all duration-150 opacity-80
+			class="h-8 text-xs font-medium flex items-center justify-center rounded-full
+				cursor-pointer transition-all duration-200
 				{selected.has(day)
-				? 'bg-primary-500 text-primary-50  hover:bg-primary-400'
-				: 'bg-primary-50 text-primary-700  hover:bg-primary-100'}
-			"
+				? 'bg-surface-900-50 text-surface-50-900'
+				: 'border border-surface-300-600 text-surface-500 hover:border-surface-500'}"
 			on:mousedown={(e) => startDrag(day, e)}
 			on:touchstart={(e) => startDrag(day, e)}
 			on:mouseenter={() => dragOver(day)}
@@ -95,13 +93,3 @@
 	{/each}
 </div>
 <input type="hidden" name="period" value={monthdaySelected} />
-
-<style>
-	[data-day='28th'] {
-		border-bottom-right-radius: 6px;
-	}
-
-	[data-day='31st'] {
-		border-bottom-right-radius: 6px;
-	}
-</style>

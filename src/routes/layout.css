@@ -3,4 +3,74 @@
 @import '@skeletonlabs/skeleton-svelte';
 @import '@skeletonlabs/skeleton/themes/cerberus';
 
-@import '../midnight.css';
+@import '../auralite.css';
+
+/* Custom glow utilities */
+@layer utilities {
+	.glow-primary {
+		box-shadow: 0 0 20px -5px var(--color-primary-500);
+	}
+	.glow-primary-sm {
+		box-shadow: 0 0 12px -3px var(--color-primary-500);
+	}
+	.glow-primary-lg {
+		box-shadow: 0 0 30px -5px var(--color-primary-500);
+	}
+	.hover\:glow-primary:hover {
+		box-shadow: 0 0 20px -5px var(--color-primary-500);
+	}
+	.hover\:glow-primary-sm:hover {
+		box-shadow: 0 0 12px -3px var(--color-primary-500);
+	}
+	.focus\:glow-primary:focus {
+		box-shadow: 0 0 20px -5px var(--color-primary-500);
+	}
+	.text-glow {
+		text-shadow: 0 0 20px var(--color-primary-400);
+	}
+	.text-glow-sm {
+		text-shadow: 0 0 10px var(--color-primary-400);
+	}
+	.hover\:text-glow-sm:hover {
+		text-shadow: 0 0 10px var(--color-primary-400);
+	}
+	.hover\:text-glow:hover {
+		text-shadow: 0 0 20px var(--color-primary-400);
+	}
+
+	@keyframes border-glow-in {
+		0% {
+			transform: scaleX(0);
+			transform-origin: left;
+		}
+		100% {
+			transform: scaleX(1);
+			transform-origin: left;
+		}
+	}
+
+	@keyframes border-glow-out {
+		0% {
+			transform: scaleX(1);
+			transform-origin: right;
+		}
+		100% {
+			transform: scaleX(0);
+			transform-origin: right;
+		}
+	}
+
+	.border-glow {
+		box-shadow: 0 0 8px var(--color-primary-500);
+		transform: scaleX(0);
+		transform-origin: left;
+	}
+
+	.border-glow.glow-in {
+		animation: border-glow-in 0.4s ease-out forwards;
+	}
+
+	.border-glow.glow-out {
+		animation: border-glow-out 0.4s ease-out forwards;
+	}
+}

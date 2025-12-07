@@ -25,9 +25,9 @@
 	}
 </script>
 
-<div class="relative">
+<div class="relative flex-1">
 	<input
-		class="border border-surface-300-600 w-28 h-11 rounded-md text-base px-3 pr-8 bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+		class="w-full border-b border-surface-300-600 bg-transparent py-2 pr-6 text-sm focus:outline-none focus:border-surface-900-50 transition-colors"
 		name="unit"
 		bind:value={unit}
 		bind:this={inputEl}
@@ -37,17 +37,17 @@
 		on:focus={handleFocus}
 		on:blur={handleBlur}
 	/>
-	<span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▾</span>
+	<span class="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-surface-400 text-xs">▾</span>
 
 	{#if showOptions}
 		<ul
-			class="absolute z-10 top-full left-0 mt-1 w-full bg-surface-50-800 border border-surface-300-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+			class="absolute z-10 top-full left-0 mt-2 w-full bg-surface-50-950 border border-surface-200-800 rounded-lg shadow-lg max-h-48 overflow-y-auto"
 		>
 			{#each suggestions as suggestion}
 				<li>
 					<button
 						type="button"
-						class="w-full text-left px-3 py-2.5 text-base hover:bg-surface-200-700 active:bg-surface-300-600"
+						class="w-full text-left px-3 py-2 text-sm text-surface-600-300 hover:bg-surface-100-900 transition-colors duration-150"
 						on:mousedown|preventDefault={() => selectOption(suggestion)}
 					>
 						{suggestion}

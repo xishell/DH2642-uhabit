@@ -53,60 +53,97 @@
 </script>
 
 <form
-	class="space-y-6 max-w-md mx-auto p-6 bg-surface-100-800 rounded-xl"
+	class="max-w-sm mx-auto px-6 py-8 rounded-lg shadow-sm"
 	on:submit|preventDefault={handleSubmit}
 >
-	<h1 class="text-2xl font-semibold text-center">Login</h1>
+	<h1 class="text-xl font-semibold mb-1">Welcome back</h1>
+	<p class="text-sm text-surface-500 mb-8">Sign in to continue</p>
 
 	{#if errorMessage}
-		<div class="p-3 bg-error-100 text-error-700 rounded">
+		<div class="p-3 mb-6 border border-error-500 text-error-500 rounded-lg text-sm">
 			{errorMessage}
 		</div>
 	{/if}
 
-	<div class="flex flex-col space-y-1">
-		<label for="email" class="text-sm font-medium text-surface-700-200">Email</label>
-		<input
-			id="email"
-			type="email"
-			bind:value={email}
-			on:blur={validateEmail}
-			required
-			class="input px-4 py-2 border rounded-md bg-surface-50-900 focus:outline-none focus:ring-2
-                  {emailError
-				? 'border-error-500 focus:ring-error-500'
-				: 'border-surface-300-600 focus:ring-primary-500'}"
-		/>
-		{#if emailError}
-			<p class="text-sm text-error-600">{emailError}</p>
-		{/if}
-	</div>
+	<div class="space-y-6">
+		<label class="block relative">
+			<span class="text-sm text-surface-500 mb-1.5 block">Email</span>
+			<div class="relative">
+				<input
+					id="email"
+					type="email"
+					bind:value={email}
+					on:blur={(e) => {
+						validateEmail();
+						const glow = e.currentTarget.parentElement?.querySelector('.border-glow');
+						if (glow) {
+							glow.classList.remove('glow-in');
+							glow.classList.add('glow-out');
+						}
+					}}
+					required
+					placeholder="you@example.com"
+					class="w-full border-b bg-transparent py-2 text-sm focus:outline-none transition-colors relative z-10
+						{emailError ? 'border-error-500' : 'border-surface-300-600'}"
+					on:focus={(e) => {
+						const glow = e.currentTarget.parentElement?.querySelector('.border-glow');
+						if (glow) {
+							glow.classList.remove('glow-out');
+							glow.classList.add('glow-in');
+						}
+					}}
+				/>
+				<div class="border-glow absolute bottom-0 left-0 w-full h-[2px] bg-primary-500 z-20"></div>
+			</div>
+			{#if emailError}
+				<p class="text-xs text-error-500 mt-1">{emailError}</p>
+			{/if}
+		</label>
 
-	<div class="flex flex-col space-y-1">
-		<label for="password" class="text-sm font-medium text-surface-700-200">Password</label>
-		<input
-			id="password"
-			type="password"
-			bind:value={password}
-			required
-			class="input px-4 py-2 border border-surface-300-600 rounded-md
-                  bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
-		/>
+		<label class="block relative">
+			<span class="text-sm text-surface-500 mb-1.5 block">Password</span>
+			<div class="relative">
+				<input
+					id="password"
+					type="password"
+					bind:value={password}
+					required
+					placeholder="••••••••"
+					class="w-full border-b border-surface-300-600 bg-transparent py-2 text-sm focus:outline-none transition-colors relative z-10"
+					on:focus={(e) => {
+						const glow = e.currentTarget.parentElement?.querySelector('.border-glow');
+						if (glow) {
+							glow.classList.remove('glow-out');
+							glow.classList.add('glow-in');
+						}
+					}}
+					on:blur={(e) => {
+						const glow = e.currentTarget.parentElement?.querySelector('.border-glow');
+						if (glow) {
+							glow.classList.remove('glow-in');
+							glow.classList.add('glow-out');
+						}
+					}}
+				/>
+				<div class="border-glow absolute bottom-0 left-0 w-full h-[2px] bg-primary-500 z-20"></div>
+			</div>
+		</label>
 	</div>
 
 	<button
 		type="submit"
-		class="w-full py-3 px-6 bg-primary-200-800 text-primary-800-200 rounded-[50px] hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+		class="w-full mt-8 py-2.5 text-sm font-medium bg-surface-900-50 text-surface-50-900 rounded-lg disabled:opacity-50 hover:opacity-80 shadow-md hover:shadow-lg transition-all"
 		disabled={loading}
 	>
 		{#if loading}
-			Loading...
+			<span class="inline-block size-4 border-2 border-current/30 border-t-current rounded-full animate-spin mr-2"></span>
+			Signing in...
 		{:else}
-			Login
+			Sign in
 		{/if}
 	</button>
 
-	<p class="text-center text-sm text-surface-500 mt-4">
-		New here? <a href="/register" class="text-primary-600 hover:underline">Create an account</a>
+	<p class="text-center text-sm text-surface-500 mt-6">
+		New here? <a href="/register" class="text-surface-900-50 font-medium hover:opacity-70 transition-opacity">Create an account</a>
 	</p>
 </form>

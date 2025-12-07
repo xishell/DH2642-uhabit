@@ -6,13 +6,10 @@
 	export let type: string = '';
 </script>
 
-<div
-	class=" w-full h-[64px] rounded-[10px] border-[1.6px] border-primary-400-600 flex justify-between items-center px-[20px]"
+<button
+	on:click={() => goto(routes.habits.edit(habitId, type))}
+	class="w-full py-4 px-5 text-left border-b border-surface-200-800 hover:bg-surface-100-900 hover:glow-primary-sm hover:shadow-md transition-all duration-150 cursor-pointer flex justify-between items-center group"
 >
-	<span>{title}</span>
-	<button
-		on:click={() => goto(routes.habits.edit(habitId, type))}
-		class="bg-primary-500 text-surface-50 rounded-[10px] py-2 px-6 hover:bg-primary-400 transition-all duration-200 cursor-pointer"
-		>Edit</button
-	>
-</div>
+	<span class="text-surface-900-50">{title}</span>
+	<span class="text-xs text-surface-400 group-hover:text-surface-600-300 transition-colors">Edit</span>
+</button>

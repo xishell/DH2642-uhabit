@@ -22,6 +22,13 @@
 			"when": 1764319805204,
 			"tag": "0002_redundant_union_jack",
 			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "6",
+			"when": 1765098342009,
+			"tag": "0003_simple_deathbird",
+			"breakpoints": true
 		}
 	]
 }

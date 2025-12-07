@@ -12,7 +12,7 @@ const updateHabitSchema = z.object({
 	color: z.string().nullish(),
 	frequency: z.enum(['daily', 'weekly', 'monthly']).optional(),
 	measurement: z.enum(['boolean', 'numeric']).optional(),
-	period: z.string().nullish(),
+	period: z.array(z.number().int()).nullish(),
 	targetAmount: z.number().int().positive().nullish(),
 	unit: z.string().nullish(),
 	categoryId: z.string().uuid().nullish(),
@@ -41,7 +41,12 @@ export const GET: RequestHandler = async ({ params, locals, platform }) => {
 		throw error(404, 'Habit not found');
 	}
 
-	return json(habits[0]);
+	const [found] = habits;
+
+	return json({
+		...found,
+		period: found.period ? JSON.parse(found.period) : null
+	});
 };
 
 // PATCH /api/habits/[id] - Update existing habit
@@ -78,19 +83,49 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 		throw error(404, 'Habit not found');
 	}
 
+	const existingHabit = existingHabits[0];
+	const effectiveMeasurement = data.measurement ?? existingHabit.measurement;
+	const effectiveTargetAmount = data.targetAmount ?? existingHabit.targetAmount;
+	const effectiveUnit = data.unit ?? existingHabit.unit;
+
+	if (
+		effectiveMeasurement === 'numeric' &&
+		(effectiveTargetAmount == null || effectiveUnit == null || effectiveUnit.trim() === '')
+	) {
+		throw error(400, 'Numeric habits require both targetAmount and unit');
+	}
+
+	const serializedPeriod = data.period ? JSON.stringify(data.period) : null;
+
+	const updateData: Record<string, unknown> = { updatedAt: new Date() };
+	if (data.title !== undefined) updateData.title = data.title;
+	if (data.notes !== undefined) updateData.notes = data.notes;
+	if (data.color !== undefined) updateData.color = data.color;
+	if (data.frequency !== undefined) updateData.frequency = data.frequency;
+	if (data.measurement !== undefined) updateData.measurement = data.measurement;
+	if (data.period !== undefined) updateData.period = serializedPeriod;
+	if (data.targetAmount !== undefined) updateData.targetAmount = data.targetAmount;
+	if (data.unit !== undefined) updateData.unit = data.unit;
+	if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
+	if (data.goalId !== undefined) updateData.goalId = data.goalId;
+
 	// Update habit
 	await db
 		.update(habit)
 		.set({
-			...data,
-			updatedAt: new Date()
+			...updateData
 		})
 		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)));
 
 	// Fetch the updated habit
 	const updatedHabit = await db.select().from(habit).where(eq(habit.id, params.id)).limit(1);
 
-	return json(updatedHabit[0]);
+	const [found] = updatedHabit;
+
+	return json({
+		...found,
+		period: found.period ? JSON.parse(found.period) : null
+	});
 };
 
 // DELETE /api/habits/[id] - Delete habit

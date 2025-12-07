@@ -13,7 +13,7 @@ const createHabitSchema = z
 		color: z.string().nullish(),
 		frequency: z.enum(['daily', 'weekly', 'monthly']).default('daily'),
 		measurement: z.enum(['boolean', 'numeric']).default('boolean'),
-		period: z.string().nullish(),
+		period: z.array(z.number().int()).nullish(),
 		targetAmount: z.number().int().positive().nullish(),
 		unit: z.string().nullish(),
 		categoryId: z.string().uuid().nullish(),
@@ -23,7 +23,7 @@ const createHabitSchema = z
 		(data) => {
 			// For numeric habits, require targetAmount and unit
 			if (data.measurement === 'numeric') {
-				return data.targetAmount !== undefined && data.unit !== undefined;
+				return data.targetAmount != null && data.unit != null && data.unit.trim() !== '';
 			}
 			return true;
 		},
@@ -47,7 +47,12 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 	// Fetch all habits for the current user
 	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
 
-	return json(habits);
+	return json(
+		habits.map((h) => ({
+			...h,
+			period: h.period ? JSON.parse(h.period) : null
+		}))
+	);
 };
 
 // POST /api/habits - Create new habit
@@ -80,6 +85,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	const db = getDB(platform.env.DB);
 
+	const serializedPeriod = data.period ? JSON.stringify(data.period) : null;
+
 	// Create habit
 	const habitId = crypto.randomUUID();
 	const now = new Date();
@@ -93,7 +100,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			color: data.color || null,
 			frequency: data.frequency,
 			measurement: data.measurement,
-			period: data.period || null,
+			period: serializedPeriod,
 			targetAmount: data.targetAmount || null,
 			unit: data.unit || null,
 			categoryId: data.categoryId || null,
@@ -110,5 +117,11 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	// Fetch the created habit
 	const newHabit = await db.select().from(habit).where(eq(habit.id, habitId)).limit(1);
 
-	return json(newHabit[0], { status: 201 });
+	return json(
+		{
+			...newHabit[0],
+			period: newHabit[0].period ? JSON.parse(newHabit[0].period) : null
+		},
+		{ status: 201 }
+	);
 };

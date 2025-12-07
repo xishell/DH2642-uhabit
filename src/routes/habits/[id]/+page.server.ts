@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import type { Habit } from '$lib/types/habit';
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { routes, type HabitType } from '$lib/routes';
 
 // GET habit
@@ -9,9 +9,7 @@ export const load: PageServerLoad = async ({ fetch, params }) => {
 	const res = await fetch(`/api/habits/${id}`);
 
 	if (!res.ok) {
-		return {
-			targetHabit: null
-		};
+		throw redirect(303, routes.habits.list);
 	}
 
 	const targetHabit: Habit = await res.json();
@@ -36,17 +34,24 @@ export const actions: Actions = {
 			notes: data.get('notes') as string,
 			color: data.get('color') as string,
 			frequency: data.get('frequency') as string,
-			period: JSON.stringify(periodArray),
+			period: periodArray,
 			measurement: data.get('measurement') as string,
 			targetAmount: isNumeric ? Number(data.get('targetAmount')) : null,
 			unit: isNumeric ? data.get('unit') : null
 		};
 
-		await fetch(`/api/habits/${id}`, {
+		const res = await fetch(`/api/habits/${id}`, {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(habit)
 		});
+
+		if (!res.ok) {
+			const message = await res.text();
+			return fail(res.status, {
+				error: message || 'Failed to update habit'
+			});
+		}
 
 		// Redirect back to habits list with correct tab
 		throw redirect(303, routes.habits.listWithTab(type));

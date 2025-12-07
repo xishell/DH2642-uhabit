@@ -1,5 +1,5 @@
 import type { Actions } from './$types';
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { routes, type HabitType } from '$lib/routes';
 
 export const actions: Actions = {
@@ -15,7 +15,7 @@ export const actions: Actions = {
 			notes: data.get('notes') as string,
 			color: data.get('color') as string,
 			frequency: data.get('frequency') as string,
-			period: JSON.stringify(periodArray),
+			period: periodArray,
 			measurement: data.get('measurement') as string,
 			targetAmount: isNumeric ? Number(data.get('targetAmount')) : null,
 			unit: isNumeric ? data.get('unit') : null
@@ -26,6 +26,13 @@ export const actions: Actions = {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(habit)
 		});
+
+		if (!res.ok) {
+			const message = await res.text();
+			return fail(res.status, {
+				error: message || 'Failed to create habit'
+			});
+		}
 
 		// Redirect back to habits list with correct tab
 		throw redirect(303, routes.habits.listWithTab(type));

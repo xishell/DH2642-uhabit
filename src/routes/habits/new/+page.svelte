@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { routes } from '$lib/routes';
+	export let form;
 
 	$: type = $page.url.searchParams.get('type');
 
@@ -26,6 +27,9 @@
 <form method="POST">
 	<div class="add-habit-view w-full flex flex-col gap-12 p-7 max-w-[800px] m-auto">
 		<h1 class="hidden sm:block text-center text-xl">New Habit</h1>
+		{#if form?.error}
+			<p class="text-red-600 text-sm text-center">{form.error}</p>
+		{/if}
 		<!-- form body -->
 		<div
 			class="form-info grid grid-cols-1 gap-3 sm:gap-0 sm:grid-cols-2 sm:border sm:border-gray-300 sm:rounded-[10px] sm:py-[50px] sm:px-[50px]"

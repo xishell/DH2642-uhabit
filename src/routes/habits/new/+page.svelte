@@ -21,7 +21,6 @@
 
 	function selectColor(color: string) {
 		selectedColor = color;
-		console.log(color);
 	}
 </script>
 

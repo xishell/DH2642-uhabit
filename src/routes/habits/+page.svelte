@@ -10,10 +10,7 @@
 	import { routes } from '$lib/routes';
 	export let data;
 
-	// const { progressiveHabitList, singleStepHabitList } = data;
-
-	const progressiveHabitList = [{ title: 'sadf', habitId: 'asdf', type: 'progressive' }];
-	const singleStepHabitList = [{ title: 'sadf', habitId: 'asdf', type: 'single' }];
+	const { progressiveHabitList, singleStepHabitList } = data;
 
 	let habitType: 0 | 1 = 0; //0 for progressive habit, 1 for single-step habit
 	let isNewBtnClicked = false;

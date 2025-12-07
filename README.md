@@ -32,7 +32,7 @@ Prerequisites: [Bun](https://bun.sh/), [Wrangler](https://developers.cloudflare.
    - Frontend-only: `bun dev` (fastest; no D1/auth)
    - Full Cloudflare runtime: `bun run dev:cf` (Workers + D1 + auth)
 
-More detail: `docs/cloudflare-setup.md` and `docs/migrations.md`.
+More details: [cloudflare-setup.md](docs/cloudflare-setup.md) and [migrations.md](docs/migrations.md).
 
 ## Common Commands
 

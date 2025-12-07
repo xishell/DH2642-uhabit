@@ -152,7 +152,7 @@ Always test migrations on local database before production:
 bun run db:migrate
 
 # If successful, apply to production
-bun run db:migrate:remote
+bun run db:migrate:production
 ```
 
 ### 4. Keep Migrations Atomic

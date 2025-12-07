@@ -5,14 +5,14 @@ This project uses [Vitest](https://vitest.dev/) for testing.
 ## Running Tests
 
 ```bash
-# Run all tests
-bun test
+# Run all tests once (CI mode)
+bun run test
 
 # Run tests in watch mode
-bun test:unit
+bun run test:unit
 
 # Run tests with coverage
-bun test -- --coverage
+bun run test -- --coverage
 ```
 
 ## Test Structure

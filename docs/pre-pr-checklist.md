@@ -61,10 +61,10 @@ This runs SvelteKit sync and svelte-check to verify:
 #### Unit Tests
 
 ```bash
-bun test
+bun run test
 ```
 
-This runs all unit tests once. All relevant tests must pass.
+Runs all tests once (CI mode). All relevant tests must pass.
 
 #### Watch Mode (Development)
 

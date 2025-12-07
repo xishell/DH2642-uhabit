@@ -29,18 +29,11 @@ The Habit API provides endpoints for creating, reading, updating, and deleting u
 
 ## Authentication
 
-> **Note**: Authentication is currently disabled for testing purposes. All requests use a mock user ID (`test-user-123`).
->
-> **TODO**: Re-enable authentication after login UI is implemented. See issue #45.
+All endpoints require a valid Better Auth session cookie. Unauthenticated requests return `401 Unauthorized`.
 
-When authentication is enabled, all endpoints require a valid session cookie. Unauthenticated requests will return `401 Unauthorized`.
-
-### How Authentication Works
-
-1. User authenticates via `/api/auth/sign-in`
-2. Better Auth sets session cookie
-3. Server hooks populate `event.locals.user`
-4. API endpoints check `locals.user` for authorization
+- The API is only available in the Cloudflare runtime (`bun run dev:cf` or deployed); `bun dev` does not provide the DB/auth bindings.
+- Auth is wired through the global `hooks.server.ts` using Better Auth’s `svelteKitHandler`, which populates `locals.user` and `locals.session`.
+- API handlers assert `locals.user` and scope queries to that user.
 
 ## Data Models
 
@@ -55,7 +48,7 @@ When authentication is enabled, all endpoints require a valid session cookie. Un
 	color: string | null; // Optional hex color code
 	frequency: 'daily' | 'weekly' | 'monthly'; // How often
 	measurement: 'boolean' | 'numeric'; // Tracking type
-	period: string | null; // JSON array of selected days (weekly: [0-6], monthly: [1-31])
+	period: number[] | null; // Selected days (weekly: [0-6], monthly: [1-31])
 	targetAmount: number | null; // Target for numeric habits (e.g., 5 cups)
 	unit: string | null; // Unit for numeric habits (e.g., "cups", "liters")
 	categoryId: string | null; // Category ID for organization
@@ -67,18 +60,18 @@ When authentication is enabled, all endpoints require a valid session cookie. Un
 
 ### Field Descriptions
 
-| Field          | Type   | Required | Description                                                                        |
-| -------------- | ------ | -------- | ---------------------------------------------------------------------------------- |
-| `title`        | string | Yes      | The name of the habit (1-255 chars)                                                |
-| `notes`        | string | No       | Additional notes or description                                                    |
-| `color`        | string | No       | Hex color code for UI display (e.g., `#4CAF50`)                                    |
-| `frequency`    | enum   | Yes      | `daily`, `weekly`, or `monthly`                                                    |
-| `measurement`  | enum   | Yes      | `boolean` (single-step) or `numeric` (progressive)                                 |
-| `period`       | string | No       | JSON array of days - weekly: `[0,2,4]` (Sun,Tue,Thu), monthly: `[1,15]` (1st,15th) |
-| `targetAmount` | number | No       | Target for numeric habits (e.g., `5` for 5 cups)                                   |
-| `unit`         | string | No       | Unit for numeric habits (e.g., `"cups"`, `"liters"`, `"steps"`)                    |
-| `categoryId`   | string | No       | Category ID for organizing habits                                                  |
-| `goalId`       | string | No       | Goal ID for linking habit to a goal (future feature)                               |
+| Field          | Type   | Required | Description                                                                   |
+| -------------- | ------ | -------- | ----------------------------------------------------------------------------- |
+| `title`        | string | Yes      | The name of the habit (1-255 chars)                                           |
+| `notes`        | string | No       | Additional notes or description                                               |
+| `color`        | string | No       | Hex color code for UI display (e.g., `#4CAF50`)                               |
+| `frequency`    | enum   | Yes      | `daily`, `weekly`, or `monthly`                                               |
+| `measurement`  | enum   | Yes      | `boolean` (single-step) or `numeric` (progressive)                            |
+| `period`       | array  | No       | Array of days - weekly: `[0,2,4]` (Sun,Tue,Thu), monthly: `[1,15]` (1st,15th) |
+| `targetAmount` | number | No       | Target for numeric habits (e.g., `5` for 5 cups)                              |
+| `unit`         | string | No       | Unit for numeric habits (e.g., `"cups"`, `"liters"`, `"steps"`)               |
+| `categoryId`   | string | No       | Category ID for organizing habits                                             |
+| `goalId`       | string | No       | Goal ID for linking habit to a goal (future feature)                          |
 
 ## Endpoints
 
@@ -88,7 +81,7 @@ Get all habits for the authenticated user.
 
 **Endpoint**: `GET /api/habits`
 
-**Authentication**: Required (when enabled)
+**Authentication**: Required
 
 **Response**: `200 OK`
 
@@ -96,7 +89,7 @@ Get all habits for the authenticated user.
 [
 	{
 		"id": "a9ed65a7-1def-4191-8718-2dd8e8acfaf3",
-		"userId": "test-user-123",
+		"userId": "user-123",
 		"title": "Morning Exercise",
 		"notes": "30 minutes of cardio",
 		"color": "#4CAF50",
@@ -127,7 +120,7 @@ Create a new habit for the authenticated user.
 
 **Endpoint**: `POST /api/habits`
 
-**Authentication**: Required (when enabled)
+**Authentication**: Required
 
 **Request Body**:
 
@@ -152,9 +145,8 @@ Create a new habit for the authenticated user.
 - `color`: Optional string
 - `frequency`: Required, must be `daily`, `weekly`, or `monthly` (default: `daily`)
 - `measurement`: Required, must be `boolean` or `numeric` (default: `boolean`)
-- `period`: Optional string (JSON array of days)
-- `targetAmount`: Optional number (required for numeric habits)
-- `unit`: Optional string (required for numeric habits)
+- `period`: Optional array of days (weekly: `[0-6]`, monthly: `[1-31]`)
+- `targetAmount` and `unit`: Required together when `measurement` is `numeric`
 - `categoryId`: Optional string (must reference existing category)
 - `goalId`: Optional string (for future goal feature)
 
@@ -163,7 +155,7 @@ Create a new habit for the authenticated user.
 ```json
 {
 	"id": "a9ed65a7-1def-4191-8718-2dd8e8acfaf3",
-	"userId": "test-user-123",
+	"userId": "user-123",
 	"title": "Drink Water",
 	"notes": "Stay hydrated throughout the day",
 	"color": "#2196F3",
@@ -190,7 +182,7 @@ curl -X POST http://localhost:8788/api/habits \
     "color": "#4CAF50",
     "frequency": "weekly",
     "measurement": "boolean",
-    "period": "[1,3,5]"
+    "period": [1,3,5]
   }'
 ```
 
@@ -238,7 +230,7 @@ Get a single habit by ID. The habit must belong to the authenticated user.
 
 **Endpoint**: `GET /api/habits/{id}`
 
-**Authentication**: Required (when enabled)
+**Authentication**: Required
 
 **URL Parameters**:
 
@@ -249,7 +241,7 @@ Get a single habit by ID. The habit must belong to the authenticated user.
 ```json
 {
 	"id": "a9ed65a7-1def-4191-8718-2dd8e8acfaf3",
-	"userId": "test-user-123",
+	"userId": "user-123",
 	"title": "Drink Water",
 	"notes": "Stay hydrated throughout the day",
 	"color": "#2196F3",
@@ -279,7 +271,7 @@ Update an existing habit. The habit must belong to the authenticated user.
 
 **Endpoint**: `PATCH /api/habits/{id}`
 
-**Authentication**: Required (when enabled)
+**Authentication**: Required
 
 **URL Parameters**:
 
@@ -307,7 +299,7 @@ Update an existing habit. The habit must belong to the authenticated user.
 ```json
 {
 	"id": "a9ed65a7-1def-4191-8718-2dd8e8acfaf3",
-	"userId": "test-user-123",
+	"userId": "user-123",
 	"title": "Drink More Water",
 	"notes": "Increased daily water intake",
 	"color": "#2196F3",
@@ -358,7 +350,7 @@ Delete a habit. The habit must belong to the authenticated user.
 
 **Endpoint**: `DELETE /api/habits/{id}`
 
-**Authentication**: Required (when enabled)
+**Authentication**: Required
 
 **URL Parameters**:
 

@@ -148,7 +148,7 @@
 										type="button"
 										class="btn capitalize preset-outlined-primary-700-300 border-primary-600 transition-colors duration-200 sm:text-sm"
 										class:border-transparent={!(selectedFrequency === frequency)}
-										class:text-primary-700={selectedFrequency === frequency}
+										class:text-primary-900-100={selectedFrequency === frequency}
 										on:click={() => (selectedFrequency = frequency)}
 									>
 										{frequency}
@@ -194,7 +194,7 @@
 			<button
 				type="button"
 				class="flex justify-center items-center w-12 h-12 rounded-full border border-surface-600-400 hover:text-surface-contrast-800 hover:bg-error-700 hover:border-error-700 transition-colors duration-300 cursor-pointer"
-				><Trash2 strokeWidth={1.5} /></button
+				formaction="?/delete"><Trash2 strokeWidth={1.5} /></button
 			>
 			<button
 				type="submit"

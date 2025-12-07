@@ -9,12 +9,12 @@
 	import { onMount } from 'svelte';
 	import type { Habit } from '$lib/types/habit';
 
-	export let data: { targetHabit?: Habit } = {};
+	export let data: { targetHabit?: Habit; loadError?: string } = {};
 	export let form;
 
 	let targetHabit: Habit | null = data?.targetHabit ?? null;
-	let isLoading = !targetHabit;
-	let loadError: string | null = null;
+	let loadError: string | null = data?.loadError ?? null;
+	let isLoading = !targetHabit && !loadError;
 	$: id = $page.params.id;
 	$: type = $page.url.searchParams.get('type');
 
@@ -33,8 +33,8 @@
 	let unit: string | null = targetHabit?.unit ?? null;
 
 	onMount(() => {
-		// If no SSR data, fetch client-side
-		if (targetHabit) {
+		// If SSR provided data or error, skip client fetch
+		if (targetHabit || loadError) {
 			isLoading = false;
 			return;
 		}

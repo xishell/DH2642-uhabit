@@ -36,17 +36,17 @@ More detail: `docs/cloudflare-setup.md` and `docs/migrations.md`.
 
 ## Common Commands
 
-| Command                              | Purpose                                      |
-| ------------------------------------ | -------------------------------------------- | ----------------------- |
-| `bun run dev` / `bun run dev:cf`     | Standard vs Cloudflare dev servers           |
-| `bun run check`                      | SvelteKit sync + type check                  |
-| `bun run lint` / `bun run format`    | Prettier check / fix                         |
-| `bun run test` / `bun run test:unit` | Vitest (single run / watch)                  |
-| `bun run build`                      | Production build                             |
-| `bun run db:generate`                | Create Drizzle migration from schema changes |
-| `bun run db:migrate[:staging         | :production]`                                | Apply migrations        |
-| `bun run db:status[:staging          | :production]`                                | List applied migrations |
-| `bun run db:studio`                  | Open Drizzle Studio                          |
+| Command                                       | Purpose                                      |
+| --------------------------------------------- | -------------------------------------------- |
+| `bun run dev` / `bun run dev:cf`              | Standard vs Cloudflare dev servers           |
+| `bun run check`                               | SvelteKit sync + type check                  |
+| `bun run lint` / `bun run format`             | Prettier check / fix                         |
+| `bun run test` / `bun run test:unit`          | Vitest (single run / watch)                  |
+| `bun run build`                               | Production build                             |
+| `bun run db:generate`                         | Create Drizzle migration from schema changes |
+| `bun run db:migrate[:staging \| :production]` | Apply migrations                             |
+| `bun run db:status[:staging \| :production]`  | List applied migrations                      |
+| `bun run db:studio`                           | Open Drizzle Studio                          |
 
 ## Testing
 

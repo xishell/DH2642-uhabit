@@ -53,7 +53,7 @@
 </script>
 
 <form
-	class="space-y-6 max-w-md mx-auto p-6 bg-surface-100 dark:bg-surface-800 rounded-xl shadow-md"
+	class="space-y-6 max-w-md mx-auto p-6 bg-surface-100-800 rounded-xl"
 	on:submit|preventDefault={handleSubmit}
 >
 	<h1 class="text-2xl font-semibold text-center">Login</h1>
@@ -65,19 +65,17 @@
 	{/if}
 
 	<div class="flex flex-col space-y-1">
-		<label for="email" class="text-sm font-medium text-surface-700 dark:text-surface-200"
-			>Email</label
-		>
+		<label for="email" class="text-sm font-medium text-surface-700-200">Email</label>
 		<input
 			id="email"
 			type="email"
 			bind:value={email}
 			on:blur={validateEmail}
 			required
-			class="input px-4 py-2 border rounded-md bg-surface-50 dark:bg-surface-900 focus:outline-none focus:ring-2
+			class="input px-4 py-2 border rounded-md bg-surface-50-900 focus:outline-none focus:ring-2
                   {emailError
 				? 'border-error-500 focus:ring-error-500'
-				: 'border-surface-300 dark:border-surface-600 focus:ring-primary-500'}"
+				: 'border-surface-300-600 focus:ring-primary-500'}"
 		/>
 		{#if emailError}
 			<p class="text-sm text-error-600">{emailError}</p>
@@ -85,22 +83,20 @@
 	</div>
 
 	<div class="flex flex-col space-y-1">
-		<label for="password" class="text-sm font-medium text-surface-700 dark:text-surface-200"
-			>Password</label
-		>
+		<label for="password" class="text-sm font-medium text-surface-700-200">Password</label>
 		<input
 			id="password"
 			type="password"
 			bind:value={password}
 			required
-			class="input px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-md
-                  bg-surface-50 dark:bg-surface-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+			class="input px-4 py-2 border border-surface-300-600 rounded-md
+                  bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
 		/>
 	</div>
 
 	<button
 		type="submit"
-		class="btn variant-filled w-full py-2 px-4 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+		class="w-full py-3 px-6 bg-primary-200-800 text-primary-800-200 rounded-[50px] hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 		disabled={loading}
 	>
 		{#if loading}

@@ -38,7 +38,7 @@
 				<span>Title <span class="text-red-500">*</span></span>
 				<input
 					type="text"
-					class="border border-primary-400-600 rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+					class="border border-surface-300-600 rounded-md px-2 py-2 text-sm bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
 					placeholder="e.g. drink water"
 					name="title"
 					required
@@ -46,7 +46,7 @@
 
 				<span>Notes</span>
 				<textarea
-					class="w-full rounded-md border border-primary-400-600 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+					class="w-full rounded-md border border-surface-300-600 px-2 py-2 text-sm bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
 					rows="4"
 					placeholder="write down your notes for this habit..."
 					name="notes"
@@ -97,7 +97,7 @@
 					<div class="inputs-ctn flex gap-4">
 						<input
 							type="number"
-							class="border border-primary-400-600 w-28 h-11 rounded-md text-base px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
+							class="border border-surface-300-600 w-28 h-11 rounded-md text-base px-3 bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
 							placeholder="100"
 							name="targetAmount"
 							required

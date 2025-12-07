@@ -82,23 +82,23 @@
 				{#if isLoading}
 					<!-- Skeletons -->
 					<div
-						class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-surface-500 sm:border-r"
+						class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-surface-500 sm:border-r animate-pulse"
 					>
-						<div class="h-5 w-1/2 bg-gray-200 rounded animate-pulse"></div>
-						<div class="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
-						<div class="h-5 w-1/3 bg-gray-200 rounded animate-pulse"></div>
-						<div class="h-24 w-full bg-gray-200 rounded animate-pulse"></div>
-						<div class="h-5 w-1/4 bg-gray-200 rounded animate-pulse"></div>
-						<div class="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+						<div class="h-5 w-1/2 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
+						<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-[12px]"></div>
+						<div class="h-5 w-1/3 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
+						<div class="h-24 w-full bg-surface-200 dark:bg-surface-700 rounded-[12px]"></div>
+						<div class="h-5 w-1/4 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
+						<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-[12px]"></div>
 					</div>
-					<div class="additional-info flex flex-col gap-3 sm:pl-[40px]">
-						<div class="h-5 w-1/3 bg-gray-200 rounded animate-pulse"></div>
+					<div class="additional-info flex flex-col gap-3 sm:pl-[40px] animate-pulse">
+						<div class="h-5 w-1/3 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
 						<div class="space-y-2">
-							<div class="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
-							<div class="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+							<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-[12px]"></div>
+							<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-[12px]"></div>
 						</div>
-						<div class="h-5 w-1/4 bg-gray-200 rounded animate-pulse"></div>
-						<div class="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+						<div class="h-5 w-1/4 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
+						<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-[12px]"></div>
 					</div>
 				{:else if targetHabit}
 					<div

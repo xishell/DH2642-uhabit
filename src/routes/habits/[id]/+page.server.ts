@@ -30,20 +30,16 @@ export const actions: Actions = {
 		const raw = data.get('period') as string;
 		const periodArray = raw ? raw.split(',').map(Number) : [];
 		const isNumeric = data.get('measurement') === 'numeric';
-		const habit: Record<string, unknown> = {
+		const habit = {
 			title: data.get('title') as string,
 			notes: data.get('notes') as string,
 			color: data.get('color') as string,
 			frequency: data.get('frequency') as string,
 			period: periodArray,
-			measurement: data.get('measurement') as string
+			measurement: data.get('measurement') as string,
+			targetAmount: isNumeric ? Number(data.get('targetAmount')) : null,
+			unit: isNumeric ? data.get('unit') : null
 		};
-
-		// Only include numeric fields when needed to avoid touching DB columns unnecessarily
-		if (isNumeric) {
-			habit.targetAmount = Number(data.get('targetAmount'));
-			habit.unit = data.get('unit');
-		}
 
 		const res = await fetch(`/api/habits/${id}`, {
 			method: 'PATCH',

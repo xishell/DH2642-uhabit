@@ -50,15 +50,15 @@
 			<SquarePen strokeWidth={1.4} />
 		</button>
 	{:else}
-			<input
-				class="border border-gray-300 w-18 h-9 rounded-md text-sm pl-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-				name="unit"
-				bind:value={customUnit}
-				bind:this={inputEl}
-				on:blur={save}
-				on:focus={hideUnitIndicator}
-				on:keydown={(e) => e.key === 'Enter' && save()}
-			/>
+		<input
+			class="border border-gray-300 w-18 h-9 rounded-md text-sm pl-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+			name="unit"
+			bind:value={customUnit}
+			bind:this={inputEl}
+			on:blur={save}
+			on:focus={hideUnitIndicator}
+			on:keydown={(e) => e.key === 'Enter' && save()}
+		/>
 
 		<button class="text-xs w-10 h-9 rounded hover:bg-gray-100 flex justify-center items-center">
 			<SquareCheckBig strokeWidth={1.4} /></button

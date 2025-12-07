@@ -1,8 +1,8 @@
 # uhabit
 
-A habit tracking application built with SvelteKit.
+Habit tracking app built with SvelteKit and Cloudflare Workers/D1, featuring Better Auth, Drizzle ORM, and Vitest coverage.
 
-## Group Members
+## Team
 
 | Name              | Email           | ID     |
 | ----------------- | --------------- | ------ |
@@ -10,98 +10,67 @@ A habit tracking application built with SvelteKit.
 | Geoanna Dahore    | dahore@kth.se   | 187167 |
 | Jintong Jiang     | jintongj@kth.se | 200160 |
 
-## Tech Stack
+## Features
 
-### Frontend
+- Habit overview, planning, and statistics pages built with Svelte 5, Tailwind CSS 4, and Skeleton UI
+- Auth via Better Auth running in the Cloudflare Workers runtime
+- Cloudflare D1 + Drizzle ORM with migration tooling and Drizzle Studio
+- API endpoints validated with Zod and covered by Vitest tests
+- CI-friendly scripts for formatting, type checking, and builds
 
-- **[Svelte 5](https://svelte.dev/)** - Modern reactive UI framework
-- **[SvelteKit 2](https://kit.svelte.dev/)** - Full-stack Svelte framework with routing and SSR
-- **[Tailwind CSS 4](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[Skeleton UI](https://www.skeleton.dev/)** - Svelte component library
+## Quick Start
 
-### Backend & Database
+Prerequisites: [Bun](https://bun.sh/), [Wrangler](https://developers.cloudflare.com/workers/wrangler/), and a Cloudflare account for D1/auth work.
 
-- **[Drizzle ORM](https://orm.drizzle.team/)** - TypeScript ORM for SQL databases
-- **[libSQL](https://github.com/tursodatabase/libsql)** - SQLite-compatible database client
-- **[Cloudflare D1](https://developers.cloudflare.com/d1/)** - Serverless SQLite database
-- **[Better Auth](https://www.better-auth.com/)** - Type-safe authentication library
+1. Install deps: `bun install`
+2. Environment files:
+   - `cp .env.example .env` and set `DATABASE_URL` to your local D1 SQLite path (see `.wrangler/state/...`).
+   - `cp .dev.vars.example .dev.vars` and set `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`.
+   - `cp wrangler.local.toml.example wrangler.local.toml` and add your `database_id` from `bunx wrangler d1 create uhabit-db-local`.
+3. Run migrations: `bun run db:migrate` (or `:staging` / `:production` for remotes).
+4. Start dev server:
+   - Frontend-only: `bun dev` (fastest; no D1/auth)
+   - Full Cloudflare runtime: `bun run dev:cf` (Workers + D1 + auth)
 
-### Development Tools
+More detail: `docs/cloudflare-setup.md` and `docs/migrations.md`.
 
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
-- **[Vite](https://vitejs.dev/)** - Fast build tool and dev server
-- **[Vitest](https://vitest.dev/)** - Unit testing framework
-- **[Prettier](https://prettier.io/)** - Code formatter
+## Scripts You’ll Use
 
-### Deployment
+| Command                              | Purpose                                      |
+| ------------------------------------ | -------------------------------------------- | ----------------------- |
+| `bun run dev` / `bun run dev:cf`     | Standard vs Cloudflare dev servers           |
+| `bun run check`                      | SvelteKit sync + type check                  |
+| `bun run lint` / `bun run format`    | Prettier check / fix                         |
+| `bun run test` / `bun run test:unit` | Vitest (single run / watch)                  |
+| `bun run build`                      | Production build                             |
+| `bun run db:generate`                | Create Drizzle migration from schema changes |
+| `bun run db:migrate[:staging         | :production]`                                | Apply migrations        |
+| `bun run db:status[:staging          | :production]`                                | List applied migrations |
+| `bun run db:studio`                  | Open Drizzle Studio                          |
 
-- **[Cloudflare Workers](https://workers.cloudflare.com/)** - Serverless deployment platform
+## Testing
 
-## Getting Started
-
-This project uses **[Bun](https://bun.sh/)** as package manager.
-
-### Install dependencies:
-
-```sh
-bun install
-```
-
-### Start the development server:
-
-**Standard Development** (without Cloudflare features):
-
-```sh
-bun dev
-```
-
-**Cloudflare Development** (with Workers, D1, and auth features):
-
-```sh
-bun run dev:cf
-```
-
-This command builds the project and runs it with Cloudflare Pages/Workers locally, enabling:
-
-- D1 database access
-- Better-auth authentication
-- Cloudflare Workers environment
-
-See [Cloudflare Local Setup](docs/cloudflare-setup.md) for configuration details.
+- Run all tests: `bun run test`
+- Watch mode: `bun run test:unit`
+- Coverage report: `bun run test -- --coverage` (HTML output in `coverage/`)
+  See `docs/testing.md` for structure and examples.
 
 ## Development Workflow
 
-This project follows a trunk-based development model with weekly development cycles.
+Trunk-based model with weekly cycles:
 
-### Branching Strategy
-
-- **Main branch** (`main`): Always stable and deployable
-- **Feature branches** (`feature/<name>`): Short-lived (max 1 week), focused on specific features or fixes
-
-### Deployment
-
-- **Staging**: Automatically deploys on every merge to `main`
-- **Production**: Manual deployment via Git tags (e.g., `v1.0.3`)
-
-### Best Practices
-
-- Keep `main` always green (passing CI)
-- Rebase feature branches frequently: `git rebase origin/main`
-- Keep PRs small and focused
-- Test thoroughly on staging before production release
+- `main` always stable/deployable
+- Short-lived `feature/<name>` branches, rebase regularly
+- Staging deploys on every merge to `main`; production via review
+- Keep CI green by running `check`, `lint`, `test`, and `build` before PRs
 
 ## Documentation
 
-- [Project Structure](docs/project-structure.md) - Overview of the codebase organization
-- [Local Development Setup](docs/local-development-setup.md) - Code formatting and development tools
-- [Cloudflare Local Setup](docs/cloudflare-setup.md) - Configure Cloudflare Workers and D1 locally
-- [Authentication Integration](docs/authentication.md) - Implement sign-up/sign-in with Better Auth
-- [GitHub Actions Workflows](.github/WORKFLOWS.md) - CI/CD pipeline configuration
-
-## Building
-
-Create a production build:
-
-```sh
-bun build
-```
+- [Project structure](docs/project-structure.md)
+- [Local dev & formatting](docs/local-development-setup.md)
+- [Cloudflare Workers/D1 setup](docs/cloudflare-setup.md)
+- [Auth integration](docs/authentication.md)
+- [Habit API](docs/api-habits.md)
+- [Migrations workflow](docs/migrations.md)
+- [Testing guide](docs/testing.md)
+- [CI/CD workflows](.github/WORKFLOWS.md)

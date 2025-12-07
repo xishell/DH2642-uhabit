@@ -106,8 +106,10 @@ uhabit/
 │   ├── local-development-setup.md      # Development tools & formatting
 │   ├── cloudflare-setup.md             # Cloudflare Workers & D1 setup
 │   ├── authentication.md               # Auth integration guide
-│   ├── api-habits.md                   # Habit API documentation
-│   └── migrations.md                   # Database migration workflow
+│   ├── migrations.md                   # Database migration workflow
+│   └── api/                            # API documentation
+│       ├── habits.md                   # Habits CRUD API
+│       └── completions.md              # Habit completions API
 │
 ├── drizzle/                            # Database migrations
 │   └── 0000_*.sql                      # SQL migration files
@@ -133,4 +135,5 @@ uhabit/
 - [Cloudflare Local Setup](./cloudflare-setup.md) - Configure Cloudflare Workers and D1 locally
 - [Authentication Integration](./authentication.md) - Implement sign-up/sign-in with Better Auth
 - [Database Migrations](./migrations.md) - Database migration workflow and best practices
-- [Habit API](./api-habits.md) - API documentation for habit management
+- [Habits API](./api/habits.md) - API documentation for habit CRUD operations
+- [Completions API](./api/completions.md) - API documentation for habit completions

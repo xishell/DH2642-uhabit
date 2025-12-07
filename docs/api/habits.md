@@ -590,6 +590,7 @@ const updateHabitSchema = z.object({
 
 ## Related Documentation
 
-- [Authentication Guide](./authentication.md) - How to integrate Better Auth
-- [Database Schema](../src/lib/server/db/schema.ts) - Full schema definitions
+- [Completions API](./completions.md) - Habit completion endpoints
+- [Authentication Guide](../authentication.md) - How to integrate Better Auth
+- [Database Schema](../../src/lib/server/db/schema.ts) - Full schema definitions
 - [Cloudflare D1](https://developers.cloudflare.com/d1/) - D1 documentation

@@ -3,8 +3,9 @@ import type { Actions } from './$types';
 import { redirect } from '@sveltejs/kit';
 
 export const actions: Actions = {
-	default: async ({ request, fetch, params }) => {
+	default: async ({ request, fetch, params, url }) => {
 		const id = params.id;
+		const type = url.searchParams.get('type');
 		const data = await request.formData();
 
 		const raw = data.get('period') as string;
@@ -27,11 +28,9 @@ export const actions: Actions = {
 			body: JSON.stringify(habit)
 		});
 
-		console.log('Status code from /api/habits/[id] UPDATE:', res.status);
-		const resBody = await res.text();
-		console.log('Response body:', resBody);
-
-		throw redirect(303, '/planning');
+		// Redirect back to planning with correct tab
+		const hash = type === 'single' ? '#single-step' : '#progressive';
+		throw redirect(303, `/planning${hash}`);
 	}
 };
 

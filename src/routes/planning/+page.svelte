@@ -5,6 +5,8 @@
 	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	export let data;
 
 	const { progressiveHabitList, singleStepHabitList } = data;
@@ -12,14 +14,19 @@
 	let habitType: 0 | 1 = 0; //0 for progressive habit, 1 for single-step habit
 	let isNewBtnClicked = false;
 
+	// Read hash on mount to restore tab state
+	onMount(() => {
+		const hash = window.location.hash;
+		if (hash === '#single-step') {
+			habitType = 1;
+		}
+	});
+
 	function handleHabitTypeChange(event: CustomEvent<0 | 1>) {
 		habitType = event.detail;
-	}
-	function addProgressiveHabit() {
-		// TODO jump to add progressive habit subpage
-	}
-	function addSingleStepHabit() {
-		// TODO jump to add single-step habit subpage
+		// Update URL hash to preserve state
+		const hash = habitType === 1 ? '#single-step' : '#progressive';
+		history.replaceState(null, '', hash);
 	}
 </script>
 

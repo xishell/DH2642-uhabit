@@ -286,11 +286,6 @@ If you added large files:
 #### Full Clean Build
 
 ```bash
-# Remove build artifacts
-rm -rf .svelte-kit dist
-
-# Fresh install (if dependencies changed)
-rm -rf node_modules bun.lock
 bun install
 
 # Build from scratch

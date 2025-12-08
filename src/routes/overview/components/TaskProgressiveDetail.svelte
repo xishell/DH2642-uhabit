@@ -59,7 +59,7 @@
 		<!-- Progress Circle -->
 		<div class="relative w-32 h-32 mb-6">
 			<Progress value={pct} max={100} class="w-full h-full">
-				<Progress.Circle strokeWidth={8}>
+				<Progress.Circle>
 					<Progress.CircleTrack class="stroke-surface-700" />
 					<Progress.CircleRange class={isCompleted ? 'stroke-violet-500' : 'stroke-primary-500'} />
 				</Progress.Circle>

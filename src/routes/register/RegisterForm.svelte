@@ -9,6 +9,7 @@
 	let password = '';
 	let loading = false;
 	let errorMessage: string | null = null;
+	let errorHint: string | null = null;
 	let emailError: string | null = null;
 
 	// Email validation schema
@@ -28,6 +29,7 @@
 
 	async function handleSubmit() {
 		errorMessage = null;
+		errorHint = null;
 		emailError = null;
 		loading = true;
 
@@ -48,19 +50,46 @@
 		} catch (err) {
 			if (err instanceof Error) {
 				const msg = err.message.toLowerCase();
-				// If it's a password validation error (including HIBP breach message), show it
-				if (msg.includes('password')) {
+
+				// Password-related errors
+				if (msg.includes('password') && (msg.includes('common') || msg.includes('breach') || msg.includes('compromised'))) {
+					errorMessage = 'This password is too common and may be easy to guess.';
+					errorHint = 'Try adding numbers, symbols, or making it longer.';
+				} else if (msg.includes('password') && (msg.includes('weak') || msg.includes('short') || msg.includes('length'))) {
+					errorMessage = 'Your password doesn\'t meet the requirements.';
+					errorHint = 'Check the password requirements below.';
+				} else if (msg.includes('password')) {
 					errorMessage = err.message;
-				} else if (msg.includes('email') && msg.includes('already')) {
-					// Generic message - don't confirm email exists
-					errorMessage = 'Registration failed. Please try a different email.';
-				} else {
-					errorMessage = 'Registration failed. Please check your information and try again.';
+					errorHint = 'Please choose a stronger password.';
+				}
+				// Email-related errors
+				else if (msg.includes('email') && (msg.includes('already') || msg.includes('exists') || msg.includes('taken'))) {
+					errorMessage = 'An account with this email may already exist.';
+					errorHint = 'login-hint';
+				} else if (msg.includes('email') && msg.includes('invalid')) {
+					errorMessage = 'Please check your email address.';
+					errorHint = 'Make sure it\'s formatted correctly (e.g., name@example.com).';
+				}
+				// Rate limiting
+				else if (msg.includes('too many') || msg.includes('rate limit')) {
+					errorMessage = 'Too many attempts. Please wait a moment.';
+					errorHint = 'Try again in a few minutes.';
+				}
+				// Network/server errors
+				else if (msg.includes('network') || msg.includes('fetch') || msg.includes('connection')) {
+					errorMessage = 'Connection problem. Please check your internet.';
+					errorHint = 'Try refreshing the page and submitting again.';
+				}
+				// Generic fallback
+				else {
+					errorMessage = 'Something went wrong during registration.';
+					errorHint = 'Please check your information and try again.';
 				}
 			} else {
-				errorMessage = 'Registration failed. Please try again.';
+				errorMessage = 'Something went wrong during registration.';
+				errorHint = 'Please try again in a moment.';
 			}
-			console.error('Registration error:', err); // Log for debugging
+			console.error('Registration error:', err);
 		} finally {
 			loading = false;
 		}
@@ -74,7 +103,23 @@
 	<h1 class="text-2xl font-semibold text-center">Create an Account</h1>
 
 	{#if errorMessage}
-		<div class="p-3 bg-error-100 text-error-700 rounded">{errorMessage}</div>
+		<div class="p-4 bg-error-50 dark:bg-error-900/30 border border-error-200 dark:border-error-800 rounded-lg" role="alert">
+			<div class="flex items-start gap-3">
+				<svg class="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+				</svg>
+				<div class="flex-1">
+					<p class="font-medium text-error-700 dark:text-error-300">{errorMessage}</p>
+					{#if errorHint === 'login-hint'}
+						<p class="mt-1 text-sm text-error-600 dark:text-error-400">
+							Try <a href="/login" class="underline font-medium hover:text-error-800 dark:hover:text-error-200">signing in</a> instead, or use a different email.
+						</p>
+					{:else if errorHint}
+						<p class="mt-1 text-sm text-error-600 dark:text-error-400">{errorHint}</p>
+					{/if}
+				</div>
+			</div>
+		</div>
 	{/if}
 
 	<div class="flex flex-col space-y-1">

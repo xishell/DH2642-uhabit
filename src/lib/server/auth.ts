@@ -56,7 +56,7 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 				? [
 						haveIBeenPwned({
 							customPasswordCompromisedMessage:
-								'This password has been exposed in a data breach. Please choose a different password.'
+								'This password is too common and may be easy to guess. Please choose a more unique password.'
 						})
 					]
 				: [])

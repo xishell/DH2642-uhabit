@@ -6,7 +6,8 @@
 	import MenuDropdown from './components/MenuDropdown.svelte';
 	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import { enhance } from '$app/forms';
-	import { setCookie, deleteCookie } from '$lib/utils/cookie';
+	import { browser } from '$app/environment';
+	import { setCookie, setJsonCookie, deleteCookie } from '$lib/utils/cookie';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
 	export let data: {
@@ -30,9 +31,9 @@
 			selectedProgressive = structuredClone(habit);
 			modalProgress = data.initialModal.progress;
 			showDetail = true;
-		} else {
-			// Clear invalid cookie
-			setCookie('overview-modal', '', -1);
+		} else if (browser) {
+			// Clear invalid cookie (only on client)
+			deleteCookie('overview-modal');
 		}
 	}
 
@@ -53,7 +54,7 @@
 		selectedProgressive = structuredClone(p);
 		modalProgress = null;
 		showDetail = true;
-		setCookie('overview-modal', JSON.stringify({ habitId: p.habit.id, progress: p.progress }));
+		setJsonCookie('overview-modal', { habitId: p.habit.id, progress: p.progress });
 	}
 
 	function closeDetail() {
@@ -65,10 +66,7 @@
 
 	function onModalProgressChange(progress: number) {
 		if (selectedProgressive) {
-			setCookie(
-				'overview-modal',
-				JSON.stringify({ habitId: selectedProgressive.habit.id, progress })
-			);
+			setJsonCookie('overview-modal', { habitId: selectedProgressive.habit.id, progress });
 		}
 	}
 

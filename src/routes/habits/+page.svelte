@@ -3,7 +3,6 @@
 	import HabitCard from '$lib/components/HabitCard.svelte';
 	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
-	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { routes } from '$lib/routes';
@@ -168,18 +167,20 @@
 	>
 		{#if isNewBtnClicked}
 			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
-				<button
+				<a
+					href={routes.habits.new('progressive')}
+					data-sveltekit-preload-data="hover"
 					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
-					on:click={() => goto(routes.habits.new('progressive'))}
 				>
 					Progressive
-				</button>
-				<button
+				</a>
+				<a
+					href={routes.habits.new('single')}
+					data-sveltekit-preload-data="hover"
 					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
-					on:click={() => goto(routes.habits.new('single'))}
 				>
 					Single-Step
-				</button>
+				</a>
 			</div>
 		{/if}
 		<button

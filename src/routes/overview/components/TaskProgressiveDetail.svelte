@@ -42,7 +42,6 @@
 			>
 		</div>
 
-		```
 		<!-- Progress Circle -->
 		<Progress value={progress} max={selectedProgressive.habit.targetAmount ?? 0} class="mb-4">
 			<Progress.Label />
@@ -77,5 +76,4 @@
 			Complete
 		</button>
 	</div>
-	```
 </div>

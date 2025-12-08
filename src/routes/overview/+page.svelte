@@ -6,6 +6,7 @@
 	import MenuDropdown from './components/MenuDropdown.svelte';
 	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
 	export let data: {
@@ -17,7 +18,7 @@
 	let showDetail = false;
 	let selectedProgressive: HabitWithStatus | null = null;
 
-	const { single, progressive } = data;
+	$: ({ single, progressive } = data);
 
 	function openProgressive(p: HabitWithStatus) {
 		selectedProgressive = structuredClone(p);
@@ -29,12 +30,12 @@
 		selectedProgressive = null;
 	}
 
-	function saveProgressive(updated: HabitWithStatus) {
+	async function saveProgressive(updated: HabitWithStatus) {
 		const form = new FormData();
 		form.append('id', updated.habit.id);
 		form.append('progress', updated.progress.toString());
-		form.append('targetAmount', (updated.habit.targetAmount ?? 0).toString());
-		fetch('?/updateProgressive', { method: 'POST', body: form });
+		await fetch('?/updateProgressValue', { method: 'POST', body: form });
+		await invalidateAll();
 		closeDetail();
 	}
 

@@ -33,11 +33,6 @@ export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 
 	if (!user) return { single: [], progressive: [], initialTab, initialModal };
 
-	// Skip DB entirely in dev
-	if (IS_DEV) {
-		return { single: [], progressive: [], initialTab, initialModal };
-	}
-
 	const db = getDB(platform!.env.DB);
 
 	const habitsRaw = await db.select().from(habit).where(eq(habit.userId, user.id));
@@ -83,11 +78,6 @@ export const actions: Actions = {
 		const user = locals.user ?? (IS_DEV ? { id: 'dev-user-123' } : null);
 		if (!user) return { success: false };
 
-		if (IS_DEV) {
-			console.log('toggleSingle called in dev, skipping DB');
-			return { success: true };
-		}
-
 		const db = getDB(platform!.env.DB);
 		const form = await request.formData();
 		const id = form.get('id') as string;
@@ -123,11 +113,6 @@ export const actions: Actions = {
 	},
 
 	updateProgressiveTarget: async ({ request, platform }) => {
-		if (IS_DEV) {
-			console.log('updateProgressiveTarget called in dev, skipping DB');
-			return { success: true };
-		}
-
 		const form = await request.formData();
 		const id = form.get('id') as string;
 		const targetAmount = Number(form.get('targetAmount'));
@@ -140,11 +125,6 @@ export const actions: Actions = {
 	updateProgressValue: async ({ request, platform, locals }) => {
 		const user = locals.user ?? (IS_DEV ? { id: 'dev-user-123' } : null);
 		if (!user) return { success: false };
-
-		if (IS_DEV) {
-			console.log('updateProgressValue called in dev, skipping DB');
-			return { success: true };
-		}
 
 		const db = getDB(platform!.env.DB);
 		const form = await request.formData();

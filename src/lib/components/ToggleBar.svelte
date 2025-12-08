@@ -1,31 +1,43 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	export let habitType: 0 | 1;
-	const dispatch = createEventDispatcher();
+	// 0 = Progressive, 1 = Single-Step (keeps old numeric contract)
+	export let habitType: 0 | 1 = 1;
+	export let onChange: (val: 0 | 1) => void;
 
-	const activateP = () => {
-		dispatch('change', 0);
-	};
+	function activateP() {
+		onChange?.(0);
+	}
 
-	const activateS = () => {
-		dispatch('change', 1);
-	};
+	function activateS() {
+		onChange?.(1);
+	}
 </script>
 
 <div
-	class="text-[14px] p-[5px] rounded-[40px] border border-primary-500 flex justify-between gap-2"
+	class="text-sm p-[5px] rounded-full border border-surface-700 inline-flex gap-2 bg-surface-800"
+	role="tablist"
+	aria-label="Select habit type"
 >
 	<button
-		class="py-1 px-3 rounded-[40px] hover:bg-primary-500 transition-[1s] cursor-pointer"
-		class:bg-primary-500={habitType == 0}
-		class:text-surface-50={habitType == 0}
+		type="button"
+		class="py-1 px-3 rounded-full transition"
+		class:bg-violet-600={habitType === 0}
+		class:text-white={habitType === 0}
+		class:text-surface-300={habitType !== 0}
 		on:click={activateP}
-		>Progressive
-	</button>
-	<button
-		class="py-1 px-3 rounded-[40px] hover:bg-primary-500 transition-[1s] cursor-pointer"
-		class:bg-primary-500={habitType == 1}
-		class:text-surface-50={habitType == 1}
-		on:click={activateS}>Single-Step</button
+		aria-pressed={habitType === 0}
 	>
+		Progressive
+	</button>
+
+	<button
+		type="button"
+		class="py-1 px-3 rounded-full transition"
+		class:bg-violet-600={habitType === 1}
+		class:text-white={habitType === 1}
+		class:text-surface-300={habitType !== 1}
+		on:click={activateS}
+		aria-pressed={habitType === 1}
+	>
+		Single-Step
+	</button>
 </div>

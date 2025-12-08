@@ -8,6 +8,7 @@
 	import { onMount } from 'svelte';
 	import { routes } from '$lib/routes';
 	import { habitsStore } from '$lib/stores/habits';
+	import { setCookie } from '$lib/utils/cookie';
 	import type { Habit } from '$lib/types/habit';
 
 	export let data;
@@ -18,7 +19,8 @@
 	let habitsLoading = false;
 	let habitsError: string | null = null;
 
-	let habitType: 0 | 1 = 0; //0 for progressive habit, 1 for single-step habit
+	// Initialize tab from server-provided value (no flash!)
+	let habitType: 0 | 1 = data.initialTab; //0 for progressive habit, 1 for single-step habit
 	let isNewBtnClicked = false;
 	let quote = data.quote ?? 'Let your days echo with the steps you choose to take.';
 	let author = data.author ?? '';
@@ -46,13 +48,7 @@
 		}
 	}
 
-	// Read hash on mount to restore tab state
 	onMount(() => {
-		const hash = window.location.hash;
-		if (hash === '#single-step') {
-			habitType = 1;
-		}
-
 		// Initialize store with SSR data, then subscribe for future updates
 		habitsStore.init(data.progressiveHabitList, data.singleStepHabitList);
 
@@ -92,11 +88,9 @@
 		};
 	});
 
-	function handleHabitTypeChange(event: CustomEvent<0 | 1>) {
-		habitType = event.detail;
-		// Update URL hash to preserve state
-		const hash = habitType === 1 ? '#single-step' : '#progressive';
-		history.replaceState(null, '', hash);
+	function handleHabitTypeChange(val: 0 | 1) {
+		habitType = val;
+		setCookie('habits-tab', habitType === 1 ? 'single' : 'progressive');
 	}
 </script>
 
@@ -126,7 +120,7 @@
 	</div>
 
 	<!-- ToggleBar -->
-	<ToggleBar {habitType} on:change={handleHabitTypeChange} />
+	<ToggleBar {habitType} onChange={handleHabitTypeChange} />
 
 	<!-- Habit List -->
 	<div class="habit-list w-full grid grid-cols-1 sm:grid-cols-2 justify-between gap-7 mt-6">

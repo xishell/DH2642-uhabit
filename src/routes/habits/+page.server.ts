@@ -3,7 +3,11 @@ import type { Habit } from '$lib/types/habit';
 
 type QuoteData = { quote?: string | null; author?: string | null };
 
-export const load: PageServerLoad = async ({ fetch }) => {
+export const load: PageServerLoad = async ({ fetch, cookies }) => {
+	// Read tab state from cookie
+	const savedTab = cookies.get('habits-tab');
+	const initialTab: 0 | 1 = savedTab === 'single' ? 1 : 0;
+
 	const res = await fetch('/api/habits');
 	const data = res.ok ? await res.json() : [];
 	const habits = Array.isArray(data) ? (data as Habit[]) : [];
@@ -28,6 +32,7 @@ export const load: PageServerLoad = async ({ fetch }) => {
 		progressiveHabitList,
 		singleStepHabitList,
 		quote,
-		author
+		author,
+		initialTab
 	};
 };

@@ -1,5 +1,7 @@
 import type { Handle } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import { createAuth } from '$lib/server/auth';
+import { routes } from '$lib/routes';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Skip auth setup for static assets (huge performance improvement)
@@ -76,6 +78,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 			console.error('[HOOKS] Session fetch error:', error);
 			event.locals.user = null;
 			event.locals.session = null;
+		}
+
+		// Protect routes - redirect unauthenticated users before load functions run
+		const isPublicRoute =
+			event.route.id === '/login' ||
+			event.route.id === '/register' ||
+			event.route.id === '/' ||
+			event.url.pathname.startsWith('/api/');
+
+		if (!event.locals.user && !isPublicRoute) {
+			throw redirect(302, routes.login);
 		}
 	} else {
 		// For auth routes, set to null (the auth handler will manage its own session)

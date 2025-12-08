@@ -36,7 +36,6 @@
 		}
 	}
 
-
 	// Local state for optimistic UI
 	let single: HabitWithStatus[] = [];
 	let progressive: HabitWithStatus[] = [];

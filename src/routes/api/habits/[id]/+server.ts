@@ -99,7 +99,12 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 	const updatedHabit = {
 		...existingHabit,
 		...updateData,
-		period: data.period !== undefined ? data.period : (existingHabit.period ? JSON.parse(existingHabit.period) : null)
+		period:
+			data.period !== undefined
+				? data.period
+				: existingHabit.period
+					? JSON.parse(existingHabit.period)
+					: null
 	};
 
 	return json(updatedHabit);

@@ -4,14 +4,17 @@
 	import type { HabitWithStatus } from '$lib/types/habit';
 
 	export let selectedProgressive: HabitWithStatus;
-
 	export let onSave: (data: HabitWithStatus) => void = () => {};
 	export let onClose: () => void = () => {};
 
 	let progress = selectedProgressive.progress;
 
+	$: target = selectedProgressive.habit.targetAmount ?? 0;
+	$: pct = target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : 0;
+	$: unit = selectedProgressive.habit.unit ?? '';
+	$: isCompleted = progress >= target && target > 0;
+
 	function increment() {
-		const target = selectedProgressive.habit.targetAmount ?? 0;
 		if (progress < target) progress += 1;
 	}
 
@@ -23,57 +26,73 @@
 		onSave?.({ ...selectedProgressive, progress });
 	}
 
-	function close() {
-		onClose?.();
+	function handleBackdropClick(e: MouseEvent) {
+		if (e.target === e.currentTarget) onClose();
 	}
 </script>
 
-<div class="fixed inset-0 bg-black/30 flex items-end md:items-center justify-center z-50">
-	<div
-		class="bg-white w-full md:w-96 rounded-t-xl md:rounded-xl p-6 md:p-8 flex flex-col items-center"
-	>
+<div
+	class="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50"
+	on:click={handleBackdropClick}
+	on:keydown={(e) => e.key === 'Escape' && onClose()}
+	role="dialog"
+	aria-modal="true"
+	tabindex="-1"
+>
+	<div class="bg-surface-800 w-full md:w-96 rounded-t-xl md:rounded-xl p-6 flex flex-col items-center">
 		<!-- Header -->
-		<div class="flex justify-between items-center w-full mb-4">
-			<div class="font-semibold text-lg text-center flex-1">{selectedProgressive.habit.title}</div>
+		<div class="flex justify-between items-center w-full mb-6">
+			<div class="font-semibold text-lg text-surface-50 flex-1">
+				{selectedProgressive.habit.title}
+			</div>
 			<button
-				on:click={close}
-				class="text-surface-500 hover:text-surface-700 text-xl font-bold ml-2"
-				aria-label="Close">&times;</button
+				on:click={onClose}
+				class="text-surface-400 hover:text-surface-200 text-2xl font-bold ml-2 leading-none"
+				aria-label="Close"
 			>
+				&times;
+			</button>
 		</div>
 
 		<!-- Progress Circle -->
-		<Progress value={progress} max={selectedProgressive.habit.targetAmount ?? 0} class="mb-4">
-			<Progress.Label />
-			<Progress.Circle>
-				<Progress.CircleTrack />
-				<Progress.CircleRange />
-			</Progress.Circle>
-			<Progress.ValueText />
-		</Progress>
+		<div class="relative w-32 h-32 mb-6">
+			<Progress value={pct} max={100} class="w-full h-full">
+				<Progress.Circle strokeWidth={8}>
+					<Progress.CircleTrack class="stroke-surface-700" />
+					<Progress.CircleRange class={isCompleted ? 'stroke-violet-500' : 'stroke-primary-500'} />
+				</Progress.Circle>
+			</Progress>
+			<div class="absolute inset-0 flex flex-col items-center justify-center">
+				<span class="text-2xl font-bold text-surface-50">{progress}</span>
+				<span class="text-xs text-surface-400">of {target} {unit}</span>
+			</div>
+		</div>
 
 		<!-- Increment / Decrement -->
-		<div class="flex items-center gap-6 mb-4">
+		<div class="flex items-center gap-8 mb-6">
 			<button
 				on:click={decrement}
-				class="p-2 rounded-lg border border-surface-300 hover:bg-surface-100 transition"
+				disabled={progress <= 0}
+				class="w-12 h-12 rounded-full border-2 border-surface-600 hover:border-surface-500 hover:bg-surface-700 transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
 			>
-				<Minus class="w-4 h-4" />
+				<Minus class="w-5 h-5 text-surface-300" />
 			</button>
+			<span class="text-3xl font-bold text-surface-50 w-16 text-center">{progress}</span>
 			<button
 				on:click={increment}
-				class="p-2 rounded-lg border border-surface-300 hover:bg-surface-100 transition"
+				disabled={progress >= target}
+				class="w-12 h-12 rounded-full border-2 border-surface-600 hover:border-surface-500 hover:bg-surface-700 transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
 			>
-				<Plus class="w-4 h-4" />
+				<Plus class="w-5 h-5 text-surface-300" />
 			</button>
 		</div>
 
-		<!-- Save / Complete Button -->
+		<!-- Save Button -->
 		<button
 			on:click={save}
-			class="w-full py-2 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 transition"
+			class="w-full py-3 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 transition"
 		>
-			Complete
+			{isCompleted ? 'Save' : 'Update Progress'}
 		</button>
 	</div>
 </div>

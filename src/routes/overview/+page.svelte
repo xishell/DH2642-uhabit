@@ -6,7 +6,6 @@
 	import MenuDropdown from './components/MenuDropdown.svelte';
 	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
 	export let data: {
@@ -17,8 +16,20 @@
 	let activeTab: 'single' | 'progressive' = 'single';
 	let showDetail = false;
 	let selectedProgressive: HabitWithStatus | null = null;
+	let error: string | null = null;
 
-	$: ({ single, progressive } = data);
+	// Local state for optimistic UI
+	let single: HabitWithStatus[] = [];
+	let progressive: HabitWithStatus[] = [];
+
+	// Sync from server data when it changes
+	$: single = data.single.map((s) => ({ ...s }));
+	$: progressive = data.progressive.map((p) => ({ ...p }));
+
+	function showError(message: string) {
+		error = message;
+		setTimeout(() => (error = null), 3000);
+	}
 
 	function openProgressive(p: HabitWithStatus) {
 		selectedProgressive = structuredClone(p);
@@ -30,13 +41,43 @@
 		selectedProgressive = null;
 	}
 
+	function toggleSingleOptimistic(habitId: string): HabitWithStatus[] {
+		const previousState = single;
+		single = single.map((s) =>
+			s.habit.id === habitId ? { ...s, isCompleted: !s.isCompleted } : s
+		);
+		return previousState;
+	}
+
+	function revertSingle(previousState: HabitWithStatus[]) {
+		single = previousState;
+	}
+
 	async function saveProgressive(updated: HabitWithStatus) {
-		const form = new FormData();
-		form.append('id', updated.habit.id);
-		form.append('progress', updated.progress.toString());
-		await fetch('?/updateProgressValue', { method: 'POST', body: form });
-		await invalidateAll();
+		// Store previous state for rollback
+		const previousState = progressive;
+
+		// Optimistic update
+		progressive = progressive.map((p) =>
+			p.habit.id === updated.habit.id ? { ...updated } : p
+		);
 		closeDetail();
+
+		// Sync with server
+		try {
+			const form = new FormData();
+			form.append('id', updated.habit.id);
+			form.append('progress', updated.progress.toString());
+			const response = await fetch('?/updateProgressValue', { method: 'POST', body: form });
+
+			if (!response.ok) {
+				throw new Error('Failed to save progress');
+			}
+		} catch (e) {
+			// Revert on failure
+			progressive = previousState;
+			showError('Failed to save progress. Please try again.');
+		}
 	}
 
 	function onHabitTypeChange(val: 0 | 1) {
@@ -44,7 +85,14 @@
 	}
 </script>
 
-<!-- Removed min-h-screen and bg-surface-50 -->
+<!-- Error Toast -->
+{#if error}
+	<div
+		class="fixed top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50"
+	>
+		{error}
+	</div>
+{/if}
 
 <div class="p-4 sm:p-8">
 	<!-- Top Progress -->
@@ -65,7 +113,19 @@
 					</div>
 				{:else}
 					{#each single as s (s.habit.id)}
-						<form method="POST" use:enhance action="?/toggleSingle">
+						<form
+							method="POST"
+							action="?/toggleSingle"
+							use:enhance={() => {
+								const previousState = toggleSingleOptimistic(s.habit.id);
+								return async ({ result }) => {
+									if (result.type === 'failure' || result.type === 'error') {
+										revertSingle(previousState);
+										showError('Failed to update task. Please try again.');
+									}
+								};
+							}}
+						>
 							<input type="hidden" name="id" value={s.habit.id} />
 							<input type="hidden" name="done" value={!s.isCompleted} />
 							<TaskSingle {s} />

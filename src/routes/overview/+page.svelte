@@ -4,6 +4,7 @@
 	import TaskProgressive from './components/TaskProgressive.svelte';
 	import TaskProgressiveDetail from './components/TaskProgressiveDetail.svelte';
 	import MenuDropdown from './components/MenuDropdown.svelte';
+	import HabitTypeToggle from '$lib/components/HabitTypeToggle.svelte';
 	import { enhance } from '$app/forms';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
@@ -12,7 +13,8 @@
 		progressive: HabitWithStatus[];
 	};
 
-	let activeTab = 'single';
+	// activeTab: 'single' | 'progressive'
+	let activeTab: 'single' | 'progressive' = 'single';
 	let showDetail = false;
 	let selectedProgressive: HabitWithStatus | null = null;
 
@@ -36,68 +38,64 @@
 		fetch('?/updateProgressive', { method: 'POST', body: form });
 		closeDetail();
 	}
+
+	// toggle callback maps: 0 -> progressive, 1 -> single
+	function onHabitTypeChange(val: 0 | 1) {
+		activeTab = val === 1 ? 'single' : 'progressive';
+	}
 </script>
 
 <div class="min-h-screen p-4 sm:p-8 bg-surface-50">
-	<!-- Header -->
-	<header class="flex items-center justify-between mb-6">
+	<!-- Page header (title + dropdown) -->
+	<div class="max-w-3xl mx-auto mb-6 flex items-center justify-between">
 		<h1 class="text-2xl font-semibold">Today's Habits</h1>
 		<MenuDropdown />
-	</header>
-
-	<!-- Top Progress -->
-	<TopProgress {single} {progressive} />
-
-	<!-- Tabs -->
-	<div class="mt-4 mb-6 flex gap-2">
-		<button
-			on:click={() => (activeTab = 'single')}
-			class={`flex-1 py-2 rounded-full border text-sm font-medium ${activeTab === 'single' ? 'bg-violet-600 text-white' : 'bg-white text-surface-700'}`}
-		>
-			Single-Step
-		</button>
-
-		<button
-			on:click={() => (activeTab = 'progressive')}
-			class={`flex-1 py-2 rounded-full border text-sm font-medium ${activeTab === 'progressive' ? 'bg-violet-600 text-white' : 'bg-white text-surface-700'}`}
-		>
-			Progressive
-		</button>
 	</div>
 
-	<!-- Single-Step Tasks -->
-	{#if activeTab === 'single'}
-		<div class="space-y-3">
-			{#if single.length === 0}
-				<div class="text-surface-500 text-center py-6">
-					No single-step tasks today. Create one in the Create page.
-				</div>
-			{:else}
-				{#each single as s (s.habit.id)}
-					<form method="POST" use:enhance action="?/toggleSingle">
-						<input type="hidden" name="id" value={s.habit.id} />
-						<input type="hidden" name="done" value={!s.isCompleted} />
-						<TaskSingle {s} />
-					</form>
-				{/each}
-			{/if}
-		</div>
-	{/if}
+	<!-- Top Progress (centered and constrained) -->
+	<TopProgress {single} {progressive} />
 
-	<!-- Progressive Tasks -->
-	{#if activeTab === 'progressive'}
-		<div class="space-y-3">
-			{#if progressive.length === 0}
-				<div class="text-surface-500 text-center py-6">
-					No progressive tasks today. Create one in the Create page.
-				</div>
-			{:else}
-				{#each progressive as p (p.habit.id)}
-					<TaskProgressive {p} onOpen={() => openProgressive(p)} />
-				{/each}
-			{/if}
-		</div>
-	{/if}
+	<!-- Toggle (replaces the old two-tab buttons) -->
+	<div class="max-w-3xl mx-auto mt-4 mb-6 flex justify-center">
+		<HabitTypeToggle habitType={activeTab === 'single' ? 1 : 0} onChange={onHabitTypeChange} />
+	</div>
+
+	<!-- Content area (centered) -->
+	<div class="max-w-3xl mx-auto">
+		<!-- Single-Step Tasks -->
+		{#if activeTab === 'single'}
+			<div class="space-y-3">
+				{#if single.length === 0}
+					<div class="text-surface-500 text-center py-6">
+						No single-step tasks today. Create one in the Create page.
+					</div>
+				{:else}
+					{#each single as s (s.habit.id)}
+						<form method="POST" use:enhance action="?/toggleSingle">
+							<input type="hidden" name="id" value={s.habit.id} />
+							<input type="hidden" name="done" value={!s.isCompleted} />
+							<TaskSingle {s} />
+						</form>
+					{/each}
+				{/if}
+			</div>
+		{/if}
+
+		<!-- Progressive Tasks -->
+		{#if activeTab === 'progressive'}
+			<div class="space-y-3">
+				{#if progressive.length === 0}
+					<div class="text-surface-500 text-center py-6">
+						No progressive tasks today. Create one in the Create page.
+					</div>
+				{:else}
+					{#each progressive as p (p.habit.id)}
+						<TaskProgressive {p} onOpen={() => openProgressive(p)} />
+					{/each}
+				{/if}
+			</div>
+		{/if}
+	</div>
 
 	<!-- Progressive Detail Modal/Drawer -->
 	{#if showDetail && selectedProgressive}

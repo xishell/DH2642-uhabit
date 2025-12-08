@@ -39,7 +39,9 @@
 	aria-modal="true"
 	tabindex="-1"
 >
-	<div class="bg-surface-800 w-full md:w-96 rounded-t-xl md:rounded-xl p-6 flex flex-col items-center">
+	<div
+		class="bg-surface-800 w-full md:w-96 rounded-t-xl md:rounded-xl p-6 flex flex-col items-center"
+	>
 		<!-- Header -->
 		<div class="flex justify-between items-center w-full mb-6">
 			<div class="font-semibold text-lg text-surface-50 flex-1">

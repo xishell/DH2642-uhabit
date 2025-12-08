@@ -25,7 +25,8 @@
 			{p.habit.title}
 		</div>
 		<div class="text-xs text-surface-500">
-			{p.progress} / {target} {p.habit.unit ?? ''}
+			{p.progress} / {target}
+			{p.habit.unit ?? ''}
 		</div>
 	</div>
 

@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { Check } from 'lucide-svelte';
+	import type { HabitWithStatus } from '$lib/types/habit';
 
-	export let s: { id: string; title: string; done: boolean };
-	export let onToggle: (id: string) => void;
+	export let s: HabitWithStatus;
+	export let onToggle: (id: string) => void = () => {};
 
 	function toggleDone() {
-		onToggle?.(s.id);
+		onToggle?.(s.habit.id);
 	}
 </script>
 
@@ -23,20 +24,20 @@
                 hover:border-violet-600
                 focus:outline-none focus:ring-2 focus:ring-violet-400
             "
-			class:border-violet-600={s.done}
-			class:bg-violet-600={s.done}
+			class:border-violet-600={s.isCompleted}
+			class:bg-violet-600={s.isCompleted}
 		>
-			{#if s.done}
+			{#if s.isCompleted}
 				<Check class="w-3 h-3 text-white" />
 			{/if}
 		</button>
 
 		<div
 			class="text-sm font-medium transition"
-			class:line-through={s.done}
-			class:text-surface-400={s.done}
+			class:line-through={s.isCompleted}
+			class:text-surface-400={s.isCompleted}
 		>
-			{s.title}
+			{s.habit.title}
 		</div>
 	</div>
 </div>

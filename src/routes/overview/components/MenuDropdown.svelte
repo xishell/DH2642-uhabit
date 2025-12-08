@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Menu from 'lucide-svelte/dist/esm/icons/menu.svelte';
+	import { Menu } from 'lucide-svelte';
 	let open = false;
 </script>
 

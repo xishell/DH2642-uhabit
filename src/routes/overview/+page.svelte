@@ -1,23 +1,25 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Tabs, Tab } from '@skeletonlabs/svelte';
-	import { Button } from '@skeletonlabs/svelte';
-	import TopProgress from '$lib/components/TopProgress.svelte';
-	import TaskSingle from '$lib/components/TaskSingle.svelte';
-	import TaskProgressive from '$lib/components/TaskProgressive.svelte';
-	import TaskProgressiveDetail from '$lib/components/TaskProgressiveDetail.svelte';
-	import MenuDropdown from '$lib/components/MenuDropdown.svelte';
+	import TopProgress from './components/TopProgress.svelte';
+	import TaskSingle from './components/TaskSingle.svelte';
+	import TaskProgressive from './components/TaskProgressive.svelte';
+	import TaskProgressiveDetail from './components/TaskProgressiveDetail.svelte';
+	import MenuDropdown from './components/MenuDropdown.svelte';
 	import { enhance } from '$app/forms';
+	import type { HabitWithStatus } from '$lib/types/habit';
 
-	export let data;
+	export let data: {
+		single: HabitWithStatus[];
+		progressive: HabitWithStatus[];
+	};
 
 	let activeTab = 'single';
 	let showDetail = false;
-	let selectedProgressive: any = null;
+	let selectedProgressive: HabitWithStatus | null = null;
 
 	const { single, progressive } = data;
 
-	function openProgressive(p: any) {
+	function openProgressive(p: HabitWithStatus) {
 		selectedProgressive = structuredClone(p);
 		showDetail = true;
 	}
@@ -25,6 +27,15 @@
 	function closeDetail() {
 		showDetail = false;
 		selectedProgressive = null;
+	}
+
+	function saveProgressive(updated: HabitWithStatus) {
+		const form = new FormData();
+		form.append('id', updated.habit.id);
+		form.append('progress', updated.progress.toString());
+		form.append('targetAmount', (updated.habit.targetAmount ?? 0).toString());
+		fetch('?/updateProgressive', { method: 'POST', body: form });
+		closeDetail();
 	}
 </script>
 
@@ -39,27 +50,21 @@
 	<TopProgress {single} {progressive} />
 
 	<!-- Tabs -->
-	<Tabs class="mt-4 mb-6">
-		<Tab
-			checked={activeTab === 'single'}
+	<div class="mt-4 mb-6 flex gap-2">
+		<button
 			on:click={() => (activeTab = 'single')}
-			class="flex-1 py-2 rounded-full border text-sm font-medium"
-			class:!bg-violet-600={activeTab === 'single'}
-			class:!text-white={activeTab === 'single'}
+			class={`flex-1 py-2 rounded-full border text-sm font-medium ${activeTab === 'single' ? 'bg-violet-600 text-white' : 'bg-white text-surface-700'}`}
 		>
 			Single-Step
-		</Tab>
+		</button>
 
-		<Tab
-			checked={activeTab === 'progressive'}
+		<button
 			on:click={() => (activeTab = 'progressive')}
-			class="flex-1 py-2 rounded-full border text-sm font-medium"
-			class:!bg-violet-600={activeTab === 'progressive'}
-			class:!text-white={activeTab === 'progressive'}
+			class={`flex-1 py-2 rounded-full border text-sm font-medium ${activeTab === 'progressive' ? 'bg-violet-600 text-white' : 'bg-white text-surface-700'}`}
 		>
 			Progressive
-		</Tab>
-	</Tabs>
+		</button>
+	</div>
 
 	<!-- Single-Step Tasks -->
 	{#if activeTab === 'single'}
@@ -69,10 +74,10 @@
 					No single-step tasks today. Create one in the Create page.
 				</div>
 			{:else}
-				{#each single as s (s.id)}
+				{#each single as s (s.habit.id)}
 					<form method="POST" use:enhance action="?/toggleSingle">
-						<input type="hidden" name="id" value={s.id} />
-						<input type="hidden" name="done" value={!s.done} />
+						<input type="hidden" name="id" value={s.habit.id} />
+						<input type="hidden" name="done" value={!s.isCompleted} />
 						<TaskSingle {s} on:toggle={() => null} />
 					</form>
 				{/each}
@@ -88,15 +93,15 @@
 					No progressive tasks today. Create one in the Create page.
 				</div>
 			{:else}
-				{#each progressive as p (p.id)}
+				{#each progressive as p (p.habit.id)}
 					<TaskProgressive
 						{p}
 						on:open={() => openProgressive(p)}
-						on:change={(e) => {
+						on:change={(e: CustomEvent<number>) => {
 							const delta = e.detail;
-							const newValue = Math.max(0, Math.min(p.targetAmount, p.progress + delta));
+							const newValue = Math.max(0, Math.min(p.habit.targetAmount ?? 0, p.progress + delta));
 							const form = new FormData();
-							form.append('id', p.id);
+							form.append('id', p.habit.id);
 							form.append('progress', newValue.toString());
 							fetch('?/updateProgressValue', { method: 'POST', body: form });
 						}}
@@ -108,18 +113,6 @@
 
 	<!-- Progressive Detail Modal/Drawer -->
 	{#if showDetail && selectedProgressive}
-		<TaskProgressiveDetail
-			{selectedProgressive}
-			on:save={(e) => {
-				const updated = e.detail;
-				const form = new FormData();
-				form.append('id', updated.id);
-				form.append('progress', updated.progress);
-				form.append('targetAmount', updated.targetAmount);
-				fetch('?/updateProgressive', { method: 'POST', body: form });
-				closeDetail();
-			}}
-			on:close={closeDetail}
-		/>
+		<TaskProgressiveDetail {selectedProgressive} onSave={saveProgressive} onClose={closeDetail} />
 	{/if}
 </div>

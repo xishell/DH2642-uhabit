@@ -1,5 +1,4 @@
 import type { PageServerLoad, Actions } from './$types';
-import { redirect } from '@sveltejs/kit';
 import { getDB } from '$lib/server/db';
 import { habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
@@ -8,10 +7,7 @@ import { getHabitsForDate } from '$lib/utils/habit';
 import { startOfDay, endOfDay } from '$lib/utils/date';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
-	if (!locals.user) {
-		throw redirect(302, '/login');
-	}
-	const userId = locals.user.id;
+	const userId = locals.user!.id;
 
 	const db = getDB(platform!.env.DB);
 
@@ -54,7 +50,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 	const single = habitsWithStatus.filter((h) => h.habit.measurement === 'boolean');
 	const progressive = habitsWithStatus.filter((h) => h.habit.measurement === 'numeric');
 
-	return { user: locals.user, single, progressive };
+	return { single, progressive };
 };
 
 export const actions: Actions = {

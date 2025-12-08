@@ -1,22 +1,18 @@
 <script lang="ts">
 	import { Progress } from '@skeletonlabs/skeleton-svelte';
 	import { Plus, Minus } from 'lucide-svelte';
+	import type { HabitWithStatus } from '$lib/types/habit';
 
-	export let selectedProgressive: {
-		id: string;
-		title: string;
-		progress: number;
-		targetAmount: number;
-		unit?: string;
-	};
+	export let selectedProgressive: HabitWithStatus;
 
-	export let onSave: (data: typeof selectedProgressive) => void;
-	export let onClose: () => void;
+	export let onSave: (data: HabitWithStatus) => void = () => {};
+	export let onClose: () => void = () => {};
 
 	let progress = selectedProgressive.progress;
 
 	function increment() {
-		if (progress < selectedProgressive.targetAmount) progress += 1;
+		const target = selectedProgressive.habit.targetAmount ?? 0;
+		if (progress < target) progress += 1;
 	}
 
 	function decrement() {
@@ -35,7 +31,7 @@
 <div class="fixed inset-0 bg-black/30 flex items-end md:items-center justify-center z-50">
 	<div class="bg-white w-full md:w-96 rounded-t-xl md:rounded-xl p-6 md:p-8">
 		<div class="flex justify-between items-center mb-4">
-			<div class="font-semibold text-lg">{selectedProgressive.title}</div>
+			<div class="font-semibold text-lg">{selectedProgressive.habit.title}</div>
 			<button
 				on:click={close}
 				class="text-surface-500 hover:text-surface-700 text-xl font-bold"
@@ -45,7 +41,7 @@
 
 		<div class="flex flex-col items-center gap-4">
 			<!-- Progress Circle -->
-			<Progress value={progress} max={selectedProgressive.targetAmount}>
+			<Progress value={progress} max={selectedProgressive.habit.targetAmount ?? 0}>
 				<Progress.Label />
 				<Progress.Circle>
 					<Progress.CircleTrack />

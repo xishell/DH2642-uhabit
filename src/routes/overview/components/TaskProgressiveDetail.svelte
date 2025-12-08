@@ -4,10 +4,12 @@
 	import type { HabitWithStatus } from '$lib/types/habit';
 
 	export let selectedProgressive: HabitWithStatus;
+	export let initialProgress: number | null = null;
 	export let onSave: (data: HabitWithStatus) => void = () => {};
 	export let onClose: () => void = () => {};
+	export let onProgressChange: (progress: number) => void = () => {};
 
-	let progress = selectedProgressive.progress;
+	let progress = initialProgress ?? selectedProgressive.progress;
 
 	$: target = selectedProgressive.habit.targetAmount ?? 0;
 	$: pct = target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : 0;
@@ -15,11 +17,17 @@
 	$: isCompleted = progress >= target && target > 0;
 
 	function increment() {
-		if (progress < target) progress += 1;
+		if (progress < target) {
+			progress += 1;
+			onProgressChange(progress);
+		}
 	}
 
 	function decrement() {
-		if (progress > 0) progress -= 1;
+		if (progress > 0) {
+			progress -= 1;
+			onProgressChange(progress);
+		}
 	}
 
 	function save() {

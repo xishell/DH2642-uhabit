@@ -6,26 +6,36 @@
 	import MenuDropdown from './components/MenuDropdown.svelte';
 	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import { enhance } from '$app/forms';
-	import { onMount } from 'svelte';
+	import { setCookie, deleteCookie } from '$lib/utils/cookie';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
 	export let data: {
 		single: HabitWithStatus[];
 		progressive: HabitWithStatus[];
+		initialTab: 'single' | 'progressive';
+		initialModal: { habitId: string; progress: number } | null;
 	};
 
-	let activeTab: 'single' | 'progressive' = 'single';
+	// Initialize from server-provided values (no flash!)
+	let activeTab: 'single' | 'progressive' = data.initialTab;
 	let showDetail = false;
 	let selectedProgressive: HabitWithStatus | null = null;
+	let modalProgress: number | null = null;
 	let error: string | null = null;
 
-	// Restore tab state from sessionStorage on mount
-	onMount(() => {
-		const saved = sessionStorage.getItem('overview-tab');
-		if (saved === 'progressive' || saved === 'single') {
-			activeTab = saved;
+	// Restore modal state from server data
+	if (data.initialModal) {
+		const habit = data.progressive.find((p) => p.habit.id === data.initialModal!.habitId);
+		if (habit) {
+			selectedProgressive = structuredClone(habit);
+			modalProgress = data.initialModal.progress;
+			showDetail = true;
+		} else {
+			// Clear invalid cookie
+			setCookie('overview-modal', '', -1);
 		}
-	});
+	}
+
 
 	// Local state for optimistic UI
 	let single: HabitWithStatus[] = [];
@@ -42,12 +52,25 @@
 
 	function openProgressive(p: HabitWithStatus) {
 		selectedProgressive = structuredClone(p);
+		modalProgress = null;
 		showDetail = true;
+		setCookie('overview-modal', JSON.stringify({ habitId: p.habit.id, progress: p.progress }));
 	}
 
 	function closeDetail() {
 		showDetail = false;
 		selectedProgressive = null;
+		modalProgress = null;
+		deleteCookie('overview-modal');
+	}
+
+	function onModalProgressChange(progress: number) {
+		if (selectedProgressive) {
+			setCookie(
+				'overview-modal',
+				JSON.stringify({ habitId: selectedProgressive.habit.id, progress })
+			);
+		}
 	}
 
 	function toggleSingleOptimistic(habitId: string): HabitWithStatus[] {
@@ -89,7 +112,7 @@
 
 	function onHabitTypeChange(val: 0 | 1) {
 		activeTab = val === 1 ? 'single' : 'progressive';
-		sessionStorage.setItem('overview-tab', activeTab);
+		setCookie('overview-tab', activeTab);
 	}
 </script>
 
@@ -160,6 +183,12 @@
 
 	<!-- Progressive Detail Modal -->
 	{#if showDetail && selectedProgressive}
-		<TaskProgressiveDetail {selectedProgressive} onSave={saveProgressive} onClose={closeDetail} />
+		<TaskProgressiveDetail
+			{selectedProgressive}
+			initialProgress={modalProgress}
+			onSave={saveProgressive}
+			onClose={closeDetail}
+			onProgressChange={onModalProgressChange}
+		/>
 	{/if}
 </div>

@@ -8,15 +8,34 @@ import { startOfDay, endOfDay } from '$lib/utils/date';
 
 const IS_DEV = import.meta.env.MODE === 'development';
 
-export const load: PageServerLoad = async ({ locals, platform }) => {
+export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
+	// Read UI state from cookies
+	const savedTab = cookies.get('overview-tab') as 'single' | 'progressive' | undefined;
+	const savedModal = cookies.get('overview-modal');
+
+	let initialTab: 'single' | 'progressive' = 'single';
+	let initialModal: { habitId: string; progress: number } | null = null;
+
+	if (savedTab === 'single' || savedTab === 'progressive') {
+		initialTab = savedTab;
+	}
+
+	if (savedModal) {
+		try {
+			initialModal = JSON.parse(savedModal);
+		} catch {
+			// Invalid JSON, ignore
+		}
+	}
+
 	// Mock user for development
 	const user = locals.user ?? (IS_DEV ? { id: 'dev-user-123', name: 'Dev User' } : null);
 
-	if (!user) return { single: [], progressive: [] };
+	if (!user) return { single: [], progressive: [], initialTab, initialModal };
 
 	// Skip DB entirely in dev
 	if (IS_DEV) {
-		return { single: [], progressive: [] };
+		return { single: [], progressive: [], initialTab, initialModal };
 	}
 
 	const db = getDB(platform!.env.DB);
@@ -53,7 +72,9 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 	const habitsWithStatus: HabitWithStatus[] = getHabitsForDate(habits, completions);
 	return {
 		single: habitsWithStatus.filter((h) => h.habit.measurement === 'boolean'),
-		progressive: habitsWithStatus.filter((h) => h.habit.measurement === 'numeric')
+		progressive: habitsWithStatus.filter((h) => h.habit.measurement === 'numeric'),
+		initialTab,
+		initialModal
 	};
 };
 

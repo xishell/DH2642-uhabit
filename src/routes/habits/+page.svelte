@@ -8,6 +8,7 @@
 	import { onMount } from 'svelte';
 	import { routes } from '$lib/routes';
 	import { habitsStore } from '$lib/stores/habits';
+	import { setCookie } from '$lib/utils/cookie';
 	import type { Habit } from '$lib/types/habit';
 
 	export let data;
@@ -18,7 +19,8 @@
 	let habitsLoading = false;
 	let habitsError: string | null = null;
 
-	let habitType: 0 | 1 = 0; //0 for progressive habit, 1 for single-step habit
+	// Initialize tab from server-provided value (no flash!)
+	let habitType: 0 | 1 = data.initialTab; //0 for progressive habit, 1 for single-step habit
 	let isNewBtnClicked = false;
 	let quote = data.quote ?? 'Let your days echo with the steps you choose to take.';
 	let author = data.author ?? '';
@@ -46,15 +48,7 @@
 		}
 	}
 
-	// Restore tab state from sessionStorage on mount
 	onMount(() => {
-		const saved = sessionStorage.getItem('habits-tab');
-		if (saved === 'single') {
-			habitType = 1;
-		} else if (saved === 'progressive') {
-			habitType = 0;
-		}
-
 		// Initialize store with SSR data, then subscribe for future updates
 		habitsStore.init(data.progressiveHabitList, data.singleStepHabitList);
 
@@ -96,7 +90,7 @@
 
 	function handleHabitTypeChange(val: 0 | 1) {
 		habitType = val;
-		sessionStorage.setItem('habits-tab', habitType === 1 ? 'single' : 'progressive');
+		setCookie('habits-tab', habitType === 1 ? 'single' : 'progressive');
 	}
 </script>
 

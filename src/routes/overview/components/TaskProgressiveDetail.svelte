@@ -64,9 +64,9 @@
 					<Progress.CircleRange class={isCompleted ? 'stroke-violet-500' : 'stroke-primary-500'} />
 				</Progress.Circle>
 			</Progress>
-			<div class="absolute inset-0 flex flex-col items-center justify-center">
-				<span class="text-2xl font-bold text-surface-50">{progress}</span>
-				<span class="text-xs text-surface-400">of {target} {unit}</span>
+			<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center text-center">
+				<span class="text-2xl font-bold text-surface-50 leading-none">{progress}</span>
+				<span class="text-xs text-surface-400 mt-1">of {target} {unit}</span>
 			</div>
 		</div>
 

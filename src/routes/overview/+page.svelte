@@ -6,6 +6,7 @@
 	import MenuDropdown from './components/MenuDropdown.svelte';
 	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
 	export let data: {
@@ -17,6 +18,14 @@
 	let showDetail = false;
 	let selectedProgressive: HabitWithStatus | null = null;
 	let error: string | null = null;
+
+	// Restore tab state from sessionStorage on mount
+	onMount(() => {
+		const saved = sessionStorage.getItem('overview-tab');
+		if (saved === 'progressive' || saved === 'single') {
+			activeTab = saved;
+		}
+	});
 
 	// Local state for optimistic UI
 	let single: HabitWithStatus[] = [];
@@ -80,6 +89,7 @@
 
 	function onHabitTypeChange(val: 0 | 1) {
 		activeTab = val === 1 ? 'single' : 'progressive';
+		sessionStorage.setItem('overview-tab', activeTab);
 	}
 </script>
 

@@ -46,11 +46,13 @@
 		}
 	}
 
-	// Read hash on mount to restore tab state
+	// Restore tab state from sessionStorage on mount
 	onMount(() => {
-		const hash = window.location.hash;
-		if (hash === '#single-step') {
+		const saved = sessionStorage.getItem('habits-tab');
+		if (saved === 'single') {
 			habitType = 1;
+		} else if (saved === 'progressive') {
+			habitType = 0;
 		}
 
 		// Initialize store with SSR data, then subscribe for future updates
@@ -94,9 +96,7 @@
 
 	function handleHabitTypeChange(val: 0 | 1) {
 		habitType = val;
-		// Update URL hash to preserve state
-		const hash = habitType === 1 ? '#single-step' : '#progressive';
-		history.replaceState(null, '', hash);
+		sessionStorage.setItem('habits-tab', habitType === 1 ? 'single' : 'progressive');
 	}
 </script>
 

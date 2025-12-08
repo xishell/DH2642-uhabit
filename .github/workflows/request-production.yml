@@ -6,6 +6,9 @@ on:
 jobs:
   request:
     runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+      contents: read
 
     steps:
       - name: Create deployment request

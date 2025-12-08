@@ -59,31 +59,36 @@
 			habitsError = state.error;
 		});
 
-		// Fetch quote client-side so SSR isn't blocked
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), 1200);
+		// Only fetch quote client-side if SSR didn't provide one and no cache exists
+		// This avoids unnecessary network requests when we already have a quote
+		let controller: AbortController | null = null;
+		if (isQuoteLoading) {
+			controller = new AbortController();
+			const timeout = setTimeout(() => controller?.abort(), 1200);
 
-		fetch('/api-external/quotes', { signal: controller.signal })
-			.then(
-				(res) => (res.ok ? res.json() : null) as Promise<{ quote?: string; author?: string } | null>
-			)
-			.then((data) => {
-				if (data?.quote) {
-					quote = data.quote;
-					author = data.author ?? '';
-					sessionStorage.setItem('uhabit-quote', JSON.stringify({ quote, author }));
-				}
-			})
-			.catch(() => {
-				// Keep fallback quote on error/timeout
-			})
-			.finally(() => {
-				isQuoteLoading = false;
-				clearTimeout(timeout);
-			});
+			fetch('/api-external/quotes', { signal: controller.signal })
+				.then(
+					(res) =>
+						(res.ok ? res.json() : null) as Promise<{ quote?: string; author?: string } | null>
+				)
+				.then((data) => {
+					if (data?.quote) {
+						quote = data.quote;
+						author = data.author ?? '';
+						sessionStorage.setItem('uhabit-quote', JSON.stringify({ quote, author }));
+					}
+				})
+				.catch(() => {
+					// Keep fallback quote on error/timeout
+				})
+				.finally(() => {
+					isQuoteLoading = false;
+					clearTimeout(timeout);
+				});
+		}
 
 		return () => {
-			controller.abort();
+			controller?.abort();
 			unsubscribe();
 		};
 	});

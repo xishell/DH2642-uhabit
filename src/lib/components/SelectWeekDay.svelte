@@ -17,17 +17,6 @@
 	function itemToValue(day: string): number {
 		return weekdayMap[day];
 	}
-
-	function valueToItem(value: number): string {
-		return Object.keys(weekdayMap).find((key) => weekdayMap[key] === value) || '';
-	}
 </script>
 
-<DragSelectGrid
-	items={days}
-	{selectDays}
-	{itemToValue}
-	{valueToItem}
-	name="period"
-	gridCols={7}
-/>
+<DragSelectGrid items={days} {selectDays} {itemToValue} name="period" gridCols={7} />

@@ -19,7 +19,12 @@ export const GET: RequestHandler = async ({ params, locals, platform, setHeaders
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
-	const { completion } = await verifyCompletionOwnership(db, params.id, params.completionId, userId);
+	const { completion } = await verifyCompletionOwnership(
+		db,
+		params.id,
+		params.completionId,
+		userId
+	);
 
 	// Cache privately
 	setHeaders({
@@ -34,8 +39,13 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
-	// Verify ownership
-	await verifyCompletionOwnership(db, params.id, params.completionId, userId);
+	// Verify ownership and get existing completion
+	const { completion: existingCompletion } = await verifyCompletionOwnership(
+		db,
+		params.id,
+		params.completionId,
+		userId
+	);
 
 	// Parse and validate request body
 	const body = await request.json();
@@ -72,14 +82,13 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 		.set(updateData)
 		.where(eq(habitCompletion.id, params.completionId));
 
-	// Fetch the updated completion
-	const updatedCompletion = await db
-		.select()
-		.from(habitCompletion)
-		.where(eq(habitCompletion.id, params.completionId))
-		.limit(1);
+	// Construct updated completion from existing data + updates (avoids extra SELECT)
+	const updatedCompletion = {
+		...existingCompletion,
+		...updateData
+	};
 
-	return json(updatedCompletion[0]);
+	return json(updatedCompletion);
 };
 
 // DELETE /api/habits/[id]/completions/[completionId] - Delete completion

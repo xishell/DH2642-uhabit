@@ -3,7 +3,6 @@
 	export let items: string[]; // Array of items to display
 	export let selectDays: number[] = []; // Array of selected values (as numbers)
 	export let itemToValue: (item: string) => number; // Function to convert item to value
-	export let valueToItem: (value: number) => string; // Function to convert value to item
 	export let name: string = 'period'; // Name for the hidden input field
 	export let gridCols: number = 7; // Number of columns in the grid
 

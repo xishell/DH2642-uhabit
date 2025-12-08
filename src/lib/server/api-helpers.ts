@@ -3,6 +3,33 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { eq, and } from 'drizzle-orm';
 import { getDB } from './db';
 import { habit, habitCompletion } from './db/schema';
+import type { z } from 'zod';
+
+/** Default pagination limits */
+export const PAGINATION_DEFAULTS = {
+	page: 1,
+	limit: 20,
+	maxLimit: 100
+} as const;
+
+/** Pagination parameters parsed from URL */
+export interface PaginationParams {
+	page: number;
+	limit: number;
+	offset: number;
+}
+
+/** Paginated response wrapper */
+export interface PaginatedResponse<T> {
+	data: T[];
+	pagination: {
+		page: number;
+		limit: number;
+		total: number;
+		totalPages: number;
+		hasMore: boolean;
+	};
+}
 
 /**
  * Requires authentication and returns the authenticated user's ID.
@@ -62,4 +89,116 @@ export async function verifyCompletionOwnership(
 	}
 
 	return { habit: habitRecord, completion: completions[0] };
+}
+
+/**
+ * Safely parses JSON from a request body with proper error handling.
+ * Returns an empty object for empty bodies (allows optional body requests).
+ * Throws 400 error for malformed JSON.
+ */
+export async function parseJsonBody<T = unknown>(request: Request): Promise<T> {
+	const text = await request.text();
+
+	// Allow empty body (returns empty object for optional body endpoints)
+	if (!text || text.trim() === '') {
+		return {} as T;
+	}
+
+	try {
+		return JSON.parse(text) as T;
+	} catch {
+		throw error(400, 'Invalid JSON in request body');
+	}
+}
+
+/**
+ * Parses and validates request body against a Zod schema.
+ * Throws 400 error for invalid JSON or validation failures.
+ */
+export async function parseAndValidate<T extends z.ZodTypeAny>(
+	request: Request,
+	schema: T
+): Promise<z.infer<T>> {
+	const body = await parseJsonBody(request);
+	const result = schema.safeParse(body);
+
+	if (!result.success) {
+		throw error(400, 'Invalid input: ' + result.error.issues.map((e) => e.message).join(', '));
+	}
+
+	return result.data;
+}
+
+/**
+ * Parses pagination parameters from URL search params.
+ * Ensures values are within valid ranges.
+ */
+export function parsePagination(url: URL): PaginationParams {
+	const pageParam = url.searchParams.get('page');
+	const limitParam = url.searchParams.get('limit');
+
+	const page = Math.max(1, parseInt(pageParam || '', 10) || PAGINATION_DEFAULTS.page);
+	const limit = Math.min(
+		PAGINATION_DEFAULTS.maxLimit,
+		Math.max(1, parseInt(limitParam || '', 10) || PAGINATION_DEFAULTS.limit)
+	);
+	const offset = (page - 1) * limit;
+
+	return { page, limit, offset };
+}
+
+/**
+ * Creates a paginated response wrapper.
+ */
+export function paginatedResponse<T>(
+	data: T[],
+	total: number,
+	pagination: PaginationParams
+): PaginatedResponse<T> {
+	const totalPages = Math.ceil(total / pagination.limit);
+
+	return {
+		data,
+		pagination: {
+			page: pagination.page,
+			limit: pagination.limit,
+			total,
+			totalPages,
+			hasMore: pagination.page < totalPages
+		}
+	};
+}
+
+/** Date format regex for YYYY-MM-DD validation */
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Validates that a date string is in YYYY-MM-DD format.
+ * Throws 400 error if format is invalid.
+ */
+export function validateDateParam(value: string | null, paramName: string): void {
+	if (value && !DATE_REGEX.test(value)) {
+		throw error(400, `Invalid "${paramName}" date format. Use YYYY-MM-DD`);
+	}
+}
+
+/**
+ * Parses and validates date range parameters from URL.
+ * Returns validated date strings or null if not provided.
+ * Throws 400 error if any date format is invalid.
+ */
+export function parseDateRangeParams(url: URL): {
+	date: string | null;
+	from: string | null;
+	to: string | null;
+} {
+	const date = url.searchParams.get('date');
+	const from = url.searchParams.get('from');
+	const to = url.searchParams.get('to');
+
+	validateDateParam(date, 'date');
+	validateDateParam(from, 'from');
+	validateDateParam(to, 'to');
+
+	return { date, from, to };
 }

@@ -149,6 +149,8 @@ export const habitCompletion = sqliteTable(
 		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull()
 	},
 	(table) => ({
+		// Index for querying all completions by user (without date filter)
+		userIdx: index('habit_completion_user_idx').on(table.userId),
 		// Index for querying completions by user and date range
 		userDateIdx: index('habit_completion_user_date_idx').on(table.userId, table.completedAt),
 		// Index for querying completions by habit and date

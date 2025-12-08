@@ -5,15 +5,34 @@ import { routes } from '$lib/routes';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Skip auth setup for static assets (huge performance improvement)
+	const pathname = event.url.pathname;
 	const isStaticAsset =
-		event.url.pathname.startsWith('/_app/') ||
-		event.url.pathname.startsWith('/favicon') ||
-		event.url.pathname.endsWith('.css') ||
-		event.url.pathname.endsWith('.js') ||
-		event.url.pathname.endsWith('.png') ||
-		event.url.pathname.endsWith('.jpg') ||
-		event.url.pathname.endsWith('.svg') ||
-		event.url.pathname.endsWith('.ico');
+		pathname.startsWith('/_app/') ||
+		pathname.startsWith('/favicon') ||
+		// Images
+		pathname.endsWith('.png') ||
+		pathname.endsWith('.jpg') ||
+		pathname.endsWith('.jpeg') ||
+		pathname.endsWith('.gif') ||
+		pathname.endsWith('.webp') ||
+		pathname.endsWith('.svg') ||
+		pathname.endsWith('.ico') ||
+		// Fonts
+		pathname.endsWith('.woff') ||
+		pathname.endsWith('.woff2') ||
+		pathname.endsWith('.ttf') ||
+		pathname.endsWith('.eot') ||
+		// Scripts & Styles
+		pathname.endsWith('.css') ||
+		pathname.endsWith('.js') ||
+		pathname.endsWith('.mjs') ||
+		// Data files
+		pathname.endsWith('.json') ||
+		pathname.endsWith('.xml') ||
+		// Other assets
+		pathname.endsWith('.map') ||
+		pathname.endsWith('.txt') ||
+		pathname.endsWith('.webmanifest');
 
 	if (isStaticAsset) {
 		return resolve(event);
@@ -50,7 +69,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		console.error('[HOOKS] Missing DB or BETTER_AUTH_SECRET in platform.env');
 		event.locals.user = null;
 		event.locals.session = null;
-		event.locals.auth = null as any;
+		event.locals.auth = null;
 		return resolve(event);
 	}
 
@@ -108,6 +127,22 @@ export const handle: Handle = async ({ event, resolve }) => {
 		'Permissions-Policy',
 		'geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()'
 	);
+
+	// Content Security Policy
+	// Note: 'unsafe-inline' is needed for SvelteKit's inline scripts and Tailwind styles
+	const cspDirectives = [
+		"default-src 'self'",
+		"script-src 'self' 'unsafe-inline'",
+		"style-src 'self' 'unsafe-inline'",
+		"img-src 'self' data: blob:",
+		"font-src 'self'",
+		"connect-src 'self'",
+		"frame-ancestors 'none'",
+		"base-uri 'self'",
+		"form-action 'self'"
+	];
+	response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
+
 	// Strict Transport Security (HSTS) - only for HTTPS
 	if (event.url.protocol === 'https:') {
 		response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');

@@ -95,15 +95,14 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 		})
 		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)));
 
-	// Fetch the updated habit
-	const updatedHabit = await db.select().from(habit).where(eq(habit.id, params.id)).limit(1);
+	// Construct updated habit from existing data + updates (avoids extra SELECT)
+	const updatedHabit = {
+		...existingHabit,
+		...updateData,
+		period: data.period !== undefined ? data.period : (existingHabit.period ? JSON.parse(existingHabit.period) : null)
+	};
 
-	const [found] = updatedHabit;
-
-	return json({
-		...found,
-		period: found.period ? JSON.parse(found.period) : null
-	});
+	return json(updatedHabit);
 };
 
 // DELETE /api/habits/[id] - Delete habit

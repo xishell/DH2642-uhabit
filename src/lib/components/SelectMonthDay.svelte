@@ -16,10 +16,6 @@
 		const match = str.match(/\d+/);
 		return match ? Number(match[0]) : NaN;
 	}
-
-	function valueToItem(value: number): string {
-		return getOrdinal(value);
-	}
 </script>
 
-<DragSelectGrid items={days} {selectDays} {itemToValue} {valueToItem} name="period" gridCols={7} />
+<DragSelectGrid items={days} {selectDays} {itemToValue} name="period" gridCols={7} />

@@ -5,7 +5,7 @@ import { habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 import { startOfDay, endOfDay } from '$lib/utils/date';
-import { requireAuth, verifyHabitOwnership } from '$lib/server/api-helpers';
+import { requireAuth, verifyHabitOwnership, parseJsonBody } from '$lib/server/api-helpers';
 
 // Validation schema for adding progress
 const addProgressSchema = z.object({
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async ({ params, request, locals, platform }
 	}
 
 	// Parse and validate request body
-	const body = await request.json().catch(() => ({}));
+	const body = await parseJsonBody(request);
 	const validationResult = addProgressSchema.safeParse(body);
 
 	if (!validationResult.success) {

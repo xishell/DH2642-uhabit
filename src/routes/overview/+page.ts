@@ -1,12 +1,5 @@
-import type { HabitWithStatus } from '$lib/types/habit';
+import type { PageLoad } from './$types';
 
-export const load = ({
-	data
-}: {
-	data: { single: HabitWithStatus[]; progressive: HabitWithStatus[] };
-}) => {
-	return {
-		single: data.single,
-		progressive: data.progressive
-	};
+export const load: PageLoad = ({ data }) => {
+	return data;
 };

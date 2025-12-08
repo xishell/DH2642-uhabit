@@ -37,13 +37,13 @@
 		}
 	}
 
-	// Local state for optimistic UI
-	let single: HabitWithStatus[] = [];
-	let progressive: HabitWithStatus[] = [];
+	// Local state for optimistic UI - initialize from server data
+	let single: HabitWithStatus[] = data.single.map((s) => ({ ...s }));
+	let progressive: HabitWithStatus[] = data.progressive.map((p) => ({ ...p }));
 
-	// Sync from server data when it changes
-	$: single = data.single.map((s) => ({ ...s }));
-	$: progressive = data.progressive.map((p) => ({ ...p }));
+	// Re-sync if server data changes (e.g., after form submission)
+	$: if (data.single) single = data.single.map((s) => ({ ...s }));
+	$: if (data.progressive) progressive = data.progressive.map((p) => ({ ...p }));
 
 	function showError(message: string) {
 		error = message;

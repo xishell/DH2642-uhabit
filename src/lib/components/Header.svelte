@@ -27,35 +27,37 @@
 <header class="w-full bg-surface-900 border-b border-surface-700 shadow-sm">
 	<div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
 		<!-- UHabit title left -->
-		<a href={routes.overview} class="text-lg font-semibold tracking-tight text-surface-50 flex-shrink-0">
+		<a
+			href={routes.overview}
+			class="text-lg font-semibold tracking-tight text-surface-50 flex-shrink-0"
+		>
 			UHabit
 		</a>
 
-	<!-- Nav items right -->
-	{#if showNav}
-		<nav class="flex items-center gap-6">
-			{#each navItems as item}
-				<a
-					href={item.href}
-					class="text-sm transition-all duration-200"
-					class:text-primary-400={currentPath.startsWith(item.href)}
-					class:text-surface-400={!currentPath.startsWith(item.href)}
-				>
-					{item.label}
-				</a>
-			{/each}
+		<!-- Nav items right -->
+		{#if showNav}
+			<nav class="flex items-center gap-6">
+				{#each navItems as item}
+					<a
+						href={item.href}
+						class="text-sm transition-all duration-200"
+						class:text-primary-400={currentPath.startsWith(item.href)}
+						class:text-surface-400={!currentPath.startsWith(item.href)}
+					>
+						{item.label}
+					</a>
+				{/each}
 
-			{#if user}
-				<button
-					type="button"
-					on:click={handleLogout}
-					class="text-sm text-surface-400 hover:text-primary-400 transition-colors duration-200"
-				>
-					Logout
-				</button>
-			{/if}
-		</nav>
-	{/if}
-</div>
-
+				{#if user}
+					<button
+						type="button"
+						on:click={handleLogout}
+						class="text-sm text-surface-400 hover:text-primary-400 transition-colors duration-200"
+					>
+						Logout
+					</button>
+				{/if}
+			</nav>
+		{/if}
+	</div>
 </header>

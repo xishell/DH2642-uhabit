@@ -92,8 +92,8 @@
 		};
 	});
 
-	function handleHabitTypeChange(event: CustomEvent<0 | 1>) {
-		habitType = event.detail;
+	function handleHabitTypeChange(val: 0 | 1) {
+		habitType = val;
 		// Update URL hash to preserve state
 		const hash = habitType === 1 ? '#single-step' : '#progressive';
 		history.replaceState(null, '', hash);
@@ -126,7 +126,7 @@
 	</div>
 
 	<!-- ToggleBar -->
-	<ToggleBar {habitType} on:change={handleHabitTypeChange} />
+	<ToggleBar {habitType} onChange={handleHabitTypeChange} />
 
 	<!-- Habit List -->
 	<div class="habit-list w-full grid grid-cols-1 sm:grid-cols-2 justify-between gap-7 mt-6">

@@ -4,7 +4,7 @@
 	import TaskProgressive from './components/TaskProgressive.svelte';
 	import TaskProgressiveDetail from './components/TaskProgressiveDetail.svelte';
 	import MenuDropdown from './components/MenuDropdown.svelte';
-	import HabitTypeToggle from '$lib/components/HabitTypeToggle.svelte';
+	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import { enhance } from '$app/forms';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
@@ -57,7 +57,7 @@
 
 	<!-- Toggle (replaces the old two-tab buttons) -->
 	<div class="max-w-3xl mx-auto mt-4 mb-6 flex justify-center">
-		<HabitTypeToggle habitType={activeTab === 'single' ? 1 : 0} onChange={onHabitTypeChange} />
+		<ToggleBar habitType={activeTab === 'single' ? 1 : 0} onChange={onHabitTypeChange} />
 	</div>
 
 	<!-- Content area (centered) -->

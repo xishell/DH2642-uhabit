@@ -23,9 +23,7 @@
 
 <header class="w-full border-b border-surface-200 shadow-sm bg-white">
 	<div class="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
-		<a href={routes.overview} class="text-lg font-semibold tracking-tight">
-			UHabit
-		</a>
+		<a href={routes.overview} class="text-lg font-semibold tracking-tight"> UHabit </a>
 
 		<nav class="flex items-center gap-6">
 			{#each navItems as item}

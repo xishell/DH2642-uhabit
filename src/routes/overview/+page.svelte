@@ -58,9 +58,7 @@
 		const previousState = progressive;
 
 		// Optimistic update
-		progressive = progressive.map((p) =>
-			p.habit.id === updated.habit.id ? { ...updated } : p
-		);
+		progressive = progressive.map((p) => (p.habit.id === updated.habit.id ? { ...updated } : p));
 		closeDetail();
 
 		// Sync with server

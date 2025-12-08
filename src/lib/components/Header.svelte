@@ -31,29 +31,28 @@
 			UHabit
 		</a>
 
-	<!-- Nav items + logout flush right -->
-	{#if showNav}
-		<nav class="flex items-center gap-4 mr-3">
-			{#each navItems as item}
-				<a
-					href={item.href}
-					class="text-sm transition-all duration-200"
-					class:text-primary-400={currentPath.startsWith(item.href)}
-					class:text-surface-400={!currentPath.startsWith(item.href)}
+		<!-- Nav items + logout flush right -->
+		{#if showNav}
+			<nav class="flex items-center gap-4 mr-3">
+				{#each navItems as item}
+					<a
+						href={item.href}
+						class="text-sm transition-all duration-200"
+						class:text-primary-400={currentPath.startsWith(item.href)}
+						class:text-surface-400={!currentPath.startsWith(item.href)}
+					>
+						{item.label}
+					</a>
+				{/each}
+
+				<button
+					type="button"
+					on:click={handleLogout}
+					class="text-sm text-surface-400 hover:text-primary-400 transition-colors duration-200"
 				>
-					{item.label}
-				</a>
-			{/each}
-
-			<button
-				type="button"
-				on:click={handleLogout}
-				class="text-sm text-surface-400 hover:text-primary-400 transition-colors duration-200"
-			>
-				Logout
-			</button>
-		</nav>
-	{/if}
-</div>
-
+					Logout
+				</button>
+			</nav>
+		{/if}
+	</div>
 </header>

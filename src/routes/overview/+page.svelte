@@ -97,7 +97,7 @@
 					<TaskProgressive
 						{p}
 						on:open={() => openProgressive(p)}
-						on:change={(e: CustomEvent<number>) => {
+						on:change={(e: CustomEvent) => {
 							const delta = e.detail;
 							const newValue = Math.max(0, Math.min(p.habit.targetAmount ?? 0, p.progress + delta));
 							const form = new FormData();

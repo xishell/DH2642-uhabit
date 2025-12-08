@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import TopProgress from './components/TopProgress.svelte';
 	import TaskSingle from './components/TaskSingle.svelte';
 	import TaskProgressive from './components/TaskProgressive.svelte';
@@ -78,7 +77,7 @@
 					<form method="POST" use:enhance action="?/toggleSingle">
 						<input type="hidden" name="id" value={s.habit.id} />
 						<input type="hidden" name="done" value={!s.isCompleted} />
-						<TaskSingle {s} on:toggle={() => null} />
+						<TaskSingle {s} />
 					</form>
 				{/each}
 			{/if}
@@ -94,18 +93,7 @@
 				</div>
 			{:else}
 				{#each progressive as p (p.habit.id)}
-					<TaskProgressive
-						{p}
-						on:open={() => openProgressive(p)}
-						on:change={(e: CustomEvent) => {
-							const delta = e.detail;
-							const newValue = Math.max(0, Math.min(p.habit.targetAmount ?? 0, p.progress + delta));
-							const form = new FormData();
-							form.append('id', p.habit.id);
-							form.append('progress', newValue.toString());
-							fetch('?/updateProgressValue', { method: 'POST', body: form });
-						}}
-					/>
+					<TaskProgressive {p} onOpen={() => openProgressive(p)} />
 				{/each}
 			{/if}
 		</div>

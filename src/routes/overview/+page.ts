@@ -1,8 +1,11 @@
-import type { Habit } from '$lib/types/habit';
+import type { HabitWithStatus } from '$lib/types/habit';
 
-export const load = ({ data }: { data: { user: any; single: Habit[]; progressive: Habit[] } }) => {
+export const load = ({
+	data
+}: {
+	data: { single: HabitWithStatus[]; progressive: HabitWithStatus[] };
+}) => {
 	return {
-		user: data.user,
 		single: data.single,
 		progressive: data.progressive
 	};

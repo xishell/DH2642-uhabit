@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { Progress } from '@skeletonlabs/skeleton-svelte';
+	import type { HabitWithStatus } from '$lib/types/habit';
 
-	export let single: any[] = [];
-	export let progressive: any[] = [];
+	export let single: HabitWithStatus[] = [];
+	export let progressive: HabitWithStatus[] = [];
 
 	$: total = single.length + progressive.length;
 	$: done =
-		single.filter((s) => s.done).length +
-		progressive.filter((p) => p.progress >= p.targetAmount).length;
+		single.filter((s) => s.isCompleted).length +
+		progressive.filter((p) => p.progress >= (p.habit.targetAmount ?? 0)).length;
 	$: pct = total === 0 ? 0 : Math.round((done / total) * 100);
 </script>
 

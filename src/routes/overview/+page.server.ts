@@ -104,5 +104,101 @@ export const actions: Actions = {
 		await db.update(habit).set({ targetAmount }).where(eq(habit.id, id));
 
 		return { success: true };
+	},
+
+	updateProgressValue: async ({ request, platform, locals }) => {
+		if (!locals.user) return { success: false };
+		const userId = locals.user.id;
+		const db = getDB(platform!.env.DB);
+
+		const form = await request.formData();
+		const habitId = form.get('id') as string;
+		const progress = Number(form.get('progress'));
+
+		const todayStart = startOfDay(new Date());
+		const todayEnd = endOfDay(new Date());
+
+		// Check if there's already a completion for today
+		const existing = await db
+			.select()
+			.from(habitCompletion)
+			.where(
+				and(
+					eq(habitCompletion.habitId, habitId),
+					eq(habitCompletion.userId, userId),
+					gte(habitCompletion.completedAt, todayStart),
+					lte(habitCompletion.completedAt, todayEnd)
+				)
+			)
+			.limit(1);
+
+		if (existing.length > 0) {
+			// Update existing completion
+			await db
+				.update(habitCompletion)
+				.set({ measurement: progress })
+				.where(eq(habitCompletion.id, existing[0].id));
+		} else {
+			// Create new completion
+			await db.insert(habitCompletion).values({
+				id: crypto.randomUUID(),
+				habitId,
+				userId,
+				completedAt: new Date(),
+				measurement: progress,
+				notes: null,
+				createdAt: new Date()
+			});
+		}
+
+		return { success: true };
+	},
+
+	updateProgressive: async ({ request, platform, locals }) => {
+		if (!locals.user) return { success: false };
+		const userId = locals.user.id;
+		const db = getDB(platform!.env.DB);
+
+		const form = await request.formData();
+		const habitId = form.get('id') as string;
+		const progress = Number(form.get('progress'));
+
+		const todayStart = startOfDay(new Date());
+		const todayEnd = endOfDay(new Date());
+
+		// Check if there's already a completion for today
+		const existing = await db
+			.select()
+			.from(habitCompletion)
+			.where(
+				and(
+					eq(habitCompletion.habitId, habitId),
+					eq(habitCompletion.userId, userId),
+					gte(habitCompletion.completedAt, todayStart),
+					lte(habitCompletion.completedAt, todayEnd)
+				)
+			)
+			.limit(1);
+
+		if (existing.length > 0) {
+			// Update existing completion
+			await db
+				.update(habitCompletion)
+				.set({ measurement: progress })
+				.where(eq(habitCompletion.id, existing[0].id));
+		} else {
+			// Create new completion
+			await db.insert(habitCompletion).values({
+				id: crypto.randomUUID(),
+				habitId,
+				userId,
+				completedAt: new Date(),
+				measurement: progress,
+				notes: null,
+				createdAt: new Date()
+			});
+		}
+
+		return { success: true };
 	}
 };

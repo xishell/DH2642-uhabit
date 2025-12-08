@@ -3,7 +3,6 @@
 	import HabitCard from '$lib/components/HabitCard.svelte';
 	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
-	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { routes } from '$lib/routes';
@@ -59,31 +58,36 @@
 			habitsError = state.error;
 		});
 
-		// Fetch quote client-side so SSR isn't blocked
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), 1200);
+		// Only fetch quote client-side if SSR didn't provide one and no cache exists
+		// This avoids unnecessary network requests when we already have a quote
+		let controller: AbortController | null = null;
+		if (isQuoteLoading) {
+			controller = new AbortController();
+			const timeout = setTimeout(() => controller?.abort(), 1200);
 
-		fetch('/api-external/quotes', { signal: controller.signal })
-			.then(
-				(res) => (res.ok ? res.json() : null) as Promise<{ quote?: string; author?: string } | null>
-			)
-			.then((data) => {
-				if (data?.quote) {
-					quote = data.quote;
-					author = data.author ?? '';
-					sessionStorage.setItem('uhabit-quote', JSON.stringify({ quote, author }));
-				}
-			})
-			.catch(() => {
-				// Keep fallback quote on error/timeout
-			})
-			.finally(() => {
-				isQuoteLoading = false;
-				clearTimeout(timeout);
-			});
+			fetch('/api-external/quotes', { signal: controller.signal })
+				.then(
+					(res) =>
+						(res.ok ? res.json() : null) as Promise<{ quote?: string; author?: string } | null>
+				)
+				.then((data) => {
+					if (data?.quote) {
+						quote = data.quote;
+						author = data.author ?? '';
+						sessionStorage.setItem('uhabit-quote', JSON.stringify({ quote, author }));
+					}
+				})
+				.catch(() => {
+					// Keep fallback quote on error/timeout
+				})
+				.finally(() => {
+					isQuoteLoading = false;
+					clearTimeout(timeout);
+				});
+		}
 
 		return () => {
-			controller.abort();
+			controller?.abort();
 			unsubscribe();
 		};
 	});
@@ -163,18 +167,20 @@
 	>
 		{#if isNewBtnClicked}
 			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
-				<button
+				<a
+					href={routes.habits.new('progressive')}
+					data-sveltekit-preload-data="hover"
 					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
-					on:click={() => goto(routes.habits.new('progressive'))}
 				>
 					Progressive
-				</button>
-				<button
+				</a>
+				<a
+					href={routes.habits.new('single')}
+					data-sveltekit-preload-data="hover"
 					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
-					on:click={() => goto(routes.habits.new('single'))}
 				>
 					Single-Step
-				</button>
+				</a>
 			</div>
 		{/if}
 		<button

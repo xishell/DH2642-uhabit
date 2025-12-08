@@ -29,6 +29,7 @@
 		<!-- UHabit title left -->
 		<a
 			href={routes.overview}
+			data-sveltekit-preload-data="hover"
 			class="text-lg font-semibold tracking-tight text-surface-50 flex-shrink-0"
 		>
 			UHabit
@@ -40,6 +41,7 @@
 				{#each navItems as item}
 					<a
 						href={item.href}
+						data-sveltekit-preload-data="hover"
 						class="text-sm transition-all duration-200"
 						class:text-primary-400={currentPath.startsWith(item.href)}
 						class:text-surface-400={!currentPath.startsWith(item.href)}

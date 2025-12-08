@@ -1,9 +1,10 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
-import { habit, habitCompletion } from '$lib/server/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { habitCompletion } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { requireAuth, verifyCompletionOwnership } from '$lib/server/api-helpers';
 
 // Validation schema for updating a completion
 const updateCompletionSchema = z.object({
@@ -13,50 +14,17 @@ const updateCompletionSchema = z.object({
 	notes: z.string().max(1000).nullish()
 });
 
-// Helper function to verify habit and completion ownership
-async function verifyOwnership(
-	db: ReturnType<typeof getDB>,
-	habitId: string,
-	completionId: string,
-	userId: string
-) {
-	// Verify habit exists and belongs to user
-	const habits = await db
-		.select()
-		.from(habit)
-		.where(and(eq(habit.id, habitId), eq(habit.userId, userId)))
-		.limit(1);
-
-	if (habits.length === 0) {
-		throw error(404, 'Habit not found');
-	}
-
-	// Verify completion exists and belongs to the habit
-	const completions = await db
-		.select()
-		.from(habitCompletion)
-		.where(and(eq(habitCompletion.id, completionId), eq(habitCompletion.habitId, habitId)))
-		.limit(1);
-
-	if (completions.length === 0) {
-		throw error(404, 'Completion not found');
-	}
-
-	return { habit: habits[0], completion: completions[0] };
-}
-
 // GET /api/habits/[id]/completions/[completionId] - Get single completion
 export const GET: RequestHandler = async ({ params, locals, platform, setHeaders }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
-	const { completion } = await verifyOwnership(db, params.id, params.completionId, userId);
+	const { completion } = await verifyCompletionOwnership(
+		db,
+		params.id,
+		params.completionId,
+		userId
+	);
 
 	// Cache privately
 	setHeaders({
@@ -68,17 +36,16 @@ export const GET: RequestHandler = async ({ params, locals, platform, setHeaders
 
 // PATCH /api/habits/[id]/completions/[completionId] - Update completion
 export const PATCH: RequestHandler = async ({ params, request, locals, platform }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
-	// Verify ownership
-	await verifyOwnership(db, params.id, params.completionId, userId);
+	// Verify ownership and get existing completion
+	const { completion: existingCompletion } = await verifyCompletionOwnership(
+		db,
+		params.id,
+		params.completionId,
+		userId
+	);
 
 	// Parse and validate request body
 	const body = await request.json();
@@ -115,29 +82,22 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 		.set(updateData)
 		.where(eq(habitCompletion.id, params.completionId));
 
-	// Fetch the updated completion
-	const updatedCompletion = await db
-		.select()
-		.from(habitCompletion)
-		.where(eq(habitCompletion.id, params.completionId))
-		.limit(1);
+	// Construct updated completion from existing data + updates (avoids extra SELECT)
+	const updatedCompletion = {
+		...existingCompletion,
+		...updateData
+	};
 
-	return json(updatedCompletion[0]);
+	return json(updatedCompletion);
 };
 
 // DELETE /api/habits/[id]/completions/[completionId] - Delete completion
 export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
 	// Verify ownership
-	await verifyOwnership(db, params.id, params.completionId, userId);
+	await verifyCompletionOwnership(db, params.id, params.completionId, userId);
 
 	// Delete completion
 	await db.delete(habitCompletion).where(eq(habitCompletion.id, params.completionId));

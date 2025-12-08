@@ -1,0 +1,1 @@
+CREATE INDEX `habit_completion_user_idx` ON `habit_completion` (`userId`);

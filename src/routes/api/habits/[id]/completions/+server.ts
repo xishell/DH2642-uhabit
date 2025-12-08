@@ -1,46 +1,35 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
-import { habit, habitCompletion } from '$lib/server/db/schema';
-import { eq, and, gte, lte, desc } from 'drizzle-orm';
+import { habitCompletion } from '$lib/server/db/schema';
+import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
 import { startOfDay, endOfDay } from '$lib/utils/date';
+import {
+	requireAuth,
+	verifyHabitOwnership,
+	parsePagination,
+	paginatedResponse,
+	validateDateParam
+} from '$lib/server/api-helpers';
 
 // GET /api/habits/[id]/completions - Get completion history with optional date range
+// Supports optional pagination: ?page=1&limit=20
+// Supports date filtering: ?from=YYYY-MM-DD&to=YYYY-MM-DD
 export const GET: RequestHandler = async ({ params, url, locals, platform, setHeaders }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
 	// Verify habit exists and belongs to user
-	const habits = await db
-		.select()
-		.from(habit)
-		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)))
-		.limit(1);
+	await verifyHabitOwnership(db, params.id, userId);
 
-	if (habits.length === 0) {
-		throw error(404, 'Habit not found');
-	}
+	// Check if pagination is requested
+	const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
 
-	// Parse optional date range query parameters
+	// Parse and validate date range parameters
 	const fromParam = url.searchParams.get('from');
 	const toParam = url.searchParams.get('to');
-
-	// Validate date format if provided
-	const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
-	if (fromParam && !dateRegex.test(fromParam)) {
-		throw error(400, 'Invalid "from" date format. Use YYYY-MM-DD');
-	}
-
-	if (toParam && !dateRegex.test(toParam)) {
-		throw error(400, 'Invalid "to" date format. Use YYYY-MM-DD');
-	}
+	validateDateParam(fromParam, 'from');
+	validateDateParam(toParam, 'to');
 
 	// Build query conditions
 	const conditions = [eq(habitCompletion.habitId, params.id)];
@@ -55,17 +44,39 @@ export const GET: RequestHandler = async ({ params, url, locals, platform, setHe
 		conditions.push(lte(habitCompletion.completedAt, toDate));
 	}
 
-	// Fetch completions with date range filter
+	// Cache privately for shorter duration since completions change more frequently
+	setHeaders({
+		'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
+	});
+
+	if (usePagination) {
+		const pagination = parsePagination(url);
+
+		// Get total count with filters
+		const [countResult] = await db
+			.select({ count: sql<number>`count(*)` })
+			.from(habitCompletion)
+			.where(and(...conditions));
+		const total = Number(countResult?.count ?? 0);
+
+		// Fetch paginated completions
+		const completions = await db
+			.select()
+			.from(habitCompletion)
+			.where(and(...conditions))
+			.orderBy(desc(habitCompletion.completedAt))
+			.limit(pagination.limit)
+			.offset(pagination.offset);
+
+		return json(paginatedResponse(completions, total, pagination));
+	}
+
+	// Non-paginated response (backward compatible)
 	const completions = await db
 		.select()
 		.from(habitCompletion)
 		.where(and(...conditions))
 		.orderBy(desc(habitCompletion.completedAt));
-
-	// Cache privately for shorter duration since completions change more frequently
-	setHeaders({
-		'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
-	});
 
 	return json(completions);
 };

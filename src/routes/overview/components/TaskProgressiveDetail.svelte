@@ -30,6 +30,15 @@
 		}
 	}
 
+	function handleInput(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const value = parseInt(input.value, 10);
+		if (!isNaN(value)) {
+			progress = Math.max(0, Math.min(target, value));
+			onProgressChange(progress);
+		}
+	}
+
 	function save() {
 		onSave?.({ ...selectedProgressive, progress });
 	}
@@ -89,7 +98,14 @@
 			>
 				<Minus class="w-5 h-5 text-surface-300" />
 			</button>
-			<span class="text-3xl font-bold text-surface-50 w-16 text-center">{progress}</span>
+			<input
+				type="number"
+				bind:value={progress}
+				on:input={handleInput}
+				min="0"
+				max={target}
+				class="text-3xl font-bold text-surface-50 w-20 text-center bg-transparent border-b-2 border-surface-600 focus:border-primary-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+			/>
 			<button
 				on:click={increment}
 				disabled={progress >= target}

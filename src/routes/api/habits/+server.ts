@@ -2,8 +2,9 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
 import { habit } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { requireAuth, parsePagination, paginatedResponse } from '$lib/server/api-helpers';
 
 // Validation schema for habit creation
 const createHabitSchema = z
@@ -37,40 +38,55 @@ const createHabitSchema = z
 	);
 
 // GET /api/habits - List all habits for authenticated user
-export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
-
+// Supports optional pagination: ?page=1&limit=20
+// Without pagination params, returns all habits (backward compatible)
+export const GET: RequestHandler = async ({ locals, platform, setHeaders, url }) => {
+	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
-	// Fetch all habits for the current user
-	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
+	// Check if pagination is requested
+	const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
+
+	// Helper to parse habit period JSON
+	const parseHabit = (h: typeof habit.$inferSelect) => ({
+		...h,
+		period: h.period ? JSON.parse(h.period) : null
+	});
 
 	// Cache privately to cut repeated reads while keeping data user-specific
 	setHeaders({
 		'Cache-Control': 'private, max-age=300, stale-while-revalidate=60'
 	});
 
-	return json(
-		habits.map((h) => ({
-			...h,
-			period: h.period ? JSON.parse(h.period) : null
-		}))
-	);
+	if (usePagination) {
+		const pagination = parsePagination(url);
+
+		// Get total count
+		const [countResult] = await db
+			.select({ count: sql<number>`count(*)` })
+			.from(habit)
+			.where(eq(habit.userId, userId));
+		const total = Number(countResult?.count ?? 0);
+
+		// Fetch paginated habits
+		const habits = await db
+			.select()
+			.from(habit)
+			.where(eq(habit.userId, userId))
+			.limit(pagination.limit)
+			.offset(pagination.offset);
+
+		return json(paginatedResponse(habits.map(parseHabit), total, pagination));
+	}
+
+	// Non-paginated response (backward compatible)
+	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
+	return json(habits.map(parseHabit));
 };
 
 // POST /api/habits - Create new habit
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
-	// Check authentication
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const userId = locals.user.id;
+	const userId = requireAuth(locals);
 
 	// Parse and validate request body
 	const body = await request.json();

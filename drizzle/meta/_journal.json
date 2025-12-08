@@ -43,6 +43,13 @@
 			"when": 1765124324054,
 			"tag": "0005_loving_garia",
 			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "6",
+			"when": 1765150580422,
+			"tag": "0006_equal_carnage",
+			"breakpoints": true
 		}
 	]
 }

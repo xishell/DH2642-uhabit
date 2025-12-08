@@ -13,7 +13,7 @@
 </script>
 
 <div
-	class="text-sm p-[5px] rounded-full border border-surface-300 inline-flex gap-2 bg-white"
+	class="text-sm p-[5px] rounded-full border border-surface-700 inline-flex gap-2 bg-surface-800"
 	role="tablist"
 	aria-label="Select habit type"
 >
@@ -22,7 +22,7 @@
 		class="py-1 px-3 rounded-full transition"
 		class:bg-violet-600={habitType === 0}
 		class:text-white={habitType === 0}
-		class:text-surface-700={habitType !== 0}
+		class:text-surface-300={habitType !== 0}
 		on:click={activateP}
 		aria-pressed={habitType === 0}
 	>
@@ -34,7 +34,7 @@
 		class="py-1 px-3 rounded-full transition"
 		class:bg-violet-600={habitType === 1}
 		class:text-white={habitType === 1}
-		class:text-surface-700={habitType !== 1}
+		class:text-surface-300={habitType !== 1}
 		on:click={activateS}
 		aria-pressed={habitType === 1}
 	>

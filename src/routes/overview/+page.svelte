@@ -12,8 +12,7 @@
 		single: HabitWithStatus[];
 		progressive: HabitWithStatus[];
 	};
-	//testing
-	// activeTab: 'single' | 'progressive'
+
 	let activeTab: 'single' | 'progressive' = 'single';
 	let showDetail = false;
 	let selectedProgressive: HabitWithStatus | null = null;
@@ -39,30 +38,24 @@
 		closeDetail();
 	}
 
-	// toggle callback maps: 0 -> progressive, 1 -> single
 	function onHabitTypeChange(val: 0 | 1) {
 		activeTab = val === 1 ? 'single' : 'progressive';
 	}
 </script>
 
-<div class="min-h-screen p-4 sm:p-8 bg-surface-50">
-	<!-- Page header (title + dropdown) -->
-	<div class="max-w-3xl mx-auto mb-6 flex items-center justify-between">
-		<h1 class="text-2xl font-semibold">Today's Habits</h1>
-		<MenuDropdown />
-	</div>
+<!-- Removed min-h-screen and bg-surface-50 -->
 
-	<!-- Top Progress (centered and constrained) -->
+<div class="p-4 sm:p-8">
+	<!-- Top Progress -->
 	<TopProgress {single} {progressive} />
 
-	<!-- Toggle (replaces the old two-tab buttons) -->
+	<!-- Toggle -->
 	<div class="max-w-3xl mx-auto mt-4 mb-6 flex justify-center">
 		<ToggleBar habitType={activeTab === 'single' ? 1 : 0} onChange={onHabitTypeChange} />
 	</div>
 
-	<!-- Content area (centered) -->
+	<!-- Content area -->
 	<div class="max-w-3xl mx-auto">
-		<!-- Single-Step Tasks -->
 		{#if activeTab === 'single'}
 			<div class="space-y-3">
 				{#if single.length === 0}
@@ -81,7 +74,6 @@
 			</div>
 		{/if}
 
-		<!-- Progressive Tasks -->
 		{#if activeTab === 'progressive'}
 			<div class="space-y-3">
 				{#if progressive.length === 0}
@@ -97,7 +89,7 @@
 		{/if}
 	</div>
 
-	<!-- Progressive Detail Modal/Drawer -->
+	<!-- Progressive Detail Modal -->
 	{#if showDetail && selectedProgressive}
 		<TaskProgressiveDetail {selectedProgressive} onSave={saveProgressive} onClose={closeDetail} />
 	{/if}

@@ -3,7 +3,6 @@
 	import SelectMonthDay from '$lib/components/SelectMonthDay.svelte';
 	import SelectOrEdit from '$lib/components/SelectOrEdit.svelte';
 	import { fade } from 'svelte/transition';
-	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { routes } from '$lib/routes';
 	export let form;
@@ -119,13 +118,13 @@
 
 		<!-- confirmation btns -->
 		<div class="form-btn flex justify-center gap-8">
-			<button
-				type="button"
-				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm"
-				on:click={() => goto(routes.habits.list)}
+			<a
+				href={routes.habits.list}
+				data-sveltekit-preload-data="hover"
+				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm text-center"
 			>
 				Cancel
-			</button>
+			</a>
 			<button
 				type="submit"
 				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm"

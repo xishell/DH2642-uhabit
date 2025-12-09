@@ -1,20 +1,29 @@
 <script lang="ts">
 	import { Progress } from '@skeletonlabs/skeleton-svelte';
 	import { Plus, Minus } from 'lucide-svelte';
+	import { untrack } from 'svelte';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
-	export let selectedProgressive: HabitWithStatus;
-	export let initialProgress: number | null = null;
-	export let onSave: (data: HabitWithStatus) => void = () => {};
-	export let onClose: () => void = () => {};
-	export let onProgressChange: (progress: number) => void = () => {};
+	let {
+		selectedProgressive,
+		initialProgress = null,
+		onSave = () => {},
+		onClose = () => {},
+		onProgressChange = () => {}
+	}: {
+		selectedProgressive: HabitWithStatus;
+		initialProgress?: number | null;
+		onSave?: (data: HabitWithStatus) => void;
+		onClose?: () => void;
+		onProgressChange?: (progress: number) => void;
+	} = $props();
 
-	let progress = initialProgress ?? selectedProgressive.progress;
+	let progress = $state(untrack(() => initialProgress ?? selectedProgressive.progress));
 
-	$: target = selectedProgressive.habit.targetAmount ?? 0;
-	$: pct = target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : 0;
-	$: unit = selectedProgressive.habit.unit ?? '';
-	$: isCompleted = progress >= target && target > 0;
+	const target = $derived(selectedProgressive.habit.targetAmount ?? 0);
+	const pct = $derived(target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : 0);
+	const unit = $derived(selectedProgressive.habit.unit ?? '');
+	const isCompleted = $derived(progress >= target && target > 0);
 
 	function increment() {
 		if (progress < target) {
@@ -59,8 +68,8 @@
 
 <div
 	class="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50"
-	on:click={handleBackdropClick}
-	on:keydown={(e) => e.key === 'Escape' && onClose()}
+	onclick={handleBackdropClick}
+	onkeydown={(e) => e.key === 'Escape' && onClose()}
 	role="dialog"
 	aria-modal="true"
 	tabindex="-1"
@@ -74,7 +83,7 @@
 				{selectedProgressive.habit.title}
 			</div>
 			<button
-				on:click={onClose}
+				onclick={onClose}
 				class="text-surface-400 hover:text-surface-200 text-2xl font-bold ml-2 leading-none"
 				aria-label="Close"
 			>
@@ -101,7 +110,7 @@
 		<!-- Increment / Decrement -->
 		<div class="flex items-center gap-8 mb-6">
 			<button
-				on:click={decrement}
+				onclick={decrement}
 				disabled={progress <= 0}
 				class="w-12 h-12 rounded-full border-2 border-surface-600 hover:border-surface-500 hover:bg-surface-700 transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
 			>
@@ -111,14 +120,14 @@
 				type="number"
 				inputmode="numeric"
 				bind:value={progress}
-				on:input={handleInput}
-				on:keydown={handleKeyDown}
+				oninput={handleInput}
+				onkeydown={handleKeyDown}
 				min="0"
 				max={target}
 				class="text-3xl font-bold text-surface-50 w-20 text-center bg-transparent border-b-2 border-surface-600 focus:border-primary-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
 			/>
 			<button
-				on:click={increment}
+				onclick={increment}
 				disabled={progress >= target}
 				class="w-12 h-12 rounded-full border-2 border-surface-600 hover:border-surface-500 hover:bg-surface-700 transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
 			>
@@ -128,7 +137,7 @@
 
 		<!-- Save Button -->
 		<button
-			on:click={save}
+			onclick={save}
 			class="w-full py-3 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 transition"
 		>
 			{isCompleted ? 'Save' : 'Update Progress'}

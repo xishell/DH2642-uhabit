@@ -4,13 +4,13 @@
 	import PasswordStrengthIndicator from '$lib/components/PasswordStrengthIndicator.svelte';
 	import { z } from 'zod';
 
-	let name = '';
-	let email = '';
-	let password = '';
-	let loading = false;
-	let errorMessage: string | null = null;
-	let errorHint: string | null = null;
-	let emailError: string | null = null;
+	let name = $state('');
+	let email = $state('');
+	let password = $state('');
+	let loading = $state(false);
+	let errorMessage = $state<string | null>(null);
+	let errorHint = $state<string | null>(null);
+	let emailError = $state<string | null>(null);
 
 	// Email validation schema
 	const emailSchema = z.string().email('Please enter a valid email address').toLowerCase();
@@ -27,7 +27,8 @@
 		}
 	}
 
-	async function handleSubmit() {
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
 		errorMessage = null;
 		errorHint = null;
 		emailError = null;
@@ -105,10 +106,7 @@
 	}
 </script>
 
-<form
-	class="space-y-6 max-w-md mx-auto p-6 bg-surface-100-800 rounded-xl"
-	on:submit|preventDefault={handleSubmit}
->
+<form class="space-y-6 max-w-md mx-auto p-6 bg-surface-100-800 rounded-xl" onsubmit={handleSubmit}>
 	<h1 class="text-2xl font-semibold text-center">Create an Account</h1>
 
 	{#if errorMessage}
@@ -167,7 +165,7 @@
 			id="email"
 			type="email"
 			bind:value={email}
-			on:blur={validateEmail}
+			onblur={validateEmail}
 			placeholder="you@example.com"
 			required
 			class="input px-4 py-2 border rounded-md bg-surface-50-900 focus:outline-none focus:ring-2

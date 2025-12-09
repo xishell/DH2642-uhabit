@@ -3,25 +3,25 @@
 	import { slide, fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 
-	export let password: string = '';
+	let { password = '' }: { password?: string } = $props();
 
 	interface Requirement {
 		met: boolean;
 		text: string;
 	}
 
-	$: requirements = [
+	const requirements = $derived([
 		{ met: password.length >= 8, text: 'At least 8 characters' },
 		{ met: /[A-Z]/.test(password), text: 'One uppercase letter' },
 		{ met: /[a-z]/.test(password), text: 'One lowercase letter' },
 		{ met: /[0-9]/.test(password), text: 'One number' }
-	] as Requirement[];
+	] as Requirement[]);
 
-	$: hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-	$: allRequirementsMet = requirements.every((r) => r.met);
+	const hasSpecialChar = $derived(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password));
+	const allRequirementsMet = $derived(requirements.every((r) => r.met));
 
 	// Calculate strength percentage
-	$: strength = (() => {
+	const strength = $derived.by(() => {
 		if (!password) return 0;
 		let score = 0;
 
@@ -37,26 +37,26 @@
 		if (/^[0-9]+$/.test(password)) score -= 20; // Only numbers
 
 		return Math.max(0, Math.min(100, score));
-	})();
+	});
 
-	$: strengthLabel = (() => {
+	const strengthLabel = $derived.by(() => {
 		if (strength === 0) return '';
 		if (strength < 40) return 'Weak';
 		if (strength < 70) return 'Medium';
 		return 'Strong';
-	})();
+	});
 
-	$: strengthColor = (() => {
+	const strengthColor = $derived.by(() => {
 		if (strength < 40) return 'bg-error-500';
 		if (strength < 70) return 'bg-warning-500';
 		return 'bg-success-500';
-	})();
+	});
 
-	$: textColor = (() => {
+	const textColor = $derived.by(() => {
 		if (strength < 40) return 'text-error-600';
 		if (strength < 70) return 'text-warning-600';
 		return 'text-success-600';
-	})();
+	});
 </script>
 
 {#if password}

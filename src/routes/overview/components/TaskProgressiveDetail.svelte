@@ -36,6 +36,15 @@
 		if (!isNaN(value)) {
 			progress = Math.max(0, Math.min(target, value));
 			onProgressChange(progress);
+		} else {
+			input.value = progress.toString();
+		}
+	}
+
+	function handleKeyDown(e: KeyboardEvent) {
+		const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+		if (!allowedKeys.includes(e.key) && !/^\d$/.test(e.key)) {
+			e.preventDefault();
 		}
 	}
 
@@ -100,8 +109,10 @@
 			</button>
 			<input
 				type="number"
+				inputmode="numeric"
 				bind:value={progress}
 				on:input={handleInput}
+				on:keydown={handleKeyDown}
 				min="0"
 				max={target}
 				class="text-3xl font-bold text-surface-50 w-20 text-center bg-transparent border-b-2 border-surface-600 focus:border-primary-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

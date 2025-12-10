@@ -6,33 +6,40 @@
 	import { page } from '$app/stores';
 	import { routes } from '$lib/routes';
 	import { Trash2 } from 'lucide-svelte';
-	import { onMount } from 'svelte';
 	import type { Habit } from '$lib/types/habit';
+	import { untrack } from 'svelte';
 
-	export let data: { targetHabit?: Habit; loadError?: string } = {};
-	export let form;
+	let {
+		data = {},
+		form
+	}: {
+		data?: { targetHabit?: Habit; loadError?: string };
+		form?: any;
+	} = $props();
 
-	let targetHabit: Habit | null = data?.targetHabit ?? null;
-	let loadError: string | null = data?.loadError ?? null;
-	let isLoading = !targetHabit && !loadError;
-	$: id = $page.params.id;
-	$: type = $page.url.searchParams.get('type');
+	let targetHabit = $state<Habit | null>(untrack(() => data?.targetHabit ?? null));
+	let loadError = $state<string | null>(untrack(() => data?.loadError ?? null));
+	let isLoading = $state(untrack(() => !targetHabit && !loadError));
+
+	const id = $derived($page.params.id);
+	const type = $derived($page.url.searchParams.get('type'));
 
 	const colors = ['#E0E0E0', '#CCCCCC', '#B8B8B8', '#A4A4A4', '#909090', '#7C7C7C', '#686868'];
 	const frequencyArr = ['daily', 'weekly', 'monthly'];
 
-	$: measurement =
+	const measurement = $derived(
 		type === 'progressive'
 			? 'numeric'
 			: type === 'single'
 				? 'boolean'
-				: (targetHabit?.measurement ?? 'boolean');
+				: (targetHabit?.measurement ?? 'boolean')
+	);
 
-	let selectedColor: string | null = targetHabit?.color ?? null;
-	let selectedFrequency: string | null = targetHabit?.frequency ?? 'daily';
-	let unit: string | null = targetHabit?.unit ?? null;
+	let selectedColor = $state<string | null>(untrack(() => targetHabit?.color ?? null));
+	let selectedFrequency = $state<string | null>(untrack(() => targetHabit?.frequency ?? 'daily'));
+	let unit = $state<string | null>(untrack(() => targetHabit?.unit ?? null));
 
-	onMount(() => {
+	$effect(() => {
 		// If SSR provided data or error, skip client fetch
 		if (targetHabit || loadError) {
 			isLoading = false;
@@ -148,7 +155,7 @@
 									type="button"
 									class="color-dot w-10 h-10 sm:w-9 sm:h-9 rounded-full border-2 p-[0.1rem] bg-clip-content transition-all duration-200"
 									style="background-color: {color};"
-									on:click={() => selectColor(color)}
+									onclick={() => selectColor(color)}
 									style:border-color={selectedColor === color ? selectedColor : 'transparent'}
 									aria-label={`Select color ${color}`}
 								></button>
@@ -167,7 +174,7 @@
 										class="btn capitalize preset-outlined-primary-700-300 border-primary-600 transition-colors duration-200 sm:text-sm"
 										class:border-transparent={!(selectedFrequency === frequency)}
 										class:text-primary-700={selectedFrequency === frequency}
-										on:click={() => (selectedFrequency = frequency)}
+										onclick={() => (selectedFrequency = frequency)}
 									>
 										{frequency}
 									</button>
@@ -214,7 +221,7 @@
 			<button
 				type="button"
 				class="flex justify-center items-center w-12 h-12 rounded-full border border-surface-600-400 hover:text-surface-contrast-800 hover:bg-error-700 hover:border-error-700 transition-colors duration-300 cursor-pointer"
-				on:click={handleDelete}><Trash2 strokeWidth={1.5} /></button
+				onclick={handleDelete}><Trash2 strokeWidth={1.5} /></button
 			>
 			<button
 				type="submit"

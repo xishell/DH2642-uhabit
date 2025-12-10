@@ -1,24 +1,36 @@
 <script lang="ts">
 	// Generic drag-to-select grid component
-	export let items: string[]; // Array of items to display
-	export let selectDays: number[] = []; // Array of selected values (as numbers)
-	export let itemToValue: (item: string) => number; // Function to convert item to value
-	export let name: string = 'period'; // Name for the hidden input field
-	export let gridCols: number = 7; // Number of columns in the grid
+	let {
+		items,
+		selectDays = [],
+		itemToValue,
+		name = 'period',
+		gridCols = 7
+	}: {
+		items: string[];
+		selectDays?: number[];
+		itemToValue: (item: string) => number;
+		name?: string;
+		gridCols?: number;
+	} = $props();
 
-	let isDragging = false;
-	let dragMode: 'select' | 'deselect' | null = null;
-	let selected = new Set<string>();
+	let isDragging = $state(false);
+	let dragMode = $state<'select' | 'deselect' | null>(null);
+	let selected = $state(new Set<string>());
 
 	// Initialize selected items from selectDays prop
-	$: if (selectDays?.length > 0) {
-		selected = new Set(items.filter((item) => selectDays.includes(itemToValue(item))));
-	}
+	$effect(() => {
+		if (selectDays?.length > 0) {
+			selected = new Set(items.filter((item) => selectDays.includes(itemToValue(item))));
+		}
+	});
 
 	// Convert selected items back to values for the form
-	$: selectedValues = Array.from(selected)
-		.map((item) => itemToValue(item))
-		.sort((a, b) => a - b);
+	const selectedValues = $derived(
+		Array.from(selected)
+			.map((item) => itemToValue(item))
+			.sort((a, b) => a - b)
+	);
 
 	function updateSet() {
 		selected = new Set(selected);
@@ -67,11 +79,11 @@
 <div
 	class="grid gap-[1px] select-none touch-none rounded-md overflow-clip"
 	style="grid-template-columns: repeat({gridCols}, minmax(0, 1fr));"
-	on:mouseup={endDrag}
-	on:mouseleave={endDrag}
-	on:touchend={endDrag}
-	on:touchcancel={endDrag}
-	on:touchmove={handleTouchMove}
+	onmouseup={endDrag}
+	onmouseleave={endDrag}
+	ontouchend={endDrag}
+	ontouchcancel={endDrag}
+	ontouchmove={handleTouchMove}
 >
 	{#each items as item}
 		<div
@@ -83,9 +95,9 @@
 				? 'bg-primary-500 text-primary-50 hover:bg-primary-400'
 				: 'bg-primary-50 text-primary-700 hover:bg-primary-100'}
 			"
-			on:mousedown={(e) => startDrag(item, e)}
-			on:touchstart={(e) => startDrag(item, e)}
-			on:mouseenter={() => dragOver(item)}
+			onmousedown={(e) => startDrag(item, e)}
+			ontouchstart={(e) => startDrag(item, e)}
+			onmouseenter={() => dragOver(item)}
 		>
 			{item}
 		</div>

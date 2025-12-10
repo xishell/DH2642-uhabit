@@ -8,42 +8,55 @@
 	import { enhance } from '$app/forms';
 	import { browser } from '$app/environment';
 	import { setCookie, setJsonCookie, deleteCookie } from '$lib/utils/cookie';
+	import { untrack } from 'svelte';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
-	export let data: {
-		single: HabitWithStatus[];
-		progressive: HabitWithStatus[];
-		initialTab: 'single' | 'progressive';
-		initialModal: { habitId: string; progress: number } | null;
-	};
+	let {
+		data
+	}: {
+		data: {
+			single: HabitWithStatus[];
+			progressive: HabitWithStatus[];
+			initialTab: 'single' | 'progressive';
+			initialModal: { habitId: string; progress: number } | null;
+		};
+	} = $props();
 
 	// Initialize from server-provided values (no flash!)
-	let activeTab: 'single' | 'progressive' = data.initialTab;
-	let showDetail = false;
-	let selectedProgressive: HabitWithStatus | null = null;
-	let modalProgress: number | null = null;
-	let error: string | null = null;
+	let activeTab = $state<'single' | 'progressive'>(untrack(() => data.initialTab));
+	let showDetail = $state(false);
+	let selectedProgressive = $state<HabitWithStatus | null>(null);
+	let modalProgress = $state<number | null>(null);
+	let error = $state<string | null>(null);
 
 	// Restore modal state from server data
-	if (data.initialModal) {
-		const habit = data.progressive.find((p) => p.habit.id === data.initialModal!.habitId);
-		if (habit) {
-			selectedProgressive = structuredClone(habit);
-			modalProgress = data.initialModal.progress;
-			showDetail = true;
-		} else if (browser) {
-			// Clear invalid cookie (only on client)
-			deleteCookie('overview-modal');
+	untrack(() => {
+		if (data.initialModal) {
+			const habit = data.progressive.find((p) => p.habit.id === data.initialModal!.habitId);
+			if (habit) {
+				selectedProgressive = { ...habit, habit: { ...habit.habit } };
+				modalProgress = data.initialModal.progress;
+				showDetail = true;
+			} else if (browser) {
+				// Clear invalid cookie (only on client)
+				deleteCookie('overview-modal');
+			}
 		}
-	}
+	});
 
 	// Local state for optimistic UI - initialize from server data
-	let single: HabitWithStatus[] = data.single.map((s) => ({ ...s }));
-	let progressive: HabitWithStatus[] = data.progressive.map((p) => ({ ...p }));
+	let single = $state<HabitWithStatus[]>(untrack(() => data.single.map((s) => ({ ...s }))));
+	let progressive = $state<HabitWithStatus[]>(
+		untrack(() => data.progressive.map((p) => ({ ...p })))
+	);
 
 	// Re-sync if server data changes (e.g., after form submission)
-	$: if (data.single) single = data.single.map((s) => ({ ...s }));
-	$: if (data.progressive) progressive = data.progressive.map((p) => ({ ...p }));
+	$effect(() => {
+		if (data.single) single = data.single.map((s) => ({ ...s }));
+	});
+	$effect(() => {
+		if (data.progressive) progressive = data.progressive.map((p) => ({ ...p }));
+	});
 
 	function showError(message: string) {
 		error = message;
@@ -51,7 +64,7 @@
 	}
 
 	function openProgressive(p: HabitWithStatus) {
-		selectedProgressive = structuredClone(p);
+		selectedProgressive = { ...p, habit: { ...p.habit } };
 		modalProgress = null;
 		showDetail = true;
 		setJsonCookie('overview-modal', { habitId: p.habit.id, progress: p.progress });

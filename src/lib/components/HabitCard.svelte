@@ -1,8 +1,15 @@
 <script lang="ts">
 	import { routes } from '$lib/routes';
-	export let title: string = 'Drink Water';
-	export let habitId: string = '';
-	export let type: string = '';
+
+	let {
+		title = 'Drink Water',
+		habitId = '',
+		type = ''
+	}: {
+		title?: string;
+		habitId?: string;
+		type?: string;
+	} = $props();
 </script>
 
 <div

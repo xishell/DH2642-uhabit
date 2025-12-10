@@ -1,8 +1,15 @@
 <script lang="ts">
-	export let onClick: () => void;
-	export let aria = '';
+	let {
+		onClick,
+		aria = '',
+		children
+	}: {
+		onClick: () => void;
+		aria?: string;
+		children: import('svelte').Snippet;
+	} = $props();
 </script>
 
-<button class="p-2 rounded-md hover:bg-surface-100" on:click={onClick} aria-label={aria}>
-	<slot />
+<button class="p-2 rounded-md hover:bg-surface-100" onclick={onClick} aria-label={aria}>
+	{@render children()}
 </button>

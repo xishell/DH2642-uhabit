@@ -2,7 +2,7 @@
 	import { Check } from 'lucide-svelte';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
-	export let s: HabitWithStatus;
+	let { s }: { s: HabitWithStatus } = $props();
 </script>
 
 <button

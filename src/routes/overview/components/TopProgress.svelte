@@ -2,14 +2,20 @@
 	import { Progress } from '@skeletonlabs/skeleton-svelte';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
-	export let single: HabitWithStatus[] = [];
-	export let progressive: HabitWithStatus[] = [];
+	let {
+		single = [],
+		progressive = []
+	}: {
+		single?: HabitWithStatus[];
+		progressive?: HabitWithStatus[];
+	} = $props();
 
-	$: total = single.length + progressive.length;
-	$: done =
+	const total = $derived(single.length + progressive.length);
+	const done = $derived(
 		single.filter((s) => s.isCompleted).length +
-		progressive.filter((p) => p.progress >= (p.habit.targetAmount ?? 0)).length;
-	$: pct = total === 0 ? 0 : Math.round((done / total) * 100);
+			progressive.filter((p) => p.progress >= (p.habit.targetAmount ?? 0)).length
+	);
+	const pct = $derived(total === 0 ? 0 : Math.round((done / total) * 100));
 </script>
 
 <div class="mb-6 flex justify-center">

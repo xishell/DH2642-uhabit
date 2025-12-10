@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { Menu } from 'lucide-svelte';
-	let open = false;
+	let open = $state(false);
 </script>
 
 <div class="relative">
 	<button
 		class="p-2 rounded-md hover:bg-surface-100"
-		on:click={() => (open = !open)}
+		onclick={() => (open = !open)}
 		aria-expanded={open}><Menu class="w-6 h-6" /></button
 	>
 	{#if open}

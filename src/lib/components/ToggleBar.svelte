@@ -1,7 +1,12 @@
 <script lang="ts">
 	// 0 = Progressive, 1 = Single-Step (keeps old numeric contract)
-	export let habitType: 0 | 1 = 1;
-	export let onChange: (val: 0 | 1) => void;
+	let {
+		habitType = 1,
+		onChange
+	}: {
+		habitType?: 0 | 1;
+		onChange: (val: 0 | 1) => void;
+	} = $props();
 
 	function activateP() {
 		onChange?.(0);
@@ -23,7 +28,7 @@
 		class:bg-violet-600={habitType === 0}
 		class:text-white={habitType === 0}
 		class:text-surface-300={habitType !== 0}
-		on:click={activateP}
+		onclick={activateP}
 		aria-pressed={habitType === 0}
 	>
 		Progressive
@@ -35,7 +40,7 @@
 		class:bg-violet-600={habitType === 1}
 		class:text-white={habitType === 1}
 		class:text-surface-300={habitType !== 1}
-		on:click={activateS}
+		onclick={activateS}
 		aria-pressed={habitType === 1}
 	>
 		Single-Step

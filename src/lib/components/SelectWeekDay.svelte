@@ -1,7 +1,11 @@
 <script lang="ts">
 	import DragSelectGrid from './DragSelectGrid.svelte';
 
-	export let selectDays: number[] = [];
+	let {
+		selectDays = []
+	}: {
+		selectDays?: number[];
+	} = $props();
 
 	const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 	const weekdayMap: Record<string, number> = {

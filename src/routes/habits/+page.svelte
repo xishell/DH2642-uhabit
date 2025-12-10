@@ -4,30 +4,33 @@
 	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
 	import { browser } from '$app/environment';
-	import { onMount } from 'svelte';
 	import { routes } from '$lib/routes';
 	import { habitsStore } from '$lib/stores/habits';
 	import { setCookie } from '$lib/utils/cookie';
 	import type { Habit } from '$lib/types/habit';
+	import { untrack } from 'svelte';
 
-	export let data;
+	let { data }: { data: any } = $props();
 
-	// Initialize from SSR data
-	let progressiveHabitList: Habit[] = data.progressiveHabitList;
-	let singleStepHabitList: Habit[] = data.singleStepHabitList;
-	let habitsLoading = false;
-	let habitsError: string | null = null;
+	// Initialize from SSR data (using untrack to capture initial value only)
+	let progressiveHabitList = $state<Habit[]>(untrack(() => data.progressiveHabitList));
+	let singleStepHabitList = $state<Habit[]>(untrack(() => data.singleStepHabitList));
+	let habitsLoading = $state(false);
+	let habitsError = $state<string | null>(null);
 
 	// Initialize tab from server-provided value (no flash!)
-	let habitType: 0 | 1 = data.initialTab; //0 for progressive habit, 1 for single-step habit
-	let isNewBtnClicked = false;
-	let quote = data.quote ?? 'Let your days echo with the steps you choose to take.';
-	let author = data.author ?? '';
-	let isQuoteLoading = !data.quote;
+	let habitType = $state<0 | 1>(untrack(() => data.initialTab)); //0 for progressive habit, 1 for single-step habit
+	let isNewBtnClicked = $state(false);
+	let quote = $state(
+		untrack(() => data.quote ?? 'Let your days echo with the steps you choose to take.')
+	);
+	let author = $state(untrack(() => data.author ?? ''));
+	let isQuoteLoading = $state(untrack(() => !data.quote));
 
 	if (browser) {
 		// Prefer SSR-provided quote, fall back to cached client quote
-		if (!data.quote) {
+		const initialQuote = untrack(() => data.quote);
+		if (!initialQuote) {
 			const cachedQuoteRaw = sessionStorage.getItem('uhabit-quote');
 			if (cachedQuoteRaw) {
 				try {
@@ -43,11 +46,15 @@
 				}
 			}
 		} else {
-			sessionStorage.setItem('uhabit-quote', JSON.stringify({ quote, author }));
+			const initialAuthor = untrack(() => author);
+			sessionStorage.setItem(
+				'uhabit-quote',
+				JSON.stringify({ quote: initialQuote, author: initialAuthor })
+			);
 		}
 	}
 
-	onMount(() => {
+	$effect(() => {
 		// Initialize store with SSR data, then subscribe for future updates
 		habitsStore.init(data.progressiveHabitList, data.singleStepHabitList);
 
@@ -114,7 +121,7 @@
 			</div>
 		{:else}
 			<p class="leading-snug">
-				“{quote}”
+				"{quote}"
 				{#if author}
 					<br />
 					<span class="text-sm opacity-80">— {author}</span>
@@ -148,12 +155,12 @@
 	<!-- blur layer -->
 	{#if isNewBtnClicked}
 		<div
-			on:click={() => {
+			onclick={() => {
 				isNewBtnClicked = !isNewBtnClicked;
 			}}
 			role="button"
 			tabindex="0"
-			on:keydown={(e) => {
+			onkeydown={(e) => {
 				e.key === 'Enter' ? (isNewBtnClicked = !isNewBtnClicked) : null;
 			}}
 			class="fixed top-0 w-full h-screen bg-gray-900 opacity-30"
@@ -185,13 +192,13 @@
 		{/if}
 		<button
 			class="text-3xl w-[64px] h-[64px] bg-primary-500 rounded-full hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl flex justify-center items-center"
-			on:click={() => {
+			onclick={() => {
 				isNewBtnClicked = !isNewBtnClicked;
 			}}
 			><Plus
 				size={26}
 				strokeWidth={3}
-				class={`pl-[0.04rem] pt-[0.04rem] 
+				class={`pl-[0.04rem] pt-[0.04rem]
           transition-transform duration-300 ease-in-out
           ${isNewBtnClicked ? 'rotate-45' : 'rotate-0'}`}
 			/></button

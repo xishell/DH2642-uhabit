@@ -51,6 +51,13 @@
 	}
 
 	function handleKeyDown(e: KeyboardEvent) {
+		// Save on Enter key
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			save();
+			return;
+		}
+
 		const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
 		if (!allowedKeys.includes(e.key) && !/^\d$/.test(e.key)) {
 			e.preventDefault();

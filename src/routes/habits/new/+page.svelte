@@ -5,17 +5,18 @@
 	import { fade } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import { routes } from '$lib/routes';
-	export let form;
 
-	$: type = $page.url.searchParams.get('type');
+	let { form }: { form: any } = $props();
+
+	const type = $derived($page.url.searchParams.get('type'));
 
 	const colors = ['#E0E0E0', '#CCCCCC', '#B8B8B8', '#A4A4A4', '#909090', '#7C7C7C', '#686868'];
 	const frequencyArr = ['daily', 'weekly', 'monthly'];
 
-	$: measurement = type === 'progressive' ? 'numeric' : 'boolean';
-	let selectedColor: string = colors[2];
-	let selectedFrequency: string = frequencyArr[0];
-	let unit: string = '';
+	const measurement = $derived(type === 'progressive' ? 'numeric' : 'boolean');
+	let selectedColor = $state<string>(colors[2]);
+	let selectedFrequency = $state<string>(frequencyArr[0]);
+	let unit = $state<string>('');
 
 	function selectColor(color: string) {
 		selectedColor = color;
@@ -58,7 +59,7 @@
 							type="button"
 							class="color-dot w-10 h-10 sm:w-9 sm:h-9 rounded-full border-2 p-[0.1rem] bg-clip-content transition-all duration-200"
 							style="background-color: {color};"
-							on:click={() => selectColor(color)}
+							onclick={() => selectColor(color)}
 							style:border-color={selectedColor === color ? selectedColor : 'transparent'}
 							aria-label={`Select color ${color}`}
 						></button>
@@ -77,7 +78,7 @@
 								class="btn capitalize preset-outlined-surface-500 border-primary-600 transition-colors duration-200 sm:text-sm"
 								class:border-transparent={!(selectedFrequency === frequency)}
 								class:text-primary-700={selectedFrequency === frequency}
-								on:click={() => (selectedFrequency = frequency)}
+								onclick={() => (selectedFrequency = frequency)}
 							>
 								{frequency}
 							</button>

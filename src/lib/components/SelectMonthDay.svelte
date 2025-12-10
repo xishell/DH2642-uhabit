@@ -1,7 +1,11 @@
 <script lang="ts">
 	import DragSelectGrid from './DragSelectGrid.svelte';
 
-	export let selectDays: number[] = [];
+	let {
+		selectDays = []
+	}: {
+		selectDays?: number[];
+	} = $props();
 
 	const getOrdinal = (n: number) => {
 		if (n % 10 === 1 && n % 100 !== 11) return `${n}st`;

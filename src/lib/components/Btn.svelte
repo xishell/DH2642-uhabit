@@ -1,5 +1,9 @@
-<script>
-	export let content = 'button';
+<script lang="ts">
+	let {
+		content = 'button'
+	}: {
+		content?: string;
+	} = $props();
 	// export let variant = 'primary';
 	// const variants = {
 	// 	primary: '',

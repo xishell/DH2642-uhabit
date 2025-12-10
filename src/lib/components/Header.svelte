@@ -2,9 +2,13 @@
 	import { page } from '$app/stores';
 	import { routes } from '$lib/routes';
 
-	export let user: { id: string; name: string } | null = null;
+	let {
+		user = null
+	}: {
+		user?: { id: string; name: string } | null;
+	} = $props();
 
-	$: currentPath = $page.url.pathname;
+	const currentPath = $derived($page.url.pathname);
 
 	const navItems = [
 		{ href: routes.overview, label: 'Overview' },
@@ -21,7 +25,7 @@
 	}
 
 	// Only hide nav on login/register pages, but allow nav if user exists
-	$: showNav = !(currentPath === routes.login || currentPath === routes.register);
+	const showNav = $derived(!(currentPath === routes.login || currentPath === routes.register));
 </script>
 
 <header class="w-full bg-surface-900 border-b border-surface-700 shadow-sm">
@@ -53,7 +57,7 @@
 				{#if user}
 					<button
 						type="button"
-						on:click={handleLogout}
+						onclick={handleLogout}
 						class="text-sm text-surface-400 hover:text-primary-400 transition-colors duration-200"
 					>
 						Logout

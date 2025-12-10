@@ -1,11 +1,16 @@
 <script lang="ts">
-	export let unit: string | null = '';
-	export let required: boolean = false;
+	let {
+		unit = '',
+		required = false
+	}: {
+		unit?: string | null;
+		required?: boolean;
+	} = $props();
 
 	const suggestions = ['times', 'min', 'ml', 'hours', 'km', 'steps', 'pages', 'glasses'];
 
-	let inputEl: HTMLInputElement;
-	let showOptions = false;
+	let inputEl = $state<HTMLInputElement>();
+	let showOptions = $state(false);
 
 	function handleFocus() {
 		showOptions = true;
@@ -34,8 +39,8 @@
 		placeholder="Unit"
 		autocomplete="off"
 		{required}
-		on:focus={handleFocus}
-		on:blur={handleBlur}
+		onfocus={handleFocus}
+		onblur={handleBlur}
 	/>
 	<span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▾</span>
 
@@ -48,7 +53,10 @@
 					<button
 						type="button"
 						class="w-full text-left px-3 py-2.5 text-base hover:bg-surface-200-700 active:bg-surface-300-600"
-						on:mousedown|preventDefault={() => selectOption(suggestion)}
+						onmousedown={(e) => {
+							e.preventDefault();
+							selectOption(suggestion);
+						}}
 					>
 						{suggestion}
 					</button>

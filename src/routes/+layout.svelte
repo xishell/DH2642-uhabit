@@ -78,19 +78,28 @@
 
 <svelte:head>
 	<title>uhabit - Build Better Habits</title>
-	<meta name="description" content="Track your daily habits, build consistency, and achieve your goals with uhabit." />
+	<meta
+		name="description"
+		content="Track your daily habits, build consistency, and achieve your goals with uhabit."
+	/>
 
 	<!-- Open Graph / Facebook / Discord / LinkedIn -->
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="uhabit - Build Better Habits" />
-	<meta property="og:description" content="Track your daily habits, build consistency, and achieve your goals with uhabit." />
+	<meta
+		property="og:description"
+		content="Track your daily habits, build consistency, and achieve your goals with uhabit."
+	/>
 	<meta property="og:image" content="/og-image.png" />
 	<meta property="og:site_name" content="uhabit" />
 
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="uhabit - Build Better Habits" />
-	<meta name="twitter:description" content="Track your daily habits, build consistency, and achieve your goals with uhabit." />
+	<meta
+		name="twitter:description"
+		content="Track your daily habits, build consistency, and achieve your goals with uhabit."
+	/>
 	<meta name="twitter:image" content="/og-image.png" />
 
 	<link rel="icon" href={favicon} />

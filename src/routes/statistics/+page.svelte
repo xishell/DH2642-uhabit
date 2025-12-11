@@ -1,5 +1,7 @@
 <script lang="ts">
 	import DatePicker from './components/DatePicker.svelte';
+
+	//data
 	const dailyHabitCompletionArr = [
 		{ habitTitle: 'read books', completionRate: 0.8 },
 		{ habitTitle: 'drink water', completionRate: 0.9 },
@@ -112,13 +114,28 @@
 	];
 
 	//resizable view
-	let heightDaily = 180;
-	let heightWeekly = 180;
-	let heightMonthly = 180;
+	const minHeight = 16;
+	let viewHeight: Record<HabitType, Number> = {
+		daily: 180,
+		weekly: 180,
+		monthly: 180
+	};
+
 	let dragging = false;
 
-	function startDrag(tartgetView: string) {
+	type HabitType = 'daily' | 'weekly' | 'monthly';
+	let isDragging: Record<HabitType, boolean> = {
+		daily: false,
+		weekly: false,
+		monthly: false
+	};
+
+	function startDrag(targetView: HabitType, event: MouseEvent | TouchEvent) {
 		dragging = true;
+
+		if (event instanceof TouchEvent) {
+			event.preventDefault();
+		}
 
 		const onMove = (event: MouseEvent | TouchEvent) => {
 			if (!dragging) return;
@@ -127,35 +144,30 @@
 			if (event instanceof MouseEvent) {
 				clientY = event.clientY;
 			} else if (event instanceof TouchEvent) {
+				event.preventDefault();
 				clientY = event.touches[0].clientY;
 			}
 
-			if (tartgetView === 'daily') {
-				const divEl = document.getElementById('resizable-daily')!;
-				const divTop = divEl.getBoundingClientRect().top;
-				heightDaily = clientY - divTop;
-			} else if (tartgetView === 'weekly') {
-				const divEl = document.getElementById('resizable-weekly')!;
-				const divTop = divEl.getBoundingClientRect().top;
-				heightWeekly = clientY - divTop;
-			} else if (tartgetView === 'monthly') {
-				const divEl = document.getElementById('resizable-monthly')!;
-				const divTop = divEl.getBoundingClientRect().top;
-				heightMonthly = clientY - divTop;
-			}
+			isDragging[targetView] = true;
+			const divEl = document.getElementById(`resizable-${targetView}`)!;
+			const divTop = divEl.getBoundingClientRect().top;
+			viewHeight[targetView] = Math.max(clientY - divTop, minHeight);
 		};
 
 		const stopDrag = () => {
 			dragging = false;
+			isDragging['daily'] = false;
+			isDragging['weekly'] = false;
+			isDragging['monthly'] = false;
 			window.removeEventListener('mousemove', onMove);
 			window.removeEventListener('mouseup', stopDrag);
-			window.removeEventListener('touchmove', onMove);
+			window.removeEventListener('touchmove', onMove as any);
 			window.removeEventListener('touchend', stopDrag);
 		};
 
 		window.addEventListener('mousemove', onMove);
 		window.addEventListener('mouseup', stopDrag);
-		window.addEventListener('touchmove', onMove);
+		window.addEventListener('touchmove', onMove as any, { passive: false });
 		window.addEventListener('touchend', stopDrag);
 	}
 
@@ -181,8 +193,8 @@
 			<div class="relative">
 				<div
 					id="resizable-daily"
-					style="height:{heightDaily}px"
-					class="  scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-y-auto"
+					style="height:{viewHeight['daily']}px"
+					class={`max-h-130 min-h-[${minHeight}] scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto `}
 				>
 					<div class=" absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
 
@@ -200,9 +212,11 @@
 
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
-						on:mousedown={() => startDrag('daily')}
-						on:touchstart={() => startDrag('daily')}
-						class="absolute bottom-0 left-0 w-full h-2 cursor-row-resize bg-tranparent"
+						on:mousedown={(e) => startDrag('daily', e)}
+						on:touchstart={(e) => startDrag('daily', e)}
+						class={`absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl 
+						bg-white/4 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
+          				${isDragging['daily'] ? 'opacity-100' : 'opacity-0'} hover:opacity-100`}
 					></div>
 				</div>
 			</div>
@@ -218,8 +232,8 @@
 			<div class="relative">
 				<div
 					id="resizable-weekly"
-					style="height:{heightWeekly}px"
-					class="  scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-y-auto"
+					style="height:{viewHeight['weekly']}px"
+					class={`max-h-130 min-h-[${minHeight}] scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto `}
 				>
 					<div class=" absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
 
@@ -237,9 +251,11 @@
 
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
-						on:mousedown={() => startDrag('weekly')}
-						on:touchstart={() => startDrag('weekly')}
-						class="absolute bottom-0 left-0 w-full h-2 cursor-row-resize bg-tranparent"
+						on:mousedown={(e) => startDrag('weekly', e)}
+						on:touchstart={(e) => startDrag('weekly', e)}
+						class={`absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl 
+						bg-white/4 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
+          				${isDragging['weekly'] ? 'opacity-100' : 'opacity-0'} hover:opacity-100`}
 					></div>
 				</div>
 			</div>
@@ -255,8 +271,8 @@
 			<div class="relative">
 				<div
 					id="resizable-monthly"
-					style="height:{heightMonthly}px"
-					class="  scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-y-auto"
+					style="height:{viewHeight['monthly']}px"
+					class={`max-h-130 min-h-[${minHeight}] scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto `}
 				>
 					<div class=" absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
 
@@ -274,9 +290,11 @@
 
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
-						on:mousedown={() => startDrag('monthly')}
-						on:touchstart={() => startDrag('monthly')}
-						class="absolute bottom-0 left-0 w-full h-2 cursor-row-resize bg-tranparent"
+						on:mousedown={(e) => startDrag('monthly', e)}
+						on:touchstart={(e) => startDrag('monthly', e)}
+						class={`absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl 
+						bg-white/4 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
+          				${isDragging['monthly'] ? 'opacity-100' : 'opacity-0'} hover:opacity-100`}
 					></div>
 				</div>
 			</div>

@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ fetch, cookies }) => {
 	const savedTab = cookies.get('habits-tab');
 	const initialTab: 0 | 1 = savedTab === 'goals' ? 1 : 0;
 
-	// Try to read cached quote from cookie first to avoid flashing the skeleton
+	// Use cached quote from cookie to avoid skeleton flash
 	let quote: string | null = null;
 	let author: string | null = null;
 	const quoteCookie = cookies.get(QUOTE_CACHE_KEY);

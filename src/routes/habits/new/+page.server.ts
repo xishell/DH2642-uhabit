@@ -10,7 +10,7 @@ export const actions: Actions = {
 		const periodArray = raw ? raw.split(',').map(Number) : [];
 
 		// Derive measurement type from form data:
-		// If both targetAmount AND unit are provided → 'numeric', else → 'boolean'
+		// Numeric if both targetAmount and unit, else boolean
 		const targetAmountRaw = data.get('targetAmount') as string;
 		const unitRaw = data.get('unit') as string;
 		const hasTarget = targetAmountRaw && targetAmountRaw.trim() !== '';

@@ -53,7 +53,7 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 	};
 
 	const { subscribe, update, set } = writable<OverviewState>(baseState);
-	// Remember last partial progress for progressive habits to restore when toggling off
+	// Store last partial progress to restore when toggling off
 	const previousProgress = new Map<string, number>();
 
 	const getState = () => {

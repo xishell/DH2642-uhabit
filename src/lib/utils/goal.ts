@@ -35,7 +35,7 @@ export function getScheduledDatesForHabit(habit: Habit, startDate: Date, endDate
  * Count completed instances for a habit within a date range
  */
 // Returns completion units for a habit across its scheduled dates.
-// Boolean habits contribute 0 or 1 per day; numeric habits contribute a fraction of the target (capped at 1).
+// Boolean habits give 0/1 per day; numeric add a fraction of target (max 1).
 export function completionUnitsForHabit(
 	habit: Habit,
 	completions: HabitCompletion[],

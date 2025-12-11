@@ -8,7 +8,7 @@ import { requireAuth } from '$lib/server/api-helpers';
 import { calculateGoalProgress } from '$lib/utils/goal';
 import type { Habit } from '$lib/types/habit';
 
-// Helper to parse habit from database (handles JSON period and type casting)
+// Parse habit from DB (handles JSON period/type casts)
 function parseHabit(h: typeof habit.$inferSelect): Habit {
 	return {
 		...h,
@@ -60,7 +60,7 @@ async function verifyGoalOwnership(db: ReturnType<typeof getDB>, goalId: string,
 	return goals[0];
 }
 
-// GET /api/goals/[id] - Get single goal with habits and progress
+// GET /api/goals/[id]: goal with habits and progress
 export const GET: RequestHandler = async ({ params, locals, platform, setHeaders }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
@@ -89,7 +89,7 @@ export const GET: RequestHandler = async ({ params, locals, platform, setHeaders
 	return json(goalWithProgress);
 };
 
-// PATCH /api/goals/[id] - Update goal
+// PATCH /api/goals/[id]: update goal
 export const PATCH: RequestHandler = async ({ params, request, locals, platform }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
@@ -167,7 +167,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 			}
 		}
 
-		// Detach habits that were previously attached but not in the new list
+		// Detach habits removed from the new list
 		const baseDetachCondition = and(eq(habit.userId, userId), eq(habit.goalId, params.id));
 		if (habitIds.length === 0) {
 			await db.update(habit).set({ goalId: null, updatedAt: now }).where(baseDetachCondition);
@@ -202,7 +202,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 	return json(goalWithProgress);
 };
 
-// DELETE /api/goals/[id] - Delete goal (habits become standalone)
+// DELETE /api/goals/[id]: delete goal (habits become standalone)
 export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
@@ -210,7 +210,7 @@ export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
 	// Verify ownership
 	await verifyGoalOwnership(db, params.id, userId);
 
-	// Delete goal (habits will have goalId set to null due to ON DELETE SET NULL)
+	// Delete goal; ON DELETE SET NULL clears goalId on habits
 	await db.delete(goal).where(eq(goal.id, params.id));
 
 	return new Response(null, { status: 204 });

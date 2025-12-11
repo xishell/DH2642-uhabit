@@ -95,7 +95,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 		})
 		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)));
 
-	// Construct updated habit from existing data + updates (avoids extra SELECT)
+	// Merge existing habit with updates to skip extra SELECT
 	const updatedHabit = {
 		...existingHabit,
 		...updateData,

@@ -146,7 +146,7 @@
 		}
 	}
 
-	// Available habits: standalone ones + habits already attached to this goal
+	// Available habits = standalone + ones already on this goal
 	const selectableHabits = $derived(() => {
 		const standalone = availableHabits.filter((h) => !h.goalId);
 		// When editing, include habits attached to this goal

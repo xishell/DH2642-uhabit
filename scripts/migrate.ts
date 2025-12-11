@@ -83,7 +83,7 @@ async function main() {
 	const args = process.argv.slice(2);
 	const isLocal = !args.includes('--remote');
 
-	// Parse environment flag (e.g., --env=preview or --env=production)
+	// Parse environment flag
 	const envArg = args.find((arg) => arg.startsWith('--env='));
 	const env = envArg ? envArg.split('=')[1] : undefined;
 

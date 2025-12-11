@@ -18,7 +18,7 @@ const preferencesSchema = z.object({
 		.optional(),
 	displayName: z.string().min(1).max(100).optional(),
 	theme: z.enum(['light', 'dark', 'system']).optional(),
-	country: z.string().length(2).optional(), // ISO 3166-1 alpha-2 country codes
+	country: z.string().length(2).optional(), // ISO 3166-1 alpha-2 code
 	preferences: z
 		.object({
 			notifications: z.boolean().optional(),
@@ -55,7 +55,7 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 		return error(401, 'Authentication required');
 	}
 
-	// Cache privately for the user to avoid re-fetching on each request
+	// Private cache to avoid re-fetching each request
 	setHeaders({
 		'Cache-Control': 'private, max-age=300, stale-while-revalidate=60'
 	});
@@ -120,7 +120,7 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		updates.lastName = body.lastName;
 	}
 
-	// Update the 'name' field when firstName or lastName changes (for Better Auth compatibility)
+	// Keep name in sync with first/last for Better Auth
 	if (body.firstName !== undefined || body.lastName !== undefined) {
 		const [currentUser] = await drizzle
 			.select({ firstName: user.firstName, lastName: user.lastName })

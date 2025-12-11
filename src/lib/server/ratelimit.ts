@@ -92,7 +92,7 @@ export async function checkRateLimit(
 				});
 			} catch (error) {
 				console.error('[RATE_LIMIT] KV write error:', error);
-				// Continue anyway - single request won't be perfectly tracked but won't crash
+				// Continue; one request may be miscounted but won't crash
 			}
 		} else {
 			memoryStore.set(key, record);

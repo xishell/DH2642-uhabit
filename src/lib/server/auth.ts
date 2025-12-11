@@ -12,7 +12,7 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 	const isStagingOrPreview =
 		/preview-\d+\..*\.pages\.dev/.test(url) || url.includes('staging.') || url.includes('preview.');
 
-	// Detect if URL is production (custom domain or main pages.dev without staging/preview prefix)
+	// Detect production URL (custom domain or main pages.dev)
 	const isProductionUrl =
 		(!url.includes('.pages.dev') && !url.includes('.workers.dev') && url.startsWith('https://')) ||
 		(url.includes('.pages.dev') && !isStagingOrPreview);

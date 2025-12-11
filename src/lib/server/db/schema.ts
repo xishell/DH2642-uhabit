@@ -140,9 +140,9 @@ export const habit = sqliteTable(
 		// Weekly: [0,2,4] for Sunday, Tuesday, Thursday (0=Sunday, 6=Saturday)
 		// Monthly: [1,15,30] for 1st, 15th, and 30th of month
 		period: text('period'),
-		// Target amount for numeric habits (e.g., 5 for "5 cups of water")
+		// Target amount for numeric habits
 		targetAmount: integer('targetAmount'),
-		// Unit for numeric habits (e.g., "cups", "liters", "steps")
+		// Unit for numeric habits
 		unit: text('unit'),
 		// Category for organizing habits
 		categoryId: text('categoryId').references(() => category.id, { onDelete: 'set null' }),

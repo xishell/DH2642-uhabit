@@ -37,7 +37,7 @@
 	});
 	const state = presenter.state;
 
-	// Keep SSR data in sync if server returns new values (e.g., after form submit)
+	// Keep SSR data in sync if server returns new values
 	$effect(() => presenter.syncFromServer(data));
 
 	// Derived: split habits by measurement type for display
@@ -74,7 +74,9 @@
 			<div class="space-y-3">
 				{#if $state.habits.length === 0}
 					{#if hasAnyHabits}
-						<div class="text-surface-500 text-center py-6">No habits due today. Enjoy your day!</div>
+						<div class="text-surface-500 text-center py-6">
+							No habits due today. Enjoy your day!
+						</div>
 					{:else}
 						<div class="text-surface-500 text-center py-6">
 							No habits yet.

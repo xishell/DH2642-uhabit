@@ -9,7 +9,7 @@ import { startOfDay } from '$lib/utils/date';
 import { calculateGoalProgress } from '$lib/utils/goal';
 import type { Habit } from '$lib/types/habit';
 
-// Helper to parse habit from database (handles JSON period and type casting)
+// Parse habit from DB (handles JSON period/type casts)
 function parseHabit(h: typeof habit.$inferSelect): Habit {
 	return {
 		...h,

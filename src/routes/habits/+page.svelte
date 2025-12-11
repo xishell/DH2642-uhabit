@@ -134,7 +134,7 @@
 	// Standalone habits (not attached to any goal)
 	const standaloneHabits = $derived($presenterState.habits.filter((h) => !h.goalId));
 
-	// Auto-open habit modal when directed via query param (e.g., from overview CTA)
+	// Auto-open habit modal when directed via query param
 	$effect(() => {
 		if (!browser) return;
 		const params = $page.url.searchParams;

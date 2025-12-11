@@ -15,7 +15,7 @@
 		onedit?: (goal: GoalWithProgress | GoalWithHabitStatus) => void;
 	} = $props();
 
-	// Local expansion state - starts with prop value, then component owns it
+	// Expansion state starts from prop, then component owns it
 	let isExpanded = $state(untrack(() => expanded));
 
 	function toggleExpand() {
@@ -33,10 +33,10 @@
 
 	const formatUnitCount = (val: number) => (Number.isInteger(val) ? `${val}` : val.toFixed(1));
 
-	// Check if goal has today's status (GoalWithHabitStatus)
+	// Whether goal has today's status
 	const hasTodayStatus = $derived('todayCompleted' in goal);
 
-	// Helper to check if habit item is HabitWithStatus (wrapped) or plain Habit
+	// Check if item is HabitWithStatus or plain Habit
 	function isHabitWithStatus(h: Habit | HabitWithStatus): h is HabitWithStatus {
 		return 'habit' in h && 'isCompleted' in h;
 	}
@@ -68,9 +68,9 @@
 </script>
 
 <div class="rounded-xl border border-surface-200-700 bg-surface-50-900 overflow-hidden">
-	<!-- Header (always visible) -->
+	<!-- Header -->
 	<div class="flex items-center gap-4 p-4 hover:bg-surface-100-800 transition-colors">
-		<!-- Expand/Collapse Button -->
+		<!-- Expand/Collapse -->
 		<button
 			type="button"
 			class="text-surface-400 hover:text-surface-600 transition-colors"
@@ -84,7 +84,7 @@
 			{/if}
 		</button>
 
-		<!-- Goal Info (clickable to expand) -->
+		<!-- Goal info -->
 		<button type="button" class="flex-1 min-w-0 text-left" onclick={toggleExpand}>
 			<div class="flex items-center gap-2">
 				<h3 class="font-semibold truncate">{goal.title}</h3>

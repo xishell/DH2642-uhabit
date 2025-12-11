@@ -1,5 +1,5 @@
 // Better Auth catch-all route handler for SvelteKit
-// This exports the auth handlers directly from the Better Auth instance
+// Export Better Auth handlers directly
 // See: https://www.better-auth.com/docs/integrations/sveltekit
 
 import { toSvelteKitHandler } from 'better-auth/svelte-kit';
@@ -27,7 +27,7 @@ export const POST: RequestHandler = async (event) => {
 	const clientIP = getClientIP(event.request);
 	const url = event.url.origin;
 
-	// Detect staging/preview environments for relaxed rate limits
+	// Detect staging/preview for relaxed rate limits
 	const isStagingOrPreview =
 		/preview-\d+\..*\.pages\.dev/.test(url) ||
 		url.includes('staging.') ||
@@ -36,7 +36,7 @@ export const POST: RequestHandler = async (event) => {
 
 	const rateLimits = getRateLimits(isStagingOrPreview);
 
-	// Determine which rate limit to apply based on endpoint
+	// Choose rate limit by endpoint
 	let rateLimitConfig = null;
 	let identifier = clientIP;
 
@@ -52,7 +52,7 @@ export const POST: RequestHandler = async (event) => {
 
 	// Check rate limit if applicable
 	if (rateLimitConfig) {
-		// Use KV namespace if available, fallback to in-memory for local dev
+		// Use KV namespace if available, fallback to in-memory for dev
 		const kv = event.platform?.env?.RATE_LIMIT;
 		const result = await checkRateLimit(
 			isRegistrationPath ? `register:attempt:${identifier}` : identifier,
@@ -79,7 +79,7 @@ export const POST: RequestHandler = async (event) => {
 		}
 	}
 
-	// Pre-check successful registration limit before processing
+	// Pre-check success limit before processing registration
 	if (isRegistrationPath) {
 		const kv = event.platform?.env?.RATE_LIMIT;
 		const successLimit = rateLimits.REGISTER_SUCCESS;
@@ -132,7 +132,7 @@ export const POST: RequestHandler = async (event) => {
 
 	const response = await toSvelteKitHandler(auth)(event);
 
-	// Only count successful registration responses toward the success limit
+	// Count only successful registrations toward the limit
 	if (isRegistrationPath && response.ok) {
 		const kv = event.platform?.env?.RATE_LIMIT;
 		const successLimit = rateLimits.REGISTER_SUCCESS;

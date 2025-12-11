@@ -25,7 +25,7 @@
 	class="bg-surface rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col gap-3 w-full text-left"
 >
 	<div class="flex items-center justify-between gap-3">
-		<div class="flex items-center gap-3 flex-1">
+		<div class="flex items-center gap-3 flex-1 min-w-0">
 			<div
 				role="button"
 				tabindex="0"
@@ -51,7 +51,7 @@
 				{/if}
 			</div>
 			<div
-				class="text-sm font-medium transition"
+				class="text-sm font-medium transition truncate"
 				class:line-through={isCompleted}
 				class:text-surface-400={isCompleted}
 			>

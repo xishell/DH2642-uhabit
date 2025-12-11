@@ -53,7 +53,10 @@
 
 	<!-- Toggle -->
 	<div class="max-w-3xl mx-auto mt-4 mb-6 flex justify-center">
-		<ToggleBar activeTab={$state.activeTab === 'habits' ? 0 : 1} onChange={presenter.setActiveTab} />
+		<ToggleBar
+			activeTab={$state.activeTab === 'habits' ? 0 : 1}
+			onChange={presenter.setActiveTab}
+		/>
 	</div>
 
 	<!-- Content area -->

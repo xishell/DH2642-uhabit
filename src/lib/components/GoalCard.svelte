@@ -109,8 +109,9 @@
 			{#if hasTodayStatus}
 				<div class="text-right">
 					<div class="text-sm font-medium">
-						{formatUnitCount((goal as GoalWithHabitStatus).todayCompleted)}/{(goal as GoalWithHabitStatus)
-							.todayTotal}
+						{formatUnitCount((goal as GoalWithHabitStatus).todayCompleted)}/{(
+							goal as GoalWithHabitStatus
+						).todayTotal}
 					</div>
 					<div class="text-xs text-surface-500">today</div>
 				</div>
@@ -167,13 +168,10 @@
 							<!-- Habit info -->
 							<div class="flex-1 min-w-0">
 								<div class="font-medium text-sm truncate">{habit.title}</div>
-								<span class="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary-50-900 text-primary-900-100 mt-0.5">
-									<svg
-										class="w-3 h-3"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
+								<span
+									class="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary-50-900 text-primary-900-100 mt-0.5"
+								>
+									<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path
 											stroke-linecap="round"
 											stroke-linejoin="round"

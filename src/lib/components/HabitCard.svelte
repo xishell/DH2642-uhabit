@@ -39,11 +39,15 @@
 		<div class="flex flex-col gap-1">
 			<div class="flex items-center gap-2">
 				<span class="text-surface-900 dark:text-surface-50 font-medium">{habit.title}</span>
-				<span class="text-[11px] px-2 py-0.5 rounded bg-surface-100-800 text-surface-700 dark:text-surface-200 w-fit">
+				<span
+					class="text-[11px] px-2 py-0.5 rounded bg-surface-100-800 text-surface-700 dark:text-surface-200 w-fit"
+				>
 					{habit.measurement === 'numeric' ? 'Progress' : 'Single step'}
 				</span>
 			</div>
-			<span class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary-50-900 text-primary-900-100 w-fit">
+			<span
+				class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary-50-900 text-primary-900-100 w-fit"
+			>
 				<CalendarClock size={11} class="shrink-0" />
 				<span class="truncate">{formatFrequency(habit)}</span>
 			</span>

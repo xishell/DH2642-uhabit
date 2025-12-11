@@ -48,7 +48,7 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 		goals: initial.goals.map((g) => ({ ...g })),
 		showDetail: restoredModal.open && !!restoredModal.editing,
 		selectedProgressive: restoredModal.editing,
-		modalProgress: restoredModal.editing ? initial.initialModal?.progress ?? null : null,
+		modalProgress: restoredModal.editing ? (initial.initialModal?.progress ?? null) : null,
 		error: null
 	};
 
@@ -82,7 +82,7 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 		);
 
 		set({
-		activeTab: data.initialTab,
+			activeTab: data.initialTab,
 			habits: nextHabits,
 			goals: nextGoals,
 			showDetail: syncedModal.open && !!syncedModal.editing,
@@ -154,7 +154,9 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 		});
 	};
 
-	const toggleSingleOptimistic = (habitId: string): { habits: HabitWithStatus[]; goals: GoalWithHabitStatus[] } => {
+	const toggleSingleOptimistic = (
+		habitId: string
+	): { habits: HabitWithStatus[]; goals: GoalWithHabitStatus[] } => {
 		const state = getState();
 		const previousHabits = state.habits;
 		const previousGoals = state.goals;

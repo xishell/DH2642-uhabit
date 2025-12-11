@@ -112,11 +112,11 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 
 			const nextEditingHabit =
 				state.showHabitModal && state.editingHabit
-					? nextHabits.find((h) => h.id === state.editingHabit!.id) ?? state.editingHabit
+					? (nextHabits.find((h) => h.id === state.editingHabit!.id) ?? state.editingHabit)
 					: null;
 			const nextEditingGoal =
 				state.showGoalModal && state.editingGoal
-					? nextGoals.find((g) => g.id === state.editingGoal!.id) ?? state.editingGoal
+					? (nextGoals.find((g) => g.id === state.editingGoal!.id) ?? state.editingGoal)
 					: null;
 
 			return {

@@ -161,7 +161,9 @@
 								aria-pressed={selectedColor === color}
 							>
 								{#if selectedColor === color}
-									<span class="absolute inset-0 m-auto w-3 h-3 rounded-full bg-white/80 dark:bg-black/70"></span>
+									<span
+										class="absolute inset-0 m-auto w-3 h-3 rounded-full bg-white/80 dark:bg-black/70"
+									></span>
 								{/if}
 							</button>
 						{/each}

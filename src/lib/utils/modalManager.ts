@@ -26,7 +26,7 @@ export function createModalManager<T extends { id: string }>({
 		if (browser && cookieKey) {
 			const saved = getJsonCookie<{ open?: boolean; id?: string | null }>(cookieKey);
 			if (saved?.open) {
-				const match = saved.id ? items.find((i) => i.id === saved.id) ?? null : null;
+				const match = saved.id ? (items.find((i) => i.id === saved.id) ?? null) : null;
 				state = { open: true, editing: match ? { ...match } : null };
 			}
 		}

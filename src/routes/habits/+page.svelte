@@ -4,105 +4,36 @@
 	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
 	import { browser } from '$app/environment';
-	import { routes } from '$lib/routes';
-	import { habitsStore } from '$lib/stores/habits';
-	import { setCookie } from '$lib/utils/cookie';
-	import type { Habit } from '$lib/types/habit';
 	import { untrack } from 'svelte';
+	import { routes } from '$lib/routes';
+	import { createHabitsPresenter } from '$lib/presenters/habitsPresenter';
 
 	let { data }: { data: any } = $props();
 
-	// Initialize from SSR data (using untrack to capture initial value only)
-	let progressiveHabitList = $state<Habit[]>(untrack(() => data.progressiveHabitList));
-	let singleStepHabitList = $state<Habit[]>(untrack(() => data.singleStepHabitList));
-	let habitsLoading = $state(false);
-	let habitsError = $state<string | null>(null);
+	const initialData = untrack(() => ({
+		progressiveHabitList: data.progressiveHabitList,
+		singleStepHabitList: data.singleStepHabitList,
+		quote: data.quote,
+		author: data.author,
+		initialTab: data.initialTab
+	}));
 
-	// Initialize tab from server-provided value (no flash!)
-	let habitType = $state<0 | 1>(untrack(() => data.initialTab)); //0 for progressive habit, 1 for single-step habit
-	let isNewBtnClicked = $state(false);
-	let quote = $state(
-		untrack(() => data.quote ?? 'Let your days echo with the steps you choose to take.')
-	);
-	let author = $state(untrack(() => data.author ?? ''));
-	let isQuoteLoading = $state(untrack(() => !data.quote));
-
-	if (browser) {
-		// Prefer SSR-provided quote, fall back to cached client quote
-		const initialQuote = untrack(() => data.quote);
-		if (!initialQuote) {
-			const cachedQuoteRaw = sessionStorage.getItem('uhabit-quote');
-			if (cachedQuoteRaw) {
-				try {
-					const cached = JSON.parse(cachedQuoteRaw) as { quote?: string; author?: string };
-					if (cached.quote) {
-						quote = cached.quote;
-						author = cached.author ?? '';
-						isQuoteLoading = false;
-					}
-				} catch (e) {
-					console.error('Failed to parse cached quote', e);
-					sessionStorage.removeItem('uhabit-quote');
-				}
-			}
-		} else {
-			const initialAuthor = untrack(() => author);
-			sessionStorage.setItem(
-				'uhabit-quote',
-				JSON.stringify({ quote: initialQuote, author: initialAuthor })
-			);
-		}
-	}
-
-	$effect(() => {
-		// Initialize store with SSR data, then subscribe for future updates
-		habitsStore.init(data.progressiveHabitList, data.singleStepHabitList);
-
-		const unsubscribe = habitsStore.subscribe((state) => {
-			progressiveHabitList = state.progressive;
-			singleStepHabitList = state.single;
-			habitsLoading = state.loading;
-			habitsError = state.error;
-		});
-
-		// Only fetch quote client-side if SSR didn't provide one and no cache exists
-		// This avoids unnecessary network requests when we already have a quote
-		let controller: AbortController | null = null;
-		if (isQuoteLoading) {
-			controller = new AbortController();
-			const timeout = setTimeout(() => controller?.abort(), 1200);
-
-			fetch('/api-external/quotes', { signal: controller.signal })
-				.then(
-					(res) =>
-						(res.ok ? res.json() : null) as Promise<{ quote?: string; author?: string } | null>
-				)
-				.then((data) => {
-					if (data?.quote) {
-						quote = data.quote;
-						author = data.author ?? '';
-						sessionStorage.setItem('uhabit-quote', JSON.stringify({ quote, author }));
-					}
-				})
-				.catch(() => {
-					// Keep fallback quote on error/timeout
-				})
-				.finally(() => {
-					isQuoteLoading = false;
-					clearTimeout(timeout);
-				});
-		}
-
-		return () => {
-			controller?.abort();
-			unsubscribe();
-		};
+	const presenter = createHabitsPresenter({
+		initial: initialData,
+		fetcher: fetch,
+		browser,
+		storage: browser ? sessionStorage : null
 	});
 
-	function handleHabitTypeChange(val: 0 | 1) {
-		habitType = val;
-		setCookie('habits-tab', habitType === 1 ? 'single' : 'progressive');
-	}
+	const state = presenter.state;
+
+	$effect(() => presenter.initHabits(data.progressiveHabitList, data.singleStepHabitList));
+
+	$effect(() => {
+		if (browser) {
+			presenter.ensureQuote();
+		}
+	});
 </script>
 
 <div class="planning-view flex flex-col items-center p-7 max-w-[800px] m-auto">
@@ -113,7 +44,7 @@
 	<div
 		class="motivation-card w-full h-40 text-[20px] text-center flex justify-center items-center px-[30px] mt-[45px] mb-[30px] bg-primary-300-700 text-white opacity-80 rounded-[10px]"
 	>
-		{#if isQuoteLoading}
+		{#if $state.isQuoteLoading}
 			<div class="w-full max-w-[560px] space-y-3 animate-pulse">
 				<div class="h-5 w-4/5 mx-auto rounded-full bg-white/25"></div>
 				<div class="h-5 w-11/12 mx-auto rounded-full bg-white/15"></div>
@@ -121,47 +52,45 @@
 			</div>
 		{:else}
 			<p class="leading-snug">
-				"{quote}"
-				{#if author}
+				"{$state.quote}"
+				{#if $state.author}
 					<br />
-					<span class="text-sm opacity-80">— {author}</span>
+					<span class="text-sm opacity-80">— {$state.author}</span>
 				{/if}
 			</p>
 		{/if}
 	</div>
 
 	<!-- ToggleBar -->
-	<ToggleBar {habitType} onChange={handleHabitTypeChange} />
+	<ToggleBar habitType={$state.habitType} onChange={presenter.setHabitType} />
 
 	<!-- Habit List -->
 	<div class="habit-list w-full grid grid-cols-1 sm:grid-cols-2 justify-between gap-7 mt-6">
-		{#if habitsLoading}
+		{#if $state.habitsLoading}
 			{#each Array(4) as _}
 				<div class="h-24 rounded-xl bg-surface-200 dark:bg-surface-700 animate-pulse"></div>
 			{/each}
-		{:else if habitsError}
-			<p class="col-span-full text-center text-sm text-red-600">{habitsError}</p>
-		{:else if habitType === 0}
-			{#each progressiveHabitList as habit}
+		{:else if $state.habitsError}
+			<p class="col-span-full text-center text-sm text-red-600">{$state.habitsError}</p>
+		{:else if $state.habitType === 0}
+			{#each $state.progressiveHabitList as habit}
 				<HabitCard title={habit.title} habitId={habit.id} type={'progressive'} />
 			{/each}
 		{:else}
-			{#each singleStepHabitList as habit}
+			{#each $state.singleStepHabitList as habit}
 				<HabitCard title={habit.title} habitId={habit.id} type={'single'} />
 			{/each}
 		{/if}
 	</div>
 
 	<!-- blur layer -->
-	{#if isNewBtnClicked}
+	{#if $state.isNewBtnClicked}
 		<div
-			onclick={() => {
-				isNewBtnClicked = !isNewBtnClicked;
-			}}
+			onclick={presenter.toggleNewButton}
 			role="button"
 			tabindex="0"
 			onkeydown={(e) => {
-				e.key === 'Enter' ? (isNewBtnClicked = !isNewBtnClicked) : null;
+				e.key === 'Enter' ? presenter.toggleNewButton() : null;
 			}}
 			class="fixed top-0 w-full h-screen bg-gray-900 opacity-30"
 			transition:fade={{ duration: 300 }}
@@ -172,7 +101,7 @@
 	<div
 		class="new-btn-ctn fixed bottom-[40px] right-[45px] flex flex-col gap-4 justify-between items-end text-surface-50"
 	>
-		{#if isNewBtnClicked}
+		{#if $state.isNewBtnClicked}
 			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
 				<a
 					href={routes.habits.new('progressive')}
@@ -192,15 +121,13 @@
 		{/if}
 		<button
 			class="text-3xl w-[64px] h-[64px] bg-primary-500 rounded-full hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl flex justify-center items-center"
-			onclick={() => {
-				isNewBtnClicked = !isNewBtnClicked;
-			}}
+			onclick={presenter.toggleNewButton}
 			><Plus
 				size={26}
 				strokeWidth={3}
 				class={`pl-[0.04rem] pt-[0.04rem]
           transition-transform duration-300 ease-in-out
-          ${isNewBtnClicked ? 'rotate-45' : 'rotate-0'}`}
+          ${$state.isNewBtnClicked ? 'rotate-45' : 'rotate-0'}`}
 			/></button
 		>
 	</div>

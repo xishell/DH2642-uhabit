@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ChevronDown, ChevronUp, Calendar, Edit2 } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
+	import { untrack } from 'svelte';
 	import type { GoalWithProgress, GoalWithHabitStatus } from '$lib/types/goal';
 	import type { Habit, HabitWithStatus } from '$lib/types/habit';
 
@@ -14,12 +15,8 @@
 		onedit?: (goal: GoalWithProgress | GoalWithHabitStatus) => void;
 	} = $props();
 
-	let isExpanded = $state(expanded);
-
-	// Update isExpanded when prop changes
-	$effect(() => {
-		isExpanded = expanded;
-	});
+	// Local expansion state - starts with prop value, then component owns it
+	let isExpanded = $state(untrack(() => expanded));
 
 	function toggleExpand() {
 		isExpanded = !isExpanded;

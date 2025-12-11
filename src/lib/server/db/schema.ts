@@ -134,7 +134,7 @@ export const habit = sqliteTable(
 		color: text('color'),
 		// Frequency: 'daily', 'weekly', 'monthly', or custom interval
 		frequency: text('frequency').notNull().default('daily'),
-		// Measurement type: 'boolean' (single-step) or 'numeric' (progressive)
+		// Measurement type: 'boolean' (checkbox) or 'numeric' (tracked amount)
 		measurement: text('measurement').notNull().default('boolean'),
 		// Period for frequency - JSON array of selected days
 		// Weekly: [0,2,4] for Sunday, Tuesday, Thursday (0=Sunday, 6=Saturday)
@@ -169,7 +169,7 @@ export const habitCompletion = sqliteTable(
 			.references(() => user.id, { onDelete: 'cascade' }),
 		// When the habit was completed
 		completedAt: integer('completedAt', { mode: 'timestamp' }).notNull(),
-		// Measurement value for progressive habits (null for single-step habits)
+		// Measurement value for numeric habits (null for boolean habits)
 		measurement: integer('measurement'),
 		// Optional notes for this completion
 		notes: text('notes'),
@@ -182,7 +182,7 @@ export const habitCompletion = sqliteTable(
 		userDateIdx: index('habit_completion_user_date_idx').on(table.userId, table.completedAt),
 		// Index for querying completions by habit and date
 		habitDateIdx: index('habit_completion_habit_date_idx').on(table.habitId, table.completedAt),
-		// Unique constraint for single-step habits (one completion per habit per day)
+		// Unique constraint for boolean habits (one completion per habit per day)
 		// This will be enforced at the application layer for the date part
 		uniqueHabitDate: unique('habit_completion_unique').on(table.habitId, table.completedAt)
 	})

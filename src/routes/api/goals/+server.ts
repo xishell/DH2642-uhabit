@@ -5,9 +5,10 @@ import { goal, habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAuth, parsePagination, paginatedResponse } from '$lib/server/api-helpers';
-import { startOfDay } from '$lib/utils/date';
+import { startOfDay, endOfDay } from '$lib/utils/date';
 import { calculateGoalProgress } from '$lib/utils/goal';
 import type { Habit } from '$lib/types/habit';
+import type { Goal } from '$lib/types/goal';
 
 // Parse habit from DB (handles JSON period/type casts)
 function parseHabit(h: typeof habit.$inferSelect): Habit {
@@ -43,11 +44,6 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders, url })
 
 	// Check if we should only return active goals
 	const activeOnly = url.searchParams.get('active') === 'true';
-
-	// Cache privately
-	setHeaders({
-		'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
-	});
 
 	// Build base query conditions
 	const conditions = [eq(goal.userId, userId)];
@@ -88,16 +84,38 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders, url })
 						)
 				: [];
 
-		// Fetch completions for progress calculation
-		const completions =
-			habits.length > 0
-				? await db.select().from(habitCompletion).where(eq(habitCompletion.userId, userId))
-				: [];
+		// Fetch completions filtered by goal date ranges
+		let completions: (typeof habitCompletion.$inferSelect)[] = [];
+		if (habits.length > 0 && goals.length > 0) {
+			const minStart = goals.reduce(
+				(min, g) => (g.startDate < min ? g.startDate : min),
+				goals[0].startDate
+			);
+			const maxEnd = goals.reduce(
+				(max, g) => (g.endDate > max ? g.endDate : max),
+				goals[0].endDate
+			);
+
+			completions = await db
+				.select()
+				.from(habitCompletion)
+				.where(
+					and(
+						eq(habitCompletion.userId, userId),
+						gte(habitCompletion.completedAt, startOfDay(minStart)),
+						lte(habitCompletion.completedAt, endOfDay(maxEnd))
+					)
+				);
+		}
 
 		// Parse habits and calculate progress
 		const parsedHabits = habits.map(parseHabit);
 
 		const goalsWithProgress = goals.map((g) => calculateGoalProgress(g, parsedHabits, completions));
+
+		setHeaders({
+			'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
+		});
 
 		return json(paginatedResponse(goalsWithProgress, total, pagination));
 	}
@@ -108,19 +126,42 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders, url })
 		.from(goal)
 		.where(and(...conditions));
 
+	if (goals.length === 0) {
+		setHeaders({
+			'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
+		});
+		return json([]);
+	}
+
 	// Fetch all habits for the user that are attached to goals
 	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
 
-	// Fetch all completions
+	// Fetch completions filtered by goal date ranges
+	const minStart = goals.reduce(
+		(min, g) => (g.startDate < min ? g.startDate : min),
+		goals[0].startDate
+	);
+	const maxEnd = goals.reduce((max, g) => (g.endDate > max ? g.endDate : max), goals[0].endDate);
+
 	const completions = await db
 		.select()
 		.from(habitCompletion)
-		.where(eq(habitCompletion.userId, userId));
+		.where(
+			and(
+				eq(habitCompletion.userId, userId),
+				gte(habitCompletion.completedAt, startOfDay(minStart)),
+				lte(habitCompletion.completedAt, endOfDay(maxEnd))
+			)
+		);
 
 	// Parse habits and calculate progress
 	const parsedHabits = habits.map(parseHabit);
 
 	const goalsWithProgress = goals.map((g) => calculateGoalProgress(g, parsedHabits, completions));
+
+	setHeaders({
+		'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
+	});
 
 	return json(goalsWithProgress);
 };
@@ -146,13 +187,15 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		throw error(500, 'Database not configured');
 	}
 
-	const db = getDB(platform.env.DB);
+	const d1 = platform.env.DB;
+	const db = getDB(d1);
 
 	// Create goal
 	const goalId = crypto.randomUUID();
 	const now = new Date();
+	const nowTimestamp = now.getTime();
 
-	const goalData = {
+	const goalData: Goal = {
 		id: goalId,
 		userId,
 		title: data.title,
@@ -164,17 +207,47 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	};
 
 	try {
-		await db.insert(goal).values(goalData);
+		// Batch for atomic insert + habit attachment
+		const statements: D1PreparedStatement[] = [
+			d1
+				.prepare(
+					`INSERT INTO goal (id, userId, title, description, startDate, endDate, createdAt, updatedAt)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+				)
+				.bind(
+					goalId,
+					userId,
+					data.title,
+					data.description || null,
+					goalData.startDate.getTime(),
+					goalData.endDate.getTime(),
+					nowTimestamp,
+					nowTimestamp
+				)
+		];
 
-		// If habitIds provided, attach habits to goal
 		if (data.habitIds && data.habitIds.length > 0) {
-			await db
-				.update(habit)
-				.set({ goalId, updatedAt: now })
+			// Validate ownership
+			const ownedHabits = await db
+				.select({ id: habit.id })
+				.from(habit)
 				.where(
 					and(eq(habit.userId, userId), sql`${habit.id} IN (${sql.join(data.habitIds, sql`, `)})`)
 				);
+
+			const ownedIds = new Set(ownedHabits.map((h) => h.id));
+			const validHabitIds = data.habitIds.filter((id) => ownedIds.has(id));
+
+			for (const habitId of validHabitIds) {
+				statements.push(
+					d1
+						.prepare(`UPDATE habit SET goalId = ?, updatedAt = ? WHERE id = ? AND userId = ?`)
+						.bind(goalId, nowTimestamp, habitId, userId)
+				);
+			}
 		}
+
+		await d1.batch(statements);
 	} catch (err) {
 		console.error('Insert error:', err);
 		throw error(500, 'Failed to create goal: ' + (err as Error).message);

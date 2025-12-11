@@ -2,10 +2,11 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
 import { goal, habit, habitCompletion } from '$lib/server/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAuth } from '$lib/server/api-helpers';
 import { calculateGoalProgress } from '$lib/utils/goal';
+import { startOfDay, endOfDay } from '$lib/utils/date';
 import type { Habit } from '$lib/types/habit';
 
 // Parse habit from DB (handles JSON period/type casts)
@@ -75,11 +76,17 @@ export const GET: RequestHandler = async ({ params, locals, platform, setHeaders
 	// Fetch attached habits
 	const habits = await db.select().from(habit).where(eq(habit.goalId, params.id));
 
-	// Fetch completions for progress calculation
+	// Fetch completions filtered by goal date range
 	const completions = await db
 		.select()
 		.from(habitCompletion)
-		.where(eq(habitCompletion.userId, userId));
+		.where(
+			and(
+				eq(habitCompletion.userId, userId),
+				gte(habitCompletion.completedAt, startOfDay(goalRecord.startDate)),
+				lte(habitCompletion.completedAt, endOfDay(goalRecord.endDate))
+			)
+		);
 
 	// Parse habits
 	const parsedHabits = habits.map(parseHabit);
@@ -193,7 +200,13 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 	const completions = await db
 		.select()
 		.from(habitCompletion)
-		.where(eq(habitCompletion.userId, userId));
+		.where(
+			and(
+				eq(habitCompletion.userId, userId),
+				gte(habitCompletion.completedAt, startOfDay(updatedGoal.startDate)),
+				lte(habitCompletion.completedAt, endOfDay(updatedGoal.endDate))
+			)
+		);
 
 	const parsedHabits = habits.map(parseHabit);
 

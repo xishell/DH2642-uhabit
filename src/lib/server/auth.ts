@@ -100,6 +100,19 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 		// Custom user fields
 		user: {
 			additionalFields: {
+				firstName: {
+					type: 'string',
+					required: false
+				},
+				lastName: {
+					type: 'string',
+					required: false
+				},
+				username: {
+					type: 'string',
+					required: false,
+					unique: true
+				},
 				displayName: {
 					type: 'string',
 					required: false
@@ -146,6 +159,17 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 
 						// Normalize the email (lowercase + trim whitespace)
 						user.email = email;
+
+						// Construct 'name' from firstName and lastName (required by Better Auth)
+						if (user.firstName || user.lastName) {
+							const parts = [user.firstName, user.lastName].filter(Boolean);
+							user.name = parts.join(' ') || user.email.split('@')[0];
+						}
+
+						// Normalize username (lowercase, trim)
+						if (user.username && typeof user.username === 'string') {
+							user.username = user.username.toLowerCase().trim();
+						}
 					}
 				}
 			}

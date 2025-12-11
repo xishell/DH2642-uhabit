@@ -4,16 +4,27 @@
 	import PasswordStrengthIndicator from '$lib/components/PasswordStrengthIndicator.svelte';
 	import { z } from 'zod';
 
-	let name = $state('');
+	let firstName = $state('');
+	let lastName = $state('');
+	let username = $state('');
 	let email = $state('');
 	let password = $state('');
 	let loading = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let errorHint = $state<string | null>(null);
 	let emailError = $state<string | null>(null);
+	let usernameError = $state<string | null>(null);
 
 	// Email validation schema
 	const emailSchema = z.string().email('Please enter a valid email address').toLowerCase();
+
+	// Username validation schema
+	const usernameSchema = z
+		.string()
+		.min(3, 'Username must be at least 3 characters')
+		.max(20, 'Username must be at most 20 characters')
+		.regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores')
+		.toLowerCase();
 
 	// Validate email on blur for immediate feedback
 	function validateEmail() {
@@ -27,11 +38,25 @@
 		}
 	}
 
+	// Validate username on blur for immediate feedback
+	function validateUsername() {
+		usernameError = null;
+		if (!username) return;
+		try {
+			usernameSchema.parse(username);
+		} catch (err) {
+			if (err instanceof z.ZodError) {
+				usernameError = err.issues[0].message;
+			}
+		}
+	}
+
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		errorMessage = null;
 		errorHint = null;
 		emailError = null;
+		usernameError = null;
 		loading = true;
 
 		// Validate email before submission
@@ -45,8 +70,19 @@
 			}
 		}
 
+		// Validate username before submission
 		try {
-			await signUp(email, password, name);
+			username = usernameSchema.parse(username);
+		} catch (err) {
+			if (err instanceof z.ZodError) {
+				usernameError = err.issues[0].message;
+				loading = false;
+				return;
+			}
+		}
+
+		try {
+			await signUp({ email, password, firstName, lastName, username });
 			window.location.href = '/overview';
 		} catch (err) {
 			if (err instanceof Error) {
@@ -79,6 +115,14 @@
 				} else if (msg.includes('email') && msg.includes('invalid')) {
 					errorMessage = 'Please check your email address.';
 					errorHint = "Make sure it's formatted correctly (e.g., name@example.com).";
+				}
+				// Username-related errors
+				else if (
+					msg.includes('username') &&
+					(msg.includes('already') || msg.includes('exists') || msg.includes('taken'))
+				) {
+					errorMessage = 'This username is already taken.';
+					errorHint = 'Please choose a different username.';
 				}
 				// Rate limiting
 				else if (msg.includes('too many') || msg.includes('rate limit')) {
@@ -146,17 +190,50 @@
 		</div>
 	{/if}
 
+	<div class="grid grid-cols-2 gap-4">
+		<div class="flex flex-col space-y-1">
+			<label for="firstName" class="text-sm font-medium text-surface-700-200">First Name</label>
+			<input
+				id="firstName"
+				type="text"
+				bind:value={firstName}
+				placeholder="John"
+				required
+				class="input px-4 py-2 border border-surface-300-600 rounded-md
+                      bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+			/>
+		</div>
+		<div class="flex flex-col space-y-1">
+			<label for="lastName" class="text-sm font-medium text-surface-700-200">Last Name</label>
+			<input
+				id="lastName"
+				type="text"
+				bind:value={lastName}
+				placeholder="Doe"
+				required
+				class="input px-4 py-2 border border-surface-300-600 rounded-md
+                      bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+			/>
+		</div>
+	</div>
+
 	<div class="flex flex-col space-y-1">
-		<label for="name" class="text-sm font-medium text-surface-700-200">Name</label>
+		<label for="username" class="text-sm font-medium text-surface-700-200">Username</label>
 		<input
-			id="name"
+			id="username"
 			type="text"
-			bind:value={name}
-			placeholder="Your name"
+			bind:value={username}
+			onblur={validateUsername}
+			placeholder="johndoe"
 			required
-			class="input px-4 py-2 border border-surface-300-600 rounded-md
-                  bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+			class="input px-4 py-2 border rounded-md bg-surface-50-900 focus:outline-none focus:ring-2
+                  {usernameError
+				? 'border-error-500 focus:ring-error-500'
+				: 'border-surface-300-600 focus:ring-primary-500'}"
 		/>
+		{#if usernameError}
+			<p class="text-sm text-error-600">{usernameError}</p>
+		{/if}
 	</div>
 
 	<div class="flex flex-col space-y-1">

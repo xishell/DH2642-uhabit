@@ -4,12 +4,33 @@ export const authClient = createAuthClient({
 	baseURL: typeof window !== 'undefined' ? window.location.origin : ''
 });
 
-export async function signUp(email: string, password: string, name: string) {
-	const result = await authClient.signUp.email({
-		email,
-		password,
-		name
-	});
+export interface SignUpData {
+	email: string;
+	password: string;
+	firstName: string;
+	lastName: string;
+	username: string;
+}
+
+export async function signUp(data: SignUpData) {
+	// Construct name from firstName and lastName for Better Auth compatibility
+	const name =
+		[data.firstName, data.lastName].filter(Boolean).join(' ') || data.email.split('@')[0];
+
+	const result = await authClient.signUp.email(
+		{
+			email: data.email,
+			password: data.password,
+			name
+		},
+		{
+			body: {
+				firstName: data.firstName,
+				lastName: data.lastName,
+				username: data.username
+			}
+		}
+	);
 
 	if (result.error) {
 		throw new Error(result.error.message || 'Sign up failed');
@@ -60,6 +81,9 @@ export async function getPreferences() {
 }
 
 export async function updatePreferences(preferences: {
+	firstName?: string;
+	lastName?: string;
+	username?: string;
 	displayName?: string;
 	theme?: 'light' | 'dark' | 'system';
 	country?: string;

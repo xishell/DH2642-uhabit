@@ -3,7 +3,12 @@ import { integer, sqliteTable, text, index, unique } from 'drizzle-orm/sqlite-co
 // Better-auth user table with custom fields for D1
 export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
+	// Keep 'name' for Better Auth compatibility (required by the library)
 	name: text('name').notNull(),
+	// New user profile fields
+	firstName: text('firstName'),
+	lastName: text('lastName'),
+	username: text('username').unique(),
 	email: text('email').notNull().unique(),
 	emailVerified: integer('emailVerified', { mode: 'boolean' }).notNull().default(false),
 	image: text('image'),

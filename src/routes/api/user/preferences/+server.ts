@@ -8,6 +8,14 @@ import { requireAuth } from '$lib/server/api-helpers';
 
 // Validation schema for user preferences
 const preferencesSchema = z.object({
+	firstName: z.string().min(1).max(50).optional(),
+	lastName: z.string().min(1).max(50).optional(),
+	username: z
+		.string()
+		.min(3)
+		.max(20)
+		.regex(/^[a-zA-Z0-9_]+$/)
+		.optional(),
 	displayName: z.string().min(1).max(100).optional(),
 	theme: z.enum(['light', 'dark', 'system']).optional(),
 	country: z.string().length(2).optional(), // ISO 3166-1 alpha-2 country codes
@@ -32,6 +40,9 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 
 	const [userData] = await drizzle
 		.select({
+			firstName: user.firstName,
+			lastName: user.lastName,
+			username: user.username,
 			displayName: user.displayName,
 			theme: user.theme,
 			country: user.country,
@@ -59,6 +70,9 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 	}
 
 	return json({
+		firstName: userData.firstName,
+		lastName: userData.lastName,
+		username: userData.username,
 		displayName: userData.displayName,
 		theme: userData.theme || 'system',
 		country: userData.country,
@@ -88,11 +102,39 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	}
 
 	const updates: {
+		firstName?: string;
+		lastName?: string;
+		username?: string;
+		name?: string;
 		displayName?: string;
 		theme?: string;
 		country?: string;
 		preferences?: string;
 	} = {};
+
+	if (body.firstName !== undefined) {
+		updates.firstName = body.firstName;
+	}
+
+	if (body.lastName !== undefined) {
+		updates.lastName = body.lastName;
+	}
+
+	// Update the 'name' field when firstName or lastName changes (for Better Auth compatibility)
+	if (body.firstName !== undefined || body.lastName !== undefined) {
+		const [currentUser] = await drizzle
+			.select({ firstName: user.firstName, lastName: user.lastName })
+			.from(user)
+			.where(eq(user.id, userId));
+
+		const newFirstName = body.firstName ?? currentUser?.firstName ?? '';
+		const newLastName = body.lastName ?? currentUser?.lastName ?? '';
+		updates.name = [newFirstName, newLastName].filter(Boolean).join(' ') || 'User';
+	}
+
+	if (body.username !== undefined) {
+		updates.username = body.username.toLowerCase().trim();
+	}
 
 	if (body.displayName !== undefined) {
 		updates.displayName = body.displayName;
@@ -129,6 +171,9 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 
 	const [updatedUser] = await drizzle
 		.select({
+			firstName: user.firstName,
+			lastName: user.lastName,
+			username: user.username,
 			displayName: user.displayName,
 			theme: user.theme,
 			country: user.country,
@@ -147,6 +192,9 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	}
 
 	return json({
+		firstName: updatedUser.firstName,
+		lastName: updatedUser.lastName,
+		username: updatedUser.username,
 		displayName: updatedUser.displayName,
 		theme: updatedUser.theme || 'system',
 		country: updatedUser.country,

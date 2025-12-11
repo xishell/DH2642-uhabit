@@ -82,6 +82,28 @@ export const verification = sqliteTable(
 	})
 );
 
+// Goal table for user objectives with attached habits
+export const goal = sqliteTable(
+	'goal',
+	{
+		id: text('id').primaryKey(),
+		userId: text('userId')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		description: text('description'),
+		// Date range for the goal
+		startDate: integer('startDate', { mode: 'timestamp' }).notNull(),
+		endDate: integer('endDate', { mode: 'timestamp' }).notNull(),
+		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+		updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull()
+	},
+	(table) => ({
+		userIdx: index('goal_user_id_idx').on(table.userId),
+		userDatesIdx: index('goal_user_dates_idx').on(table.userId, table.startDate, table.endDate)
+	})
+);
+
 // Category table for organizing habits
 export const category = sqliteTable(
 	'category',
@@ -124,8 +146,8 @@ export const habit = sqliteTable(
 		unit: text('unit'),
 		// Category for organizing habits
 		categoryId: text('categoryId').references(() => category.id, { onDelete: 'set null' }),
-		// Goal this habit contributes to (for future goal system)
-		goalId: text('goalId'), // Will reference goal table when implemented
+		// Goal this habit contributes to
+		goalId: text('goalId').references(() => goal.id, { onDelete: 'set null' }),
 		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
 		updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull()
 	},

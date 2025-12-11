@@ -1,19 +1,24 @@
 import type { PageServerLoad } from './$types';
 import type { Habit } from '$lib/types/habit';
+import type { GoalWithProgress } from '$lib/types/goal';
 
 type QuoteData = { quote?: string | null; author?: string | null };
 
 export const load: PageServerLoad = async ({ fetch, cookies }) => {
 	// Read tab state from cookie
 	const savedTab = cookies.get('habits-tab');
-	const initialTab: 0 | 1 = savedTab === 'single' ? 1 : 0;
+	const initialTab: 0 | 1 = savedTab === 'goals' ? 1 : 0;
 
-	const res = await fetch('/api/habits');
-	const data = res.ok ? await res.json() : [];
-	const habits = Array.isArray(data) ? (data as Habit[]) : [];
+	// Fetch habits and goals in parallel
+	const [habitsRes, goalsRes] = await Promise.all([fetch('/api/habits'), fetch('/api/goals')]);
 
-	const progressiveHabitList = habits.filter((h: Habit) => h.measurement === 'numeric');
-	const singleStepHabitList = habits.filter((h: Habit) => h.measurement === 'boolean');
+	const habitsData = habitsRes.ok ? await habitsRes.json() : [];
+	const goalsData = goalsRes.ok ? await goalsRes.json() : [];
+
+	const habits = Array.isArray(habitsData)
+		? (habitsData as Habit[]).sort((a, b) => a.title.localeCompare(b.title))
+		: [];
+	const goals = Array.isArray(goalsData) ? (goalsData as GoalWithProgress[]) : [];
 
 	let quote: string | null = null;
 	let author: string | null = null;
@@ -29,8 +34,8 @@ export const load: PageServerLoad = async ({ fetch, cookies }) => {
 	}
 
 	return {
-		progressiveHabitList,
-		singleStepHabitList,
+		habits,
+		goals,
 		quote,
 		author,
 		initialTab

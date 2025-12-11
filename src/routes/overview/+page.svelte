@@ -3,20 +3,22 @@
 	import TaskSingle from './components/TaskSingle.svelte';
 	import TaskProgressive from './components/TaskProgressive.svelte';
 	import TaskProgressiveDetail from './components/TaskProgressiveDetail.svelte';
+	import GoalCard from '$lib/components/GoalCard.svelte';
 	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import { enhance } from '$app/forms';
 	import { browser } from '$app/environment';
 	import { untrack } from 'svelte';
 	import type { HabitWithStatus } from '$lib/types/habit';
+	import type { GoalWithHabitStatus } from '$lib/types/goal';
 	import { createOverviewPresenter } from '$lib/presenters/overviewPresenter';
 
 	let {
 		data
 	}: {
 		data: {
-			single: HabitWithStatus[];
-			progressive: HabitWithStatus[];
-			initialTab: 'single' | 'progressive';
+			habits: HabitWithStatus[];
+			goals: GoalWithHabitStatus[];
+			initialTab: 'tasks' | 'goals';
 			initialModal: { habitId: string; progress: number } | null;
 		};
 	} = $props();
@@ -30,6 +32,10 @@
 
 	// Keep SSR data in sync if server returns new values (e.g., after form submit)
 	$effect(() => presenter.syncFromServer(data));
+
+	// Derived: split habits by measurement type for display
+	const booleanHabits = $derived($state.habits.filter((h) => h.habit.measurement === 'boolean'));
+	const numericHabits = $derived($state.habits.filter((h) => h.habit.measurement === 'numeric'));
 </script>
 
 <!-- Error Toast -->
@@ -43,26 +49,23 @@
 
 <div class="p-4 sm:p-8">
 	<!-- Top Progress -->
-	<TopProgress single={$state.single} progressive={$state.progressive} />
+	<TopProgress single={booleanHabits} progressive={numericHabits} />
 
 	<!-- Toggle -->
 	<div class="max-w-3xl mx-auto mt-4 mb-6 flex justify-center">
-		<ToggleBar
-			habitType={$state.activeTab === 'single' ? 1 : 0}
-			onChange={presenter.setActiveTabFromToggle}
-		/>
+		<ToggleBar activeTab={$state.activeTab === 'tasks' ? 0 : 1} onChange={presenter.setActiveTab} />
 	</div>
 
 	<!-- Content area -->
 	<div class="max-w-3xl mx-auto">
-		{#if $state.activeTab === 'single'}
+		{#if $state.activeTab === 'tasks'}
+			<!-- Tasks Tab: All habits due today -->
 			<div class="space-y-3">
-				{#if $state.single.length === 0}
-					<div class="text-surface-500 text-center py-6">
-						No single-step tasks today. Create one in the Create page.
-					</div>
+				{#if $state.habits.length === 0}
+					<div class="text-surface-500 text-center py-6">No tasks due today. Enjoy your day!</div>
 				{:else}
-					{#each $state.single as s (s.habit.id)}
+					<!-- Boolean habits (checkboxes) -->
+					{#each booleanHabits as s (s.habit.id)}
 						<form
 							method="POST"
 							action="?/toggleSingle"
@@ -70,7 +73,7 @@
 								const previousState = presenter.toggleSingleOptimistic(s.habit.id);
 								return async ({ result }) => {
 									if (result.type === 'failure' || result.type === 'error') {
-										presenter.revertSingle(previousState);
+										presenter.revertHabits(previousState);
 										presenter.showError('Failed to update task. Please try again.');
 									}
 								};
@@ -81,19 +84,23 @@
 							<TaskSingle {s} />
 						</form>
 					{/each}
+
+					<!-- Numeric habits (progress) -->
+					{#each numericHabits as p (p.habit.id)}
+						<TaskProgressive {p} onOpen={() => presenter.openProgressive(p)} />
+					{/each}
 				{/if}
 			</div>
-		{/if}
-
-		{#if $state.activeTab === 'progressive'}
-			<div class="space-y-3">
-				{#if $state.progressive.length === 0}
+		{:else}
+			<!-- Goals Tab -->
+			<div class="space-y-4">
+				{#if $state.goals.length === 0}
 					<div class="text-surface-500 text-center py-6">
-						No progressive tasks today. Create one in the Create page.
+						No active goals. Create a goal to organize your habits!
 					</div>
 				{:else}
-					{#each $state.progressive as p (p.habit.id)}
-						<TaskProgressive {p} onOpen={() => presenter.openProgressive(p)} />
+					{#each $state.goals as goal (goal.id)}
+						<GoalCard {goal} />
 					{/each}
 				{/if}
 			</div>

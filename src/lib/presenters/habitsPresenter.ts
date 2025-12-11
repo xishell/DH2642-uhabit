@@ -1,13 +1,14 @@
 import { writable } from 'svelte/store';
 import type { Habit } from '$lib/types/habit';
+import type { GoalWithProgress } from '$lib/types/goal';
 import { setCookie } from '$lib/utils/cookie';
 
 type QuoteData = { quote?: string | null; author?: string | null };
 
 export type HabitsState = {
-	progressiveHabitList: Habit[];
-	singleStepHabitList: Habit[];
-	habitType: 0 | 1;
+	habits: Habit[];
+	goals: GoalWithProgress[];
+	activeTab: 0 | 1; // 0 = Tasks, 1 = Goals
 	habitsLoading: boolean;
 	habitsError: string | null;
 	quote: string;
@@ -17,8 +18,8 @@ export type HabitsState = {
 
 type HabitsPresenterDeps = {
 	initial: {
-		progressiveHabitList: Habit[];
-		singleStepHabitList: Habit[];
+		habits: Habit[];
+		goals: GoalWithProgress[];
 		quote: string | null;
 		author: string | null;
 		initialTab: 0 | 1;
@@ -32,9 +33,9 @@ const QUOTE_CACHE_KEY = 'uhabit-quote';
 
 export function createHabitsPresenter({ initial, fetcher, browser, storage }: HabitsPresenterDeps) {
 	const { subscribe, update } = writable<HabitsState>({
-		progressiveHabitList: initial.progressiveHabitList,
-		singleStepHabitList: initial.singleStepHabitList,
-		habitType: initial.initialTab,
+		habits: initial.habits,
+		goals: initial.goals,
+		activeTab: initial.initialTab,
 		habitsLoading: false,
 		habitsError: null,
 		quote: initial.quote ?? 'Let your days echo with the steps you choose to take.',
@@ -49,46 +50,51 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		return current as HabitsState;
 	};
 
-	const initHabits = (progressive: Habit[], single: Habit[]) => {
+	const initData = (habits: Habit[], goals: GoalWithProgress[]) => {
 		update((state) => ({
 			...state,
-			progressiveHabitList: progressive,
-			singleStepHabitList: single,
+			habits,
+			goals,
 			habitsLoading: false,
 			habitsError: null
 		}));
 	};
 
-	const setHabitType = (val: 0 | 1) => {
-		update((state) => ({ ...state, habitType: val }));
+	const setActiveTab = (val: 0 | 1) => {
+		update((state) => ({ ...state, activeTab: val }));
 		if (browser) {
-			setCookie('habits-tab', val === 1 ? 'single' : 'progressive');
+			setCookie('habits-tab', val === 1 ? 'goals' : 'tasks');
 		}
 	};
 
-	const refreshHabits = async () => {
+	const refreshData = async () => {
 		update((state) => ({ ...state, habitsLoading: true, habitsError: null }));
 		try {
-			const res = await fetcher('/api/habits');
-			if (!res.ok) {
-				throw new Error('Failed to load habits');
+			const [habitsRes, goalsRes] = await Promise.all([
+				fetcher('/api/habits'),
+				fetcher('/api/goals')
+			]);
+
+			if (!habitsRes.ok || !goalsRes.ok) {
+				throw new Error('Failed to load data');
 			}
-			const data = (await res.json()) as Habit[];
-			const progressive = data.filter((h) => h.measurement === 'numeric');
-			const single = data.filter((h) => h.measurement === 'boolean');
+
+			const habits = (await habitsRes.json()) as Habit[];
+			const goals = (await goalsRes.json()) as GoalWithProgress[];
+
 			update((state) => ({
 				...state,
-				progressiveHabitList: progressive,
-				singleStepHabitList: single,
+				habits: habits.sort((a, b) => a.title.localeCompare(b.title)),
+				goals,
 				habitsLoading: false
 			}));
 		} catch (error) {
 			update((state) => ({
 				...state,
 				habitsLoading: false,
-				habitsError: 'Could not load habits.'
+				habitsError: 'Could not load data.'
 			}));
-			console.error('Habit load error:', error);
+			console.error('Data load error:', error);
 		}
 	};
 
@@ -155,9 +161,9 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 
 	return {
 		state: { subscribe },
-		initHabits,
-		setHabitType,
-		refreshHabits,
+		initData,
+		setActiveTab,
+		refreshData,
 		ensureQuote
 	};
 }

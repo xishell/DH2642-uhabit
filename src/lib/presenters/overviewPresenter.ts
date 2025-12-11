@@ -1,11 +1,12 @@
 import { writable } from 'svelte/store';
 import type { HabitWithStatus } from '$lib/types/habit';
+import type { GoalWithHabitStatus } from '$lib/types/goal';
 import { setCookie, setJsonCookie, deleteCookie } from '$lib/utils/cookie';
 
 export type OverviewState = {
-	activeTab: 'single' | 'progressive';
-	single: HabitWithStatus[];
-	progressive: HabitWithStatus[];
+	activeTab: 'tasks' | 'goals';
+	habits: HabitWithStatus[]; // All habits due today
+	goals: GoalWithHabitStatus[]; // Active goals with today's status
 	showDetail: boolean;
 	selectedProgressive: HabitWithStatus | null;
 	modalProgress: number | null;
@@ -14,9 +15,9 @@ export type OverviewState = {
 
 type OverviewPresenterDeps = {
 	initial: {
-		single: HabitWithStatus[];
-		progressive: HabitWithStatus[];
-		initialTab: 'single' | 'progressive';
+		habits: HabitWithStatus[];
+		goals: GoalWithHabitStatus[];
+		initialTab: 'tasks' | 'goals';
 		initialModal: { habitId: string; progress: number } | null;
 	};
 	fetcher: typeof fetch;
@@ -26,8 +27,8 @@ type OverviewPresenterDeps = {
 export function createOverviewPresenter({ initial, fetcher, browser }: OverviewPresenterDeps) {
 	const baseState: OverviewState = {
 		activeTab: initial.initialTab,
-		single: initial.single.map((s) => ({ ...s })),
-		progressive: initial.progressive.map((p) => ({ ...p })),
+		habits: initial.habits.map((h) => ({ ...h })),
+		goals: initial.goals.map((g) => ({ ...g })),
 		showDetail: false,
 		selectedProgressive: null,
 		modalProgress: null,
@@ -36,7 +37,9 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 
 	// Restore modal if server provided valid cookie-backed state
 	if (initial.initialModal) {
-		const match = baseState.progressive.find((p) => p.habit.id === initial.initialModal!.habitId);
+		const match = baseState.habits
+			.filter((h) => h.habit.measurement === 'numeric')
+			.find((p) => p.habit.id === initial.initialModal!.habitId);
 		if (match) {
 			baseState.selectedProgressive = { ...match, habit: { ...match.habit } };
 			baseState.modalProgress = initial.initialModal.progress;
@@ -60,8 +63,8 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 	const syncFromServer = (data: OverviewPresenterDeps['initial']) => {
 		set({
 			activeTab: data.initialTab,
-			single: data.single.map((s) => ({ ...s })),
-			progressive: data.progressive.map((p) => ({ ...p })),
+			habits: data.habits.map((h) => ({ ...h })),
+			goals: data.goals.map((g) => ({ ...g })),
 			showDetail: false,
 			selectedProgressive: null,
 			modalProgress: null,
@@ -114,28 +117,26 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 	};
 
 	const toggleSingleOptimistic = (habitId: string): HabitWithStatus[] => {
-		const previous = getState().single;
+		const previous = getState().habits;
 		update((state) => ({
 			...state,
-			single: state.single.map((s) =>
-				s.habit.id === habitId ? { ...s, isCompleted: !s.isCompleted } : s
+			habits: state.habits.map((h) =>
+				h.habit.id === habitId ? { ...h, isCompleted: !h.isCompleted } : h
 			)
 		}));
 		return previous;
 	};
 
-	const revertSingle = (previous: HabitWithStatus[]) => {
-		update((state) => ({ ...state, single: previous }));
+	const revertHabits = (previous: HabitWithStatus[]) => {
+		update((state) => ({ ...state, habits: previous }));
 	};
 
 	const saveProgressive = async (updated: HabitWithStatus) => {
-		const prevState = getState().progressive;
+		const prevState = getState().habits;
 
 		update((state) => ({
 			...state,
-			progressive: state.progressive.map((p) =>
-				p.habit.id === updated.habit.id ? { ...updated } : p
-			)
+			habits: state.habits.map((h) => (h.habit.id === updated.habit.id ? { ...updated } : h))
 		}));
 		closeDetail();
 
@@ -149,19 +150,23 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 				throw new Error('Failed to save progress');
 			}
 		} catch (error) {
-			update((state) => ({ ...state, progressive: prevState }));
+			update((state) => ({ ...state, habits: prevState }));
 			setError('Failed to save progress. Please try again.');
 			console.error('Progress save error:', error);
 		}
 	};
 
-	const setActiveTabFromToggle = (val: 0 | 1) => {
-		const activeTab = val === 1 ? 'single' : 'progressive';
+	const setActiveTab = (val: 0 | 1) => {
+		const activeTab = val === 0 ? 'tasks' : 'goals';
 		update((state) => ({ ...state, activeTab }));
 		if (browser) {
 			setCookie('overview-tab', activeTab);
 		}
 	};
+
+	// Derived helpers
+	const getBooleanHabits = () => getState().habits.filter((h) => h.habit.measurement === 'boolean');
+	const getNumericHabits = () => getState().habits.filter((h) => h.habit.measurement === 'numeric');
 
 	return {
 		state: { subscribe },
@@ -170,9 +175,11 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 		closeDetail,
 		onModalProgressChange,
 		toggleSingleOptimistic,
-		revertSingle,
+		revertHabits,
 		saveProgressive,
-		setActiveTabFromToggle,
-		showError: setError
+		setActiveTab,
+		showError: setError,
+		getBooleanHabits,
+		getNumericHabits
 	};
 }

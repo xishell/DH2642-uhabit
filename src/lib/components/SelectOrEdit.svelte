@@ -1,6 +1,6 @@
 <script lang="ts">
 	let {
-		unit = '',
+		unit = $bindable(''),
 		required = false
 	}: {
 		unit?: string | null;

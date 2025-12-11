@@ -2,7 +2,7 @@
 	// Generic drag-to-select grid component
 	let {
 		items,
-		selectDays = [],
+		selectDays = $bindable([]),
 		itemToValue,
 		name = 'period',
 		gridCols = 7
@@ -17,11 +17,13 @@
 	let isDragging = $state(false);
 	let dragMode = $state<'select' | 'deselect' | null>(null);
 	let selected = $state(new Set<string>());
+	let initialized = $state(false);
 
-	// Initialize selected items from selectDays prop
+	// Initialize selected items from selectDays prop (only once)
 	$effect(() => {
-		if (selectDays?.length > 0) {
+		if (!initialized && selectDays?.length > 0) {
 			selected = new Set(items.filter((item) => selectDays.includes(itemToValue(item))));
+			initialized = true;
 		}
 	});
 
@@ -31,6 +33,11 @@
 			.map((item) => itemToValue(item))
 			.sort((a, b) => a - b)
 	);
+
+	// Update the bound selectDays when selection changes
+	$effect(() => {
+		selectDays = selectedValues;
+	});
 
 	function updateSet() {
 		selected = new Set(selected);

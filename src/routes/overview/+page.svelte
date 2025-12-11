@@ -8,6 +8,7 @@
 	import { enhance } from '$app/forms';
 	import { browser } from '$app/environment';
 	import { untrack } from 'svelte';
+	import { goto } from '$app/navigation';
 	import type { HabitWithStatus } from '$lib/types/habit';
 	import type { GoalWithHabitStatus } from '$lib/types/goal';
 	import { createOverviewPresenter } from '$lib/presenters/overviewPresenter';
@@ -20,11 +21,17 @@
 			goals: GoalWithHabitStatus[];
 			initialTab: 'habits' | 'goals';
 			initialModal: { habitId: string; progress: number } | null;
+			totalHabits: number;
 		};
 	} = $props();
 
 	const presenter = createOverviewPresenter({
-		initial: untrack(() => data),
+		initial: untrack(() => ({
+			habits: data.habits,
+			goals: data.goals,
+			initialTab: data.initialTab,
+			initialModal: data.initialModal
+		})),
 		fetcher: fetch,
 		browser
 	});
@@ -36,6 +43,7 @@
 	// Derived: split habits by measurement type for display
 	const booleanHabits = $derived($state.habits.filter((h) => h.habit.measurement === 'boolean'));
 	const numericHabits = $derived($state.habits.filter((h) => h.habit.measurement === 'numeric'));
+	const hasAnyHabits = $derived(data.totalHabits > 0);
 </script>
 
 <!-- Error Toast -->
@@ -65,7 +73,21 @@
 			<!-- Habits Tab: All habits due today -->
 			<div class="space-y-3">
 				{#if $state.habits.length === 0}
-					<div class="text-surface-500 text-center py-6">No habits due today. Enjoy your day!</div>
+					{#if hasAnyHabits}
+						<div class="text-surface-500 text-center py-6">No habits due today. Enjoy your day!</div>
+					{:else}
+						<div class="text-surface-500 text-center py-6">
+							No habits yet.
+							<button
+								type="button"
+								class="text-primary-600 hover:text-primary-500 underline underline-offset-2"
+								onclick={() => goto('/habits?openHabitModal=1')}
+							>
+								Start a habit
+							</button>
+							.
+						</div>
+					{/if}
 				{:else}
 					<!-- Boolean habits (checkboxes) -->
 					{#each booleanHabits as s (s.habit.id)}

@@ -78,6 +78,7 @@ export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 
 	// Get habits with today's status (filters to only habits due today)
 	const habitsWithStatus: HabitWithStatus[] = getHabitsForDate(habits, completions);
+	const totalHabits = habits.length;
 
 	// Build goals with habit status
 	const goalsWithStatus: GoalWithHabitStatus[] = goalsRaw
@@ -122,7 +123,8 @@ export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 		habits: habitsWithStatus,
 		goals: goalsWithStatus,
 		initialTab,
-		initialModal
+		initialModal,
+		totalHabits
 	};
 };
 

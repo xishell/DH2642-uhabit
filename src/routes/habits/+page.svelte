@@ -6,6 +6,7 @@
 	import GoalModal from '$lib/components/GoalModal.svelte';
 	import { Plus } from 'lucide-svelte';
 	import { browser } from '$app/environment';
+	import { page } from '$app/stores';
 	import { untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { createHabitsPresenter } from '$lib/presenters/habitsPresenter';
@@ -73,6 +74,7 @@
 		}
 
 		presenter.closeHabitModal();
+		presenter.setActiveTab(0);
 		await presenter.refreshData();
 	}
 
@@ -107,6 +109,7 @@
 		}
 
 		presenter.closeGoalModal();
+		presenter.setActiveTab(1);
 		await presenter.refreshData();
 	}
 
@@ -130,6 +133,19 @@
 
 	// Standalone habits (not attached to any goal)
 	const standaloneHabits = $derived($presenterState.habits.filter((h) => !h.goalId));
+
+	// Auto-open habit modal when directed via query param (e.g., from overview CTA)
+	$effect(() => {
+		if (!browser) return;
+		const params = $page.url.searchParams;
+		if (params.get('openHabitModal') === '1') {
+			openHabitModal();
+			// Remove param to avoid reopening on refresh
+			const url = new URL(window.location.href);
+			url.searchParams.delete('openHabitModal');
+			window.history.replaceState({}, '', url);
+		}
+	});
 </script>
 
 <div class="planning-view flex flex-col items-center p-7 max-w-[800px] m-auto">
@@ -171,10 +187,16 @@
 		{:else if $presenterState.habitsError}
 			<p class="text-center text-sm text-red-600">{$presenterState.habitsError}</p>
 		{:else if $presenterState.activeTab === 0}
-			<!-- Tasks Tab: All habits -->
+			<!-- Habits Tab: All habits -->
 			{#if $presenterState.habits.length === 0}
 				<p class="text-center text-surface-500 py-8">
-					No habits yet. Create your first habit to get started!
+					No habits yet. <button
+						class="text-primary-600 hover:text-primary-500 underline underline-offset-2"
+						onclick={() => openHabitModal()}
+						type="button"
+					>
+						Create a habit
+					</button>.
 				</p>
 			{:else}
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-7">

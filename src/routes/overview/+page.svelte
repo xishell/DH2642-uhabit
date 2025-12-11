@@ -1,5 +1,5 @@
 <script lang="ts">
-	import TopProgress from './components/TopProgress.svelte';
+	import TopProgressMultiRing from './components/TopProgressMultiRing.svelte';
 	import TaskSingle from './components/TaskSingle.svelte';
 	import TaskProgressive from './components/TaskProgressive.svelte';
 	import TaskProgressiveDetail from './components/TaskProgressiveDetail.svelte';
@@ -57,7 +57,11 @@
 
 <div class="p-4 sm:p-8">
 	<!-- Top Progress -->
-	<TopProgress single={booleanHabits} progressive={numericHabits} />
+	<TopProgressMultiRing
+		single={booleanHabits}
+		progressive={numericHabits}
+		showInnerRings={$state.activeTab === 'habits'}
+	/>
 
 	<!-- Toggle -->
 	<div class="max-w-3xl mx-auto mt-4 mb-6 flex justify-center">

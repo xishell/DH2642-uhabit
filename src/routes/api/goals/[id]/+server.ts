@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
 import { goal, habit, habitCompletion } from '$lib/server/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAuth } from '$lib/server/api-helpers';
 import { calculateGoalProgress } from '$lib/utils/goal';
@@ -30,7 +30,8 @@ const updateGoalSchema = z
 		endDate: z
 			.string()
 			.regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be YYYY-MM-DD')
-			.optional()
+			.optional(),
+		habitIds: z.array(z.string()).optional()
 	})
 	.refine(
 		(data) => {
@@ -146,6 +147,43 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 	}
 
 	await db.update(goal).set(updates).where(eq(goal.id, params.id));
+
+	// Update habit attachments if provided
+	if (data.habitIds !== undefined) {
+		const habitIds = data.habitIds;
+		const now = new Date();
+
+		// Validate ownership of provided habits
+		if (habitIds.length > 0) {
+			const ownedHabits = await db
+				.select({ id: habit.id })
+				.from(habit)
+				.where(and(eq(habit.userId, userId), sql`${habit.id} IN (${sql.join(habitIds, sql`, `)})`));
+
+			const ownedIds = new Set(ownedHabits.map((h) => h.id));
+			const invalid = habitIds.filter((id) => !ownedIds.has(id));
+			if (invalid.length > 0) {
+				throw error(400, 'One or more habits are invalid or do not belong to the user.');
+			}
+		}
+
+		// Detach habits that were previously attached but not in the new list
+		const baseDetachCondition = and(eq(habit.userId, userId), eq(habit.goalId, params.id));
+		if (habitIds.length === 0) {
+			await db.update(habit).set({ goalId: null, updatedAt: now }).where(baseDetachCondition);
+		} else {
+			await db
+				.update(habit)
+				.set({ goalId: null, updatedAt: now })
+				.where(and(baseDetachCondition, sql`${habit.id} NOT IN (${sql.join(habitIds, sql`, `)})`));
+
+			// Attach the provided habits to this goal
+			await db
+				.update(habit)
+				.set({ goalId: params.id, updatedAt: now })
+				.where(and(eq(habit.userId, userId), sql`${habit.id} IN (${sql.join(habitIds, sql`, `)})`));
+		}
+	}
 
 	// Fetch updated goal with habits
 	const [updatedGoal] = await db.select().from(goal).where(eq(goal.id, params.id));

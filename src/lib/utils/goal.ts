@@ -34,33 +34,31 @@ export function getScheduledDatesForHabit(habit: Habit, startDate: Date, endDate
 /**
  * Count completed instances for a habit within a date range
  */
-export function countCompletedInstances(
+// Returns completion units for a habit across its scheduled dates.
+// Boolean habits contribute 0 or 1 per day; numeric habits contribute a fraction of the target (capped at 1).
+export function completionUnitsForHabit(
 	habit: Habit,
 	completions: HabitCompletion[],
 	startDate: Date,
 	endDate: Date
 ): number {
 	const scheduledDates = getScheduledDatesForHabit(habit, startDate, endDate);
-	let completedCount = 0;
+	let units = 0;
 
 	for (const date of scheduledDates) {
 		const dayCompletions = getCompletionsForHabitOnDate(habit.id, completions, date);
 
 		if (habit.measurement === 'boolean') {
-			// Boolean habit: completed if any completion exists
-			if (dayCompletions.length > 0) {
-				completedCount++;
-			}
+			units += dayCompletions.length > 0 ? 1 : 0;
 		} else {
-			// Numeric habit: completed if total >= target
+			const target = habit.targetAmount ?? 0;
+			if (target <= 0) continue;
 			const totalProgress = dayCompletions.reduce((sum, c) => sum + (c.measurement ?? 0), 0);
-			if (habit.targetAmount && totalProgress >= habit.targetAmount) {
-				completedCount++;
-			}
+			units += Math.min(1, totalProgress / target);
 		}
 	}
 
-	return completedCount;
+	return units;
 }
 
 /**
@@ -80,7 +78,7 @@ export function calculateGoalProgress(
 	for (const habit of goalHabits) {
 		const scheduledDates = getScheduledDatesForHabit(habit, goal.startDate, goal.endDate);
 		totalScheduled += scheduledDates.length;
-		totalCompleted += countCompletedInstances(habit, completions, goal.startDate, goal.endDate);
+		totalCompleted += completionUnitsForHabit(habit, completions, goal.startDate, goal.endDate);
 	}
 
 	const progressPercentage =
@@ -116,7 +114,7 @@ export function calculateGoalWithTodayStatus(
 	for (const habit of goalHabits) {
 		const scheduledDates = getScheduledDatesForHabit(habit, goal.startDate, goal.endDate);
 		totalScheduled += scheduledDates.length;
-		totalCompleted += countCompletedInstances(habit, completions, goal.startDate, goal.endDate);
+		totalCompleted += completionUnitsForHabit(habit, completions, goal.startDate, goal.endDate);
 	}
 
 	// Calculate today's status for each habit
@@ -147,7 +145,14 @@ export function calculateGoalWithTodayStatus(
 			}
 		});
 
-	const todayCompleted = habitsWithStatus.filter((h) => h.isCompleted).length;
+	const todayCompletedUnits = habitsWithStatus.reduce((sum, h) => {
+		if (h.habit.measurement === 'boolean') {
+			return sum + (h.isCompleted ? 1 : 0);
+		}
+		const target = h.target ?? h.habit.targetAmount ?? 0;
+		if (target <= 0) return sum + (h.isCompleted ? 1 : 0);
+		return sum + Math.min(1, h.progress / target);
+	}, 0);
 	const todayTotal = habitsWithStatus.length;
 
 	const progressPercentage =
@@ -156,7 +161,7 @@ export function calculateGoalWithTodayStatus(
 	return {
 		...goal,
 		habits: habitsWithStatus,
-		todayCompleted,
+		todayCompleted: todayCompletedUnits,
 		todayTotal,
 		totalScheduled,
 		totalCompleted,

@@ -3,7 +3,12 @@ import { integer, sqliteTable, text, index, unique } from 'drizzle-orm/sqlite-co
 // Better-auth user table with custom fields for D1
 export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
+	// Keep 'name' for Better Auth compatibility (required by the library)
 	name: text('name').notNull(),
+	// New user profile fields
+	firstName: text('firstName'),
+	lastName: text('lastName'),
+	username: text('username').unique(),
 	email: text('email').notNull().unique(),
 	emailVerified: integer('emailVerified', { mode: 'boolean' }).notNull().default(false),
 	image: text('image'),
@@ -77,6 +82,28 @@ export const verification = sqliteTable(
 	})
 );
 
+// Goal table for user objectives with attached habits
+export const goal = sqliteTable(
+	'goal',
+	{
+		id: text('id').primaryKey(),
+		userId: text('userId')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		description: text('description'),
+		// Date range for the goal
+		startDate: integer('startDate', { mode: 'timestamp' }).notNull(),
+		endDate: integer('endDate', { mode: 'timestamp' }).notNull(),
+		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+		updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull()
+	},
+	(table) => ({
+		userIdx: index('goal_user_id_idx').on(table.userId),
+		userDatesIdx: index('goal_user_dates_idx').on(table.userId, table.startDate, table.endDate)
+	})
+);
+
 // Category table for organizing habits
 export const category = sqliteTable(
 	'category',
@@ -107,20 +134,20 @@ export const habit = sqliteTable(
 		color: text('color'),
 		// Frequency: 'daily', 'weekly', 'monthly', or custom interval
 		frequency: text('frequency').notNull().default('daily'),
-		// Measurement type: 'boolean' (single-step) or 'numeric' (progressive)
+		// Measurement type: 'boolean' (checkbox) or 'numeric' (tracked amount)
 		measurement: text('measurement').notNull().default('boolean'),
 		// Period for frequency - JSON array of selected days
 		// Weekly: [0,2,4] for Sunday, Tuesday, Thursday (0=Sunday, 6=Saturday)
 		// Monthly: [1,15,30] for 1st, 15th, and 30th of month
 		period: text('period'),
-		// Target amount for numeric habits (e.g., 5 for "5 cups of water")
+		// Target amount for numeric habits
 		targetAmount: integer('targetAmount'),
-		// Unit for numeric habits (e.g., "cups", "liters", "steps")
+		// Unit for numeric habits
 		unit: text('unit'),
 		// Category for organizing habits
 		categoryId: text('categoryId').references(() => category.id, { onDelete: 'set null' }),
-		// Goal this habit contributes to (for future goal system)
-		goalId: text('goalId'), // Will reference goal table when implemented
+		// Goal this habit contributes to
+		goalId: text('goalId').references(() => goal.id, { onDelete: 'set null' }),
 		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
 		updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull()
 	},
@@ -142,7 +169,7 @@ export const habitCompletion = sqliteTable(
 			.references(() => user.id, { onDelete: 'cascade' }),
 		// When the habit was completed
 		completedAt: integer('completedAt', { mode: 'timestamp' }).notNull(),
-		// Measurement value for progressive habits (null for single-step habits)
+		// Measurement value for numeric habits (null for boolean habits)
 		measurement: integer('measurement'),
 		// Optional notes for this completion
 		notes: text('notes'),
@@ -155,7 +182,7 @@ export const habitCompletion = sqliteTable(
 		userDateIdx: index('habit_completion_user_date_idx').on(table.userId, table.completedAt),
 		// Index for querying completions by habit and date
 		habitDateIdx: index('habit_completion_habit_date_idx').on(table.habitId, table.completedAt),
-		// Unique constraint for single-step habits (one completion per habit per day)
+		// Unique constraint for boolean habits (one completion per habit per day)
 		// This will be enforced at the application layer for the date part
 		uniqueHabitDate: unique('habit_completion_unique').on(table.habitId, table.completedAt)
 	})

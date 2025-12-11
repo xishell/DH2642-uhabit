@@ -11,9 +11,9 @@ import {
 	parseDateRangeParams
 } from '$lib/server/api-helpers';
 
-// GET /api/completions - Get all completions for user with optional date filter
-// Supports optional pagination: ?page=1&limit=20
-// Supports date filtering: ?date=YYYY-MM-DD or ?from=YYYY-MM-DD&to=YYYY-MM-DD
+// GET /api/completions: user completions with optional date filter
+// Supports pagination: ?page=1&limit=20
+// Supports ?date=YYYY-MM-DD or ?from=YYYY-MM-DD&to=YYYY-MM-DD
 export const GET: RequestHandler = async ({ url, locals, platform, setHeaders }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
@@ -45,7 +45,7 @@ export const GET: RequestHandler = async ({ url, locals, platform, setHeaders })
 		}
 	}
 
-	// Cache privately for short duration since completions change frequently
+	// Short private cache; completions change often
 	setHeaders({
 		'Cache-Control': 'private, max-age=30, stale-while-revalidate=15'
 	});

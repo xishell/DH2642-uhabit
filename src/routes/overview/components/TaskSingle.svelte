@@ -9,7 +9,7 @@
 	type="submit"
 	class="bg-surface rounded-xl p-4 flex items-center justify-between shadow-sm hover:shadow-md transition w-full text-left"
 >
-	<div class="flex items-center gap-4 flex-1">
+	<div class="flex items-center gap-4 flex-1 min-w-0">
 		<div
 			class="
                 w-5 h-5 rounded-full flex items-center justify-center border-2
@@ -25,7 +25,7 @@
 		</div>
 
 		<div
-			class="text-sm font-medium transition"
+			class="text-sm font-medium transition truncate"
 			class:line-through={s.isCompleted}
 			class:text-surface-400={s.isCompleted}
 		>

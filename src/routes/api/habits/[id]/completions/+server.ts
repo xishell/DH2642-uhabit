@@ -12,9 +12,9 @@ import {
 	validateDateParam
 } from '$lib/server/api-helpers';
 
-// GET /api/habits/[id]/completions - Get completion history with optional date range
-// Supports optional pagination: ?page=1&limit=20
-// Supports date filtering: ?from=YYYY-MM-DD&to=YYYY-MM-DD
+// GET /api/habits/[id]/completions: history (optional date range)
+// Supports pagination ?page=1&limit=20
+// Supports ?from=YYYY-MM-DD&to=YYYY-MM-DD
 export const GET: RequestHandler = async ({ params, url, locals, platform, setHeaders }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
@@ -44,7 +44,7 @@ export const GET: RequestHandler = async ({ params, url, locals, platform, setHe
 		conditions.push(lte(habitCompletion.completedAt, toDate));
 	}
 
-	// Cache privately for shorter duration since completions change more frequently
+	// Short private cache; completions change quickly
 	setHeaders({
 		'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
 	});

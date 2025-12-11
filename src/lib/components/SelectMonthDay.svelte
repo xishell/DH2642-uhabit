@@ -2,7 +2,7 @@
 	import DragSelectGrid from './DragSelectGrid.svelte';
 
 	let {
-		selectDays = []
+		selectDays = $bindable([])
 	}: {
 		selectDays?: number[];
 	} = $props();
@@ -22,4 +22,4 @@
 	}
 </script>
 
-<DragSelectGrid items={days} {selectDays} {itemToValue} name="period" gridCols={7} />
+<DragSelectGrid items={days} bind:selectDays {itemToValue} name="period" gridCols={7} />

@@ -50,6 +50,20 @@
 			"when": 1765150580422,
 			"tag": "0006_equal_carnage",
 			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "6",
+			"when": 1765460608409,
+			"tag": "0007_superb_hawkeye",
+			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "6",
+			"when": 1765461179536,
+			"tag": "0008_abnormal_micromacro",
+			"breakpoints": true
 		}
 	]
 }

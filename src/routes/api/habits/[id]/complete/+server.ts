@@ -9,18 +9,18 @@ import { requireAuth, verifyHabitOwnership, parseJsonBody } from '$lib/server/ap
 
 // Validation schema for completing a habit
 const completeHabitSchema = z.object({
-	// Optional date - defaults to today if not provided
+	// Optional date; defaults to today
 	date: z
 		.string()
 		.regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
 		.nullish(),
-	// Measurement value for numeric habits (required for numeric, ignored for boolean)
+	// Measurement: required for numeric, ignored for boolean
 	measurement: z.number().int().positive().nullish(),
 	// Optional notes for this completion
 	notes: z.string().max(1000).nullish()
 });
 
-// POST /api/habits/[id]/complete - Mark habit as complete
+// POST /api/habits/[id]/complete: mark habit as complete
 export const POST: RequestHandler = async ({ params, request, locals, platform }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
@@ -28,7 +28,7 @@ export const POST: RequestHandler = async ({ params, request, locals, platform }
 	// Verify habit exists and belongs to user
 	const targetHabit = await verifyHabitOwnership(db, params.id, userId);
 
-	// Parse and validate request body (allows empty body for simple completions)
+	// Parse and validate body (empty OK for simple completions)
 	const body = await parseJsonBody(request);
 	const validationResult = completeHabitSchema.safeParse(body);
 
@@ -51,7 +51,7 @@ export const POST: RequestHandler = async ({ params, request, locals, platform }
 		throw error(400, 'Measurement value is required for numeric habits');
 	}
 
-	// For boolean habits, check for duplicate completions on the same day
+	// For boolean habits, prevent same-day duplicates
 	if (targetHabit.measurement === 'boolean') {
 		const existingCompletions = await db
 			.select()

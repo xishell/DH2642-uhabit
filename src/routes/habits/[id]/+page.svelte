@@ -22,18 +22,9 @@
 	let isLoading = $state(untrack(() => !targetHabit && !loadError));
 
 	const id = $derived($page.params.id);
-	const type = $derived($page.url.searchParams.get('type'));
 
 	const colors = ['#E0E0E0', '#CCCCCC', '#B8B8B8', '#A4A4A4', '#909090', '#7C7C7C', '#686868'];
 	const frequencyArr = ['daily', 'weekly', 'monthly'];
-
-	const measurement = $derived(
-		type === 'progressive'
-			? 'numeric'
-			: type === 'single'
-				? 'boolean'
-				: (targetHabit?.measurement ?? 'boolean')
-	);
 
 	let selectedColor = $state<string | null>(untrack(() => targetHabit?.color ?? null));
 	let selectedFrequency = $state<string | null>(untrack(() => targetHabit?.frequency ?? 'daily'));
@@ -188,22 +179,19 @@
 						</div>
 						<input type="hidden" name="frequency" value={selectedFrequency} />
 
-						{#if measurement === 'numeric'}
-							<span>Measurement <span class="text-red-500">*</span></span>
-							<div class="inputs-ctn flex gap-4">
-								<input
-									type="number"
-									class="border border-surface-300-600 w-28 h-11 rounded-md text-base px-3 bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
-									placeholder="100"
-									name="targetAmount"
-									bind:value={targetHabit.targetAmount}
-									required
-									min="1"
-								/>
-								<SelectOrEdit {unit} required />
-							</div>
-						{/if}
-						<input type="hidden" name="measurement" value={measurement} />
+						<span>Target <span class="text-surface-400">(optional)</span></span>
+						<p class="text-xs text-surface-500 -mt-1">Set a target amount to track progress</p>
+						<div class="inputs-ctn flex gap-4">
+							<input
+								type="number"
+								class="border border-surface-300-600 w-28 h-11 rounded-md text-base px-3 bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
+								placeholder="100"
+								name="targetAmount"
+								bind:value={targetHabit.targetAmount}
+								min="1"
+							/>
+							<SelectOrEdit {unit} />
+						</div>
 					</div>
 				{/if}
 			</div>

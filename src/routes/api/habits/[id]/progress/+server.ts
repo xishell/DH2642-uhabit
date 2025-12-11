@@ -9,13 +9,13 @@ import { requireAuth, verifyHabitOwnership, parseJsonBody } from '$lib/server/ap
 
 // Validation schema for adding progress
 const addProgressSchema = z.object({
-	// Amount to add to today's progress
+	// Amount to add today
 	amount: z.number().int().positive('Amount must be a positive integer'),
 	// Optional notes for this entry
 	notes: z.string().max(1000).nullish()
 });
 
-// POST /api/habits/[id]/progress - Add progress to a numeric habit
+// POST /api/habits/[id]/progress: add progress to a numeric habit
 export const POST: RequestHandler = async ({ params, request, locals, platform }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ params, request, locals, platform }
 
 	const data = validationResult.data;
 
-	// Create a new completion record for this progress entry
+	// Create completion record for this entry
 	const completionId = crypto.randomUUID();
 	const now = new Date();
 

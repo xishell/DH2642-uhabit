@@ -8,13 +8,13 @@ import { requireAuth, verifyCompletionOwnership } from '$lib/server/api-helpers'
 
 // Validation schema for updating a completion
 const updateCompletionSchema = z.object({
-	// Measurement value (for numeric habits)
+	// Measurement (numeric habits)
 	measurement: z.number().int().positive().nullish(),
 	// Optional notes for this completion
 	notes: z.string().max(1000).nullish()
 });
 
-// GET /api/habits/[id]/completions/[completionId] - Get single completion
+// GET /api/habits/[id]/completions/[completionId]: single completion
 export const GET: RequestHandler = async ({ params, locals, platform, setHeaders }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
@@ -34,7 +34,7 @@ export const GET: RequestHandler = async ({ params, locals, platform, setHeaders
 	return json(completion);
 };
 
-// PATCH /api/habits/[id]/completions/[completionId] - Update completion
+// PATCH /api/habits/[id]/completions/[completionId]: update completion
 export const PATCH: RequestHandler = async ({ params, request, locals, platform }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
@@ -82,7 +82,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 		.set(updateData)
 		.where(eq(habitCompletion.id, params.completionId));
 
-	// Construct updated completion from existing data + updates (avoids extra SELECT)
+	// Build updated completion without an extra SELECT
 	const updatedCompletion = {
 		...existingCompletion,
 		...updateData
@@ -91,7 +91,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 	return json(updatedCompletion);
 };
 
-// DELETE /api/habits/[id]/completions/[completionId] - Delete completion
+// DELETE /api/habits/[id]/completions/[completionId]: delete completion
 export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);

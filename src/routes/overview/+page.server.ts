@@ -1,22 +1,24 @@
 import type { PageServerLoad, Actions } from './$types';
 import { getDB } from '$lib/server/db';
-import { habit, habitCompletion } from '$lib/server/db/schema';
+import { habit, habitCompletion, goal } from '$lib/server/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import type { Habit, HabitCompletion, HabitWithStatus } from '$lib/types/habit';
+import type { GoalWithHabitStatus } from '$lib/types/goal';
 import { getHabitsForDate } from '$lib/utils/habit';
 import { startOfDay, endOfDay } from '$lib/utils/date';
+import { isGoalActive } from '$lib/utils/goal';
 
 const IS_DEV = import.meta.env.MODE === 'development';
 
 export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 	// Read UI state from cookies
-	const savedTab = cookies.get('overview-tab') as 'single' | 'progressive' | undefined;
+	const savedTab = cookies.get('overview-tab') as 'habits' | 'goals' | undefined;
 	const savedModal = cookies.get('overview-modal');
 
-	let initialTab: 'single' | 'progressive' = 'single';
+	let initialTab: 'habits' | 'goals' = 'habits';
 	let initialModal: { habitId: string; progress: number } | null = null;
 
-	if (savedTab === 'single' || savedTab === 'progressive') {
+	if (savedTab === 'habits' || savedTab === 'goals') {
 		initialTab = savedTab;
 	}
 
@@ -31,13 +33,18 @@ export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 	// Mock user for development
 	const user = locals.user ?? (IS_DEV ? { id: 'dev-user-123', name: 'Dev User' } : null);
 
-	if (!user) return { single: [], progressive: [], initialTab, initialModal };
+	if (!user) return { habits: [], goals: [], initialTab, initialModal };
 
 	const db = getDB(platform!.env.DB);
 
+	const today = new Date();
+	const todayStart = startOfDay(today);
+	const todayEnd = endOfDay(today);
+
+	// Fetch all habits
 	const habitsRaw = await db.select().from(habit).where(eq(habit.userId, user.id));
-	const todayStart = startOfDay(new Date());
-	const todayEnd = endOfDay(new Date());
+
+	// Fetch today's completions
 	const completionsRaw = await db
 		.select()
 		.from(habitCompletion)
@@ -49,6 +56,10 @@ export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 			)
 		);
 
+	// Fetch all goals
+	const goalsRaw = await db.select().from(goal).where(eq(goal.userId, user.id));
+
+	// Parse habits
 	const habits: Habit[] = habitsRaw.map((h: any) => ({
 		...h,
 		frequency: h.frequency as 'daily' | 'weekly' | 'monthly',
@@ -58,18 +69,62 @@ export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 		updatedAt: new Date(h.updatedAt)
 	}));
 
+	// Parse completions
 	const completions: HabitCompletion[] = completionsRaw.map((c: any) => ({
 		...c,
 		completedAt: new Date(c.completedAt),
 		createdAt: new Date(c.createdAt)
 	}));
 
+	// Get habits with today's status (filters to only habits due today)
 	const habitsWithStatus: HabitWithStatus[] = getHabitsForDate(habits, completions);
+	const totalHabits = habits.length;
+
+	// Build goals with habit status
+	const goalsWithStatus: GoalWithHabitStatus[] = goalsRaw
+		.map((g: any) => {
+			const goalData = {
+				...g,
+				startDate: new Date(g.startDate),
+				endDate: new Date(g.endDate),
+				createdAt: new Date(g.createdAt),
+				updatedAt: new Date(g.updatedAt)
+			};
+
+			// Only include active goals
+			if (!isGoalActive(goalData)) {
+				return null;
+			}
+
+			// Get habits attached to this goal
+			const goalHabits = habitsWithStatus.filter((h) => h.habit.goalId === g.id);
+
+			// Calculate today's progress
+			const todayCompleted = goalHabits.filter((h) => h.isCompleted).length;
+			const todayTotal = goalHabits.length;
+
+			// Overall progress (simplified - just today's for now)
+			const progressPercentage = todayTotal > 0 ? (todayCompleted / todayTotal) * 100 : 0;
+
+			return {
+				...goalData,
+				habits: goalHabits,
+				todayCompleted,
+				todayTotal,
+				totalScheduled: todayTotal,
+				totalCompleted: todayCompleted,
+				progressPercentage,
+				isCompleted: todayTotal > 0 && todayCompleted === todayTotal
+			} as GoalWithHabitStatus;
+		})
+		.filter((g): g is GoalWithHabitStatus => g !== null);
+
 	return {
-		single: habitsWithStatus.filter((h) => h.habit.measurement === 'boolean'),
-		progressive: habitsWithStatus.filter((h) => h.habit.measurement === 'numeric'),
+		habits: habitsWithStatus,
+		goals: goalsWithStatus,
 		initialTab,
-		initialModal
+		initialModal,
+		totalHabits
 	};
 };
 

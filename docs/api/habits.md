@@ -49,8 +49,8 @@ All endpoints require a valid Better Auth session cookie. Unauthenticated reques
 	frequency: 'daily' | 'weekly' | 'monthly'; // How often
 	measurement: 'boolean' | 'numeric'; // Tracking type
 	period: number[] | null; // Selected days (weekly: [0-6], monthly: [1-31])
-	targetAmount: number | null; // Target for numeric habits (e.g., 5 cups)
-	unit: string | null; // Unit for numeric habits (e.g., "cups", "liters")
+targetAmount: number | null; // Target for numeric habits
+unit: string | null; // Unit for numeric habits
 	categoryId: string | null; // Category ID for organization
 	goalId: string | null; // Goal ID (future feature)
 	createdAt: Date; // Creation timestamp

@@ -130,14 +130,17 @@
 				clientY = event.touches[0].clientY;
 			}
 
-			const divEl = document.getElementById('resizable-div')!;
-			const divTop = divEl.getBoundingClientRect().top;
-
 			if (tartgetView === 'daily') {
+				const divEl = document.getElementById('resizable-daily')!;
+				const divTop = divEl.getBoundingClientRect().top;
 				heightDaily = clientY - divTop;
 			} else if (tartgetView === 'weekly') {
+				const divEl = document.getElementById('resizable-weekly')!;
+				const divTop = divEl.getBoundingClientRect().top;
 				heightWeekly = clientY - divTop;
 			} else if (tartgetView === 'monthly') {
+				const divEl = document.getElementById('resizable-monthly')!;
+				const divTop = divEl.getBoundingClientRect().top;
 				heightMonthly = clientY - divTop;
 			}
 		};
@@ -177,7 +180,7 @@
 			</div>
 			<div class="relative">
 				<div
-					id="resizable-div"
+					id="resizable-daily"
 					style="height:{heightDaily}px"
 					class="  scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-y-auto"
 				>
@@ -214,7 +217,7 @@
 			</div>
 			<div class="relative">
 				<div
-					id="resizable-div"
+					id="resizable-weekly"
 					style="height:{heightWeekly}px"
 					class="  scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-y-auto"
 				>
@@ -251,7 +254,7 @@
 			</div>
 			<div class="relative">
 				<div
-					id="resizable-div"
+					id="resizable-monthly"
 					style="height:{heightMonthly}px"
 					class="  scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-y-auto"
 				>
@@ -283,9 +286,9 @@
 </div>
 
 <style>
-	.scrollbar-ctn {
+	/* .scrollbar-ctn {
 		scrollbar-gutter: stable both-edges;
-	}
+	} */
 	.scrollbar-ctn::-webkit-scrollbar {
 		width: 26px;
 	}
@@ -299,6 +302,6 @@
 		background-color: #f4f4f4a8;
 		background-clip: content-box;
 		border-radius: 99px;
-		border: 8px solid transparent;
+		border: 10px solid transparent;
 	}
 </style>

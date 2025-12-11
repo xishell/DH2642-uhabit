@@ -68,7 +68,8 @@
 		}
 		// Inner rings (progressive habits) - no gap between them
 		const baseRadius = (size - outerStrokeWidth) / 2;
-		const firstInnerRadius = baseRadius - outerStrokeWidth / 2 - outerInnerGap - innerStrokeWidth / 2;
+		const firstInnerRadius =
+			baseRadius - outerStrokeWidth / 2 - outerInnerGap - innerStrokeWidth / 2;
 		return firstInnerRadius - (index - 1) * innerStrokeWidth;
 	}
 
@@ -182,8 +183,22 @@
 
 				<!-- Inner Rings: Individual Progressive Habits -->
 				{#each progressiveRings as ring, index}
-					{@const animatedRadius = index === 0 ? $ring0Radius : index === 1 ? $ring1Radius : index === 2 ? $ring2Radius : $ring3Radius}
-					{@const animatedOpacity = index === 0 ? $ring0Opacity : index === 1 ? $ring1Opacity : index === 2 ? $ring2Opacity : $ring3Opacity}
+					{@const animatedRadius =
+						index === 0
+							? $ring0Radius
+							: index === 1
+								? $ring1Radius
+								: index === 2
+									? $ring2Radius
+									: $ring3Radius}
+					{@const animatedOpacity =
+						index === 0
+							? $ring0Opacity
+							: index === 1
+								? $ring1Opacity
+								: index === 2
+									? $ring2Opacity
+									: $ring3Opacity}
 					{@const ringCircumference = Math.PI * animatedRadius}
 					{@const ringOffset = ringCircumference - (ring.percentage / 100) * ringCircumference}
 					{@const ringPath = getArcPath(animatedRadius)}

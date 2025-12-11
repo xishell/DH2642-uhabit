@@ -2,8 +2,13 @@
 	import Modal from './Modal.svelte';
 	import HabitModal from './HabitModal.svelte';
 	import { Plus, Check } from 'lucide-svelte';
-	import type { Goal } from '$lib/types/goal';
-	import type { Habit } from '$lib/types/habit';
+	import type {
+		Goal,
+		GoalWithHabits,
+		GoalWithHabitStatus,
+		GoalWithProgress
+	} from '$lib/types/goal';
+	import type { Habit, HabitWithStatus } from '$lib/types/habit';
 
 	let {
 		open = false,
@@ -11,18 +16,27 @@
 		availableHabits = [],
 		onclose,
 		onsave,
-		oncreatehabit
+		oncreatehabit,
+		ondelete
 	}: {
 		open: boolean;
-		goal?: Goal | null;
+		goal?: Goal | GoalWithHabits | GoalWithProgress | GoalWithHabitStatus | null;
 		availableHabits?: Habit[];
 		onclose: () => void;
 		onsave: (goal: Partial<Goal>, habitIds: string[]) => void;
 		oncreatehabit?: (habit: Partial<Habit>) => Promise<Habit>;
+		ondelete?: (goalId: string) => void;
 	} = $props();
 
 	const isEditMode = $derived(!!goal);
 	const modalTitle = $derived(isEditMode ? 'Edit Goal' : 'New Goal');
+
+	// Get habits attached to the goal (if editing)
+	const goalHabits = $derived((): Habit[] => {
+		if (!goal || !('habits' in goal) || !goal.habits) return [];
+		const habits = goal.habits as (Habit | HabitWithStatus)[];
+		return habits.map((h) => ('habit' in h ? h.habit : h));
+	});
 
 	// Form state
 	let title = $state('');
@@ -51,8 +65,8 @@
 				description = goal.description ?? '';
 				startDate = formatDateForInput(goal.startDate);
 				endDate = formatDateForInput(goal.endDate);
-				// Note: selectedHabitIds would be populated from goal.habits if available
-				selectedHabitIds = new Set();
+				// Pre-select habits attached to the goal
+				selectedHabitIds = new Set(goalHabits().map((h) => h.id));
 			} else {
 				title = '';
 				description = '';
@@ -132,8 +146,13 @@
 		}
 	}
 
-	// Standalone habits (not attached to any goal)
-	const standaloneHabits = $derived(availableHabits.filter((h) => !h.goalId));
+	// Available habits: standalone ones + habits already attached to this goal
+	const selectableHabits = $derived(() => {
+		const standalone = availableHabits.filter((h) => !h.goalId);
+		// When editing, include habits attached to this goal
+		const attached = goalHabits().filter((gh) => !standalone.some((sh) => sh.id === gh.id));
+		return [...standalone, ...attached];
+	});
 </script>
 
 <Modal {open} title={modalTitle} {onclose}>
@@ -214,13 +233,13 @@
 				{/if}
 			</div>
 
-			{#if standaloneHabits.length === 0}
+			{#if selectableHabits().length === 0}
 				<p class="text-sm text-surface-500 py-4 text-center">
-					No standalone habits available. Create a habit first.
+					No habits available. Create a habit first.
 				</p>
 			{:else}
 				<div class="flex flex-col gap-2 max-h-48 overflow-y-auto">
-					{#each standaloneHabits as habit}
+					{#each selectableHabits() as habit}
 						<button
 							type="button"
 							class="flex items-center gap-3 p-3 rounded-lg border transition-colors text-left"
@@ -255,6 +274,16 @@
 
 		<!-- Actions -->
 		<div class="flex justify-end gap-3 pt-4 border-t border-surface-200-700">
+			{#if isEditMode && goal?.id && ondelete}
+				<button
+					type="button"
+					class="px-4 py-2 text-sm rounded-md border border-error-500 text-error-600 hover:bg-error-50 transition-colors"
+					onclick={() => ondelete(goal.id!)}
+					disabled={isSubmitting}
+				>
+					Delete
+				</button>
+			{/if}
 			<button
 				type="button"
 				class="px-4 py-2 text-sm rounded-md border border-surface-300-600 hover:bg-surface-200-700 transition-colors"

@@ -9,19 +9,25 @@
 		open = false,
 		habit = null,
 		onclose,
-		onsave
+		onsave,
+		ondelete
 	}: {
 		open: boolean;
 		habit?: Habit | null;
 		onclose: () => void;
 		onsave: (habit: Partial<Habit>) => void;
+		ondelete?: (habitId: string) => void;
 	} = $props();
 
 	const isEditMode = $derived(!!habit);
 	const modalTitle = $derived(isEditMode ? 'Edit Habit' : 'New Habit');
 
 	const colors = ['#E0E0E0', '#CCCCCC', '#B8B8B8', '#A4A4A4', '#909090', '#7C7C7C', '#686868'];
-	const frequencyArr = ['daily', 'weekly', 'monthly'] as const;
+	const frequencyArr = [
+		{ value: 'daily', label: 'Daily (every day)' },
+		{ value: 'weekly', label: 'Weekly (choose days)' },
+		{ value: 'monthly', label: 'Monthly (choose dates)' }
+	] as const;
 
 	// Form state
 	let title = $state('');
@@ -144,12 +150,20 @@
 						{#each colors as color}
 							<button
 								type="button"
-								class="w-8 h-8 rounded-full border-2 transition-all duration-200"
+								class="relative w-9 h-9 rounded-full border-2 transition-all duration-150"
 								style="background-color: {color};"
-								style:border-color={selectedColor === color ? selectedColor : 'transparent'}
+								class:border-primary-500={selectedColor === color}
+								class:ring-2={selectedColor === color}
+								class:ring-primary-200={selectedColor === color}
+								class:border-transparent={selectedColor !== color}
 								onclick={() => selectColor(color)}
 								aria-label={`Select color ${color}`}
-							></button>
+								aria-pressed={selectedColor === color}
+							>
+								{#if selectedColor === color}
+									<span class="absolute inset-0 m-auto w-3 h-3 rounded-full bg-white/80 dark:bg-black/70"></span>
+								{/if}
+							</button>
 						{/each}
 					</div>
 				</div>
@@ -158,19 +172,20 @@
 			<!-- Right column -->
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-col gap-1">
-					<span class="text-sm font-medium">Frequency</span>
+					<span class="text-sm font-medium">Schedule</span>
 					<div class="flex gap-2">
-						{#each frequencyArr as frequency}
+						{#each frequencyArr as freq}
 							<button
 								type="button"
 								class="btn capitalize text-sm px-3 py-1.5 rounded-md border transition-colors duration-200"
-								class:bg-primary-500={selectedFrequency === frequency}
-								class:text-white={selectedFrequency === frequency}
-								class:border-primary-500={selectedFrequency === frequency}
-								class:border-surface-300-600={selectedFrequency !== frequency}
-								onclick={() => (selectedFrequency = frequency)}
+								class:bg-primary-500={selectedFrequency === freq.value}
+								class:text-white={selectedFrequency === freq.value}
+								class:border-primary-500={selectedFrequency === freq.value}
+								class:border-surface-300-600={selectedFrequency !== freq.value}
+								onclick={() => (selectedFrequency = freq.value)}
+								title={freq.label}
 							>
-								{frequency}
+								{freq.value}
 							</button>
 						{/each}
 					</div>
@@ -206,6 +221,16 @@
 
 		<!-- Actions -->
 		<div class="flex justify-end gap-3 pt-4 border-t border-surface-200-700">
+			{#if habit?.id && ondelete}
+				<button
+					type="button"
+					class="px-4 py-2 text-sm rounded-md border border-error-500 text-error-600 hover:bg-error-50 transition-colors"
+					onclick={() => ondelete(habit.id!)}
+					disabled={isSubmitting}
+				>
+					Delete
+				</button>
+			{/if}
 			<button
 				type="button"
 				class="px-4 py-2 text-sm rounded-md border border-surface-300-600 hover:bg-surface-200-700 transition-colors"

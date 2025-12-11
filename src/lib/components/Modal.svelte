@@ -49,12 +49,12 @@
 
 		<!-- Modal content -->
 		<div
-			class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-surface-50-900 rounded-xl shadow-xl"
+			class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-surface-900 rounded-xl shadow-xl"
 			transition:fly={{ y: 20, duration: 200 }}
 		>
 			<!-- Header -->
 			<div
-				class="sticky top-0 flex items-center justify-between p-4 border-b border-surface-200-700 bg-surface-50-900 rounded-t-xl"
+				class="sticky top-0 flex items-center justify-between p-4 border-b border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 rounded-t-xl"
 			>
 				<h2 id="modal-title" class="text-lg font-semibold">{title}</h2>
 				<button

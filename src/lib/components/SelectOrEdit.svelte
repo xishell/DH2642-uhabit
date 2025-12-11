@@ -46,7 +46,7 @@
 
 	{#if showOptions}
 		<ul
-			class="absolute z-10 top-full left-0 mt-1 w-full bg-surface-50-800 border border-surface-300-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+			class="absolute z-10 top-full left-0 mt-1 w-full bg-surface-50 dark:bg-surface-900 border border-surface-300-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
 		>
 			{#each suggestions as suggestion}
 				<li>

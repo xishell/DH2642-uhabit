@@ -1,5 +1,5 @@
 <script lang="ts">
-	// 0 = Tasks, 1 = Goals
+	// 0 = Habits, 1 = Goals
 	let {
 		activeTab = 0,
 		onChange
@@ -8,7 +8,7 @@
 		onChange: (val: 0 | 1) => void;
 	} = $props();
 
-	function activateTasks() {
+	function activateHabits() {
 		onChange?.(0);
 	}
 
@@ -28,10 +28,10 @@
 		class:bg-violet-600={activeTab === 0}
 		class:text-white={activeTab === 0}
 		class:text-surface-300={activeTab !== 0}
-		onclick={activateTasks}
+		onclick={activateHabits}
 		aria-pressed={activeTab === 0}
 	>
-		Tasks
+		Habits
 	</button>
 
 	<button

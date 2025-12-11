@@ -12,13 +12,13 @@ const IS_DEV = import.meta.env.MODE === 'development';
 
 export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 	// Read UI state from cookies
-	const savedTab = cookies.get('overview-tab') as 'tasks' | 'goals' | undefined;
+	const savedTab = cookies.get('overview-tab') as 'habits' | 'goals' | undefined;
 	const savedModal = cookies.get('overview-modal');
 
-	let initialTab: 'tasks' | 'goals' = 'tasks';
+	let initialTab: 'habits' | 'goals' = 'habits';
 	let initialModal: { habitId: string; progress: number } | null = null;
 
-	if (savedTab === 'tasks' || savedTab === 'goals') {
+	if (savedTab === 'habits' || savedTab === 'goals') {
 		initialTab = savedTab;
 	}
 

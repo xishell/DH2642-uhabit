@@ -10,7 +10,7 @@
 	import { fade } from 'svelte/transition';
 	import { createHabitsPresenter } from '$lib/presenters/habitsPresenter';
 	import type { Habit } from '$lib/types/habit';
-	import type { GoalWithProgress, Goal } from '$lib/types/goal';
+	import type { GoalWithProgress, Goal, GoalWithHabitStatus } from '$lib/types/goal';
 
 	let { data }: { data: any } = $props();
 
@@ -39,65 +39,74 @@
 		}
 	});
 
-	// FAB menu state
+	// FAB menu state (local)
 	let showFabMenu = $state(false);
-	let showHabitModal = $state(false);
-	let showGoalModal = $state(false);
 
 	function toggleFabMenu() {
 		showFabMenu = !showFabMenu;
 	}
 
-	function openHabitModal() {
+	function openHabitModal(habitToEdit?: Habit) {
 		showFabMenu = false;
-		showHabitModal = true;
+		presenter.openHabitModal(habitToEdit ?? null);
 	}
 
-	function openGoalModal() {
+	function openGoalModal(goalToEdit: GoalWithProgress | GoalWithHabitStatus | null = null) {
 		showFabMenu = false;
-		showGoalModal = true;
+		presenter.openGoalModal(goalToEdit ? (goalToEdit as GoalWithProgress) : null);
 	}
 
-	async function handleCreateHabit(habitData: Partial<Habit>) {
-		const res = await fetch('/api/habits', {
-			method: 'POST',
+	async function handleSaveHabit(habitData: Partial<Habit>) {
+		const isEdit = Boolean(habitData.id);
+		const endpoint = isEdit ? `/api/habits/${habitData.id}` : '/api/habits';
+		const method = isEdit ? 'PATCH' : 'POST';
+
+		const res = await fetch(endpoint, {
+			method,
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(habitData)
 		});
 
 		if (!res.ok) {
 			const error = await res.text();
-			throw new Error(error || 'Failed to create habit');
+			throw new Error(error || `Failed to ${isEdit ? 'update' : 'create'} habit`);
 		}
 
-		showHabitModal = false;
+		presenter.closeHabitModal();
 		await presenter.refreshData();
 	}
 
-	async function handleCreateGoal(goalData: Partial<Goal>, habitIds: string[]) {
-		const res = await fetch('/api/goals', {
-			method: 'POST',
+	async function handleSaveGoal(goalData: Partial<Goal>, habitIds: string[]) {
+		const isEdit = Boolean(goalData.id);
+		const endpoint = isEdit ? `/api/goals/${goalData.id}` : '/api/goals';
+		const method = isEdit ? 'PATCH' : 'POST';
+
+		const payload = {
+			title: goalData.title,
+			description: goalData.description ?? null,
+			startDate:
+				goalData.startDate instanceof Date
+					? goalData.startDate.toISOString().split('T')[0]
+					: goalData.startDate,
+			endDate:
+				goalData.endDate instanceof Date
+					? goalData.endDate.toISOString().split('T')[0]
+					: goalData.endDate,
+			habitIds
+		};
+
+		const res = await fetch(endpoint, {
+			method,
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				...goalData,
-				startDate:
-					goalData.startDate instanceof Date
-						? goalData.startDate.toISOString().split('T')[0]
-						: goalData.startDate,
-				endDate:
-					goalData.endDate instanceof Date
-						? goalData.endDate.toISOString().split('T')[0]
-						: goalData.endDate,
-				habitIds
-			})
+			body: JSON.stringify(payload)
 		});
 
 		if (!res.ok) {
 			const error = await res.text();
-			throw new Error(error || 'Failed to create goal');
+			throw new Error(error || `Failed to ${isEdit ? 'update' : 'create'} goal`);
 		}
 
-		showGoalModal = false;
+		presenter.closeGoalModal();
 		await presenter.refreshData();
 	}
 
@@ -170,7 +179,7 @@
 			{:else}
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-7">
 					{#each $presenterState.habits as habit (habit.id)}
-						<HabitCard title={habit.title} habitId={habit.id} />
+						<HabitCard {habit} onedit={openHabitModal} />
 					{/each}
 				</div>
 			{/if}
@@ -183,7 +192,7 @@
 			{:else}
 				<div class="flex flex-col gap-4">
 					{#each $presenterState.goals as goal (goal.id)}
-						<GoalCard {goal} />
+						<GoalCard {goal} onedit={openGoalModal} />
 					{/each}
 				</div>
 			{/if}
@@ -208,13 +217,13 @@
 			<div class="flex flex-col gap-2" transition:fade={{ duration: 150 }}>
 				<button
 					class="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-400 transition-colors text-sm"
-					onclick={openHabitModal}
+					onclick={() => openHabitModal()}
 				>
 					Create Task
 				</button>
 				<button
 					class="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-400 transition-colors text-sm"
-					onclick={openGoalModal}
+					onclick={() => openGoalModal()}
 				>
 					Create Goal
 				</button>
@@ -236,15 +245,41 @@
 
 <!-- Modals -->
 <HabitModal
-	open={showHabitModal}
-	onclose={() => (showHabitModal = false)}
-	onsave={handleCreateHabit}
+	open={$presenterState.showHabitModal}
+	habit={$presenterState.editingHabit}
+	onclose={presenter.closeHabitModal}
+	onsave={handleSaveHabit}
+	ondelete={async (habitId) => {
+		if (!confirm('Delete this habit? This cannot be undone.')) return;
+		const res = await fetch(`/api/habits/${habitId}`, { method: 'DELETE' });
+		if (!res.ok) {
+			const error = await res.text();
+			throw new Error(error || 'Failed to delete habit');
+		}
+		presenter.closeHabitModal();
+		await presenter.refreshData();
+		// Ensure UI reflects removal immediately without stale selection
+		$presenterState.habits = $presenterState.habits.filter((h) => h.id !== habitId);
+	}}
 />
 
 <GoalModal
-	open={showGoalModal}
+	open={$presenterState.showGoalModal}
+	goal={$presenterState.editingGoal}
 	availableHabits={standaloneHabits}
-	onclose={() => (showGoalModal = false)}
-	onsave={handleCreateGoal}
+	onclose={presenter.closeGoalModal}
+	onsave={handleSaveGoal}
 	oncreatehabit={handleCreateHabitForGoal}
+	ondelete={async (goalId) => {
+		if (!confirm('Delete this goal? Habits will remain as standalone.')) return;
+		const res = await fetch(`/api/goals/${goalId}`, { method: 'DELETE' });
+		if (!res.ok) {
+			const error = await res.text();
+			throw new Error(error || 'Failed to delete goal');
+		}
+		presenter.closeGoalModal();
+		await presenter.refreshData();
+		// Drop deleted goal immediately to avoid stale view
+		$presenterState.goals = $presenterState.goals.filter((g) => g.id !== goalId);
+	}}
 />

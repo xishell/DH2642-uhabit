@@ -97,11 +97,14 @@
 			data-item={item}
 			class="
 				h-10 text-sm sm:text-[13px] sm:h-8 flex items-center justify-center
-				cursor-pointer transition-all duration-150 opacity-80
-				{selected.has(item)
-				? 'bg-primary-500 text-primary-50 hover:bg-primary-400'
-				: 'bg-primary-50 text-primary-700 hover:bg-primary-100'}
+				cursor-pointer transition-all duration-150 rounded-md border font-medium
+				bg-surface-50-900 text-surface-900 dark:text-surface-50 hover:bg-surface-100-800
 			"
+			class:border-primary-500={selected.has(item)}
+			class:ring-2={selected.has(item)}
+			class:ring-primary-200={selected.has(item)}
+			class:border-surface-200-700={!selected.has(item)}
+			class:text-primary-900={selected.has(item)}
 			onmousedown={(e) => startDrag(item, e)}
 			ontouchstart={(e) => startDrag(item, e)}
 			onmouseenter={() => dragOver(item)}

@@ -31,6 +31,8 @@
 		return `${formatDate(start)} - ${formatDate(end)}`;
 	}
 
+	const formatUnitCount = (val: number) => (Number.isInteger(val) ? `${val}` : val.toFixed(1));
+
 	// Check if goal has today's status (GoalWithHabitStatus)
 	const hasTodayStatus = $derived('todayCompleted' in goal);
 
@@ -42,6 +44,23 @@
 	// Get habit data regardless of wrapper
 	function getHabitData(h: Habit | HabitWithStatus): Habit {
 		return isHabitWithStatus(h) ? h.habit : h;
+	}
+
+	function formatFrequency(h: Habit) {
+		if (h.frequency === 'daily') return 'Daily';
+		if (h.frequency === 'weekly') {
+			if (!h.period?.length) return 'Weekly';
+			const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+			return `Weekly on ${h.period.map((d) => labels[d] || d).join(', ')}`;
+		}
+		if (!h.period?.length) return 'Monthly';
+		const suffix = (n: number) => {
+			if (n % 10 === 1 && n % 100 !== 11) return `${n}st`;
+			if (n % 10 === 2 && n % 100 !== 12) return `${n}nd`;
+			if (n % 10 === 3 && n % 100 !== 13) return `${n}rd`;
+			return `${n}th`;
+		};
+		return `Monthly on ${h.period.map(suffix).join(', ')}`;
 	}
 
 	const habits = $derived(goal.habits || []);
@@ -90,7 +109,7 @@
 			{#if hasTodayStatus}
 				<div class="text-right">
 					<div class="text-sm font-medium">
-						{(goal as GoalWithHabitStatus).todayCompleted}/{(goal as GoalWithHabitStatus)
+						{formatUnitCount((goal as GoalWithHabitStatus).todayCompleted)}/{(goal as GoalWithHabitStatus)
 							.todayTotal}
 					</div>
 					<div class="text-xs text-surface-500">today</div>
@@ -148,7 +167,22 @@
 							<!-- Habit info -->
 							<div class="flex-1 min-w-0">
 								<div class="font-medium text-sm truncate">{habit.title}</div>
-								<div class="text-xs text-surface-500 capitalize">{habit.frequency}</div>
+								<span class="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary-50-900 text-primary-900-100 mt-0.5">
+									<svg
+										class="w-3 h-3"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M8 7h8M8 11h8m-6 4h6M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"
+										/>
+									</svg>
+									<span class="truncate">{formatFrequency(habit)}</span>
+								</span>
 							</div>
 
 							<!-- Habit status (if available) -->

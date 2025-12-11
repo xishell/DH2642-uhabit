@@ -18,7 +18,7 @@
 		data: {
 			habits: HabitWithStatus[];
 			goals: GoalWithHabitStatus[];
-			initialTab: 'tasks' | 'goals';
+			initialTab: 'habits' | 'goals';
 			initialModal: { habitId: string; progress: number } | null;
 		};
 	} = $props();
@@ -53,16 +53,16 @@
 
 	<!-- Toggle -->
 	<div class="max-w-3xl mx-auto mt-4 mb-6 flex justify-center">
-		<ToggleBar activeTab={$state.activeTab === 'tasks' ? 0 : 1} onChange={presenter.setActiveTab} />
+		<ToggleBar activeTab={$state.activeTab === 'habits' ? 0 : 1} onChange={presenter.setActiveTab} />
 	</div>
 
 	<!-- Content area -->
 	<div class="max-w-3xl mx-auto">
-		{#if $state.activeTab === 'tasks'}
-			<!-- Tasks Tab: All habits due today -->
+		{#if $state.activeTab === 'habits'}
+			<!-- Habits Tab: All habits due today -->
 			<div class="space-y-3">
 				{#if $state.habits.length === 0}
-					<div class="text-surface-500 text-center py-6">No tasks due today. Enjoy your day!</div>
+					<div class="text-surface-500 text-center py-6">No habits due today. Enjoy your day!</div>
 				{:else}
 					<!-- Boolean habits (checkboxes) -->
 					{#each booleanHabits as s (s.habit.id)}
@@ -74,7 +74,7 @@
 								return async ({ result }) => {
 									if (result.type === 'failure' || result.type === 'error') {
 										presenter.revertHabits(previousState);
-										presenter.showError('Failed to update task. Please try again.');
+										presenter.showError('Failed to update habit. Please try again.');
 									}
 								};
 							}}
@@ -87,7 +87,11 @@
 
 					<!-- Numeric habits (progress) -->
 					{#each numericHabits as p (p.habit.id)}
-						<TaskProgressive {p} onOpen={() => presenter.openProgressive(p)} />
+						<TaskProgressive
+							{p}
+							onOpen={() => presenter.openProgressive(p)}
+							onToggleComplete={() => presenter.toggleProgressiveComplete(p)}
+						/>
 					{/each}
 				{/if}
 			</div>

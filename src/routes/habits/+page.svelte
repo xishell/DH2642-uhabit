@@ -1,7 +1,6 @@
 <script lang="ts">
 	import ToggleBar from '$lib/components/ToggleBar.svelte';
 	import HabitCard from '$lib/components/HabitCard.svelte';
-	import { fade } from 'svelte/transition';
 	import { Plus } from 'lucide-svelte';
 	import { browser } from '$app/environment';
 	import { untrack } from 'svelte';
@@ -74,61 +73,21 @@
 			<p class="col-span-full text-center text-sm text-red-600">{$state.habitsError}</p>
 		{:else if $state.habitType === 0}
 			{#each $state.progressiveHabitList as habit}
-				<HabitCard title={habit.title} habitId={habit.id} type={'progressive'} />
+				<HabitCard title={habit.title} habitId={habit.id} />
 			{/each}
 		{:else}
 			{#each $state.singleStepHabitList as habit}
-				<HabitCard title={habit.title} habitId={habit.id} type={'single'} />
+				<HabitCard title={habit.title} habitId={habit.id} />
 			{/each}
 		{/if}
 	</div>
 
-	<!-- blur layer -->
-	{#if $state.isNewBtnClicked}
-		<div
-			onclick={presenter.toggleNewButton}
-			role="button"
-			tabindex="0"
-			onkeydown={(e) => {
-				e.key === 'Enter' ? presenter.toggleNewButton() : null;
-			}}
-			class="fixed top-0 w-full h-screen bg-gray-900 opacity-30"
-			transition:fade={{ duration: 300 }}
-		></div>
-	{/if}
-
 	<!-- add new habit btn -->
-	<div
-		class="new-btn-ctn fixed bottom-[40px] right-[45px] flex flex-col gap-4 justify-between items-end text-surface-50"
+	<a
+		href={routes.habits.new}
+		data-sveltekit-preload-data="hover"
+		class="fixed bottom-[40px] right-[45px] text-3xl w-[64px] h-[64px] bg-primary-500 rounded-full hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl flex justify-center items-center text-surface-50"
 	>
-		{#if $state.isNewBtnClicked}
-			<div class="flex h-[90px] flex-col justify-between" transition:fade={{ duration: 300 }}>
-				<a
-					href={routes.habits.new('progressive')}
-					data-sveltekit-preload-data="hover"
-					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
-				>
-					Progressive
-				</a>
-				<a
-					href={routes.habits.new('single')}
-					data-sveltekit-preload-data="hover"
-					class="text-sm bg-primary-500 rounded-[50px] py-2 px-4 hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl"
-				>
-					Single-Step
-				</a>
-			</div>
-		{/if}
-		<button
-			class="text-3xl w-[64px] h-[64px] bg-primary-500 rounded-full hover:bg-primary-400 transition-colors duration-200 cursor-pointer shadow-xl flex justify-center items-center"
-			onclick={presenter.toggleNewButton}
-			><Plus
-				size={26}
-				strokeWidth={3}
-				class={`pl-[0.04rem] pt-[0.04rem]
-          transition-transform duration-300 ease-in-out
-          ${$state.isNewBtnClicked ? 'rotate-45' : 'rotate-0'}`}
-			/></button
-		>
-	</div>
+		<Plus size={26} strokeWidth={3} class="pl-[0.04rem] pt-[0.04rem]" />
+	</a>
 </div>

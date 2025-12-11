@@ -1,24 +1,31 @@
 import type { Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { routes, type HabitType } from '$lib/routes';
+import { routes } from '$lib/routes';
 
 export const actions: Actions = {
-	default: async ({ request, fetch, url }) => {
+	default: async ({ request, fetch }) => {
 		const data = await request.formData();
-		const type = (url.searchParams.get('type') as HabitType) || 'progressive';
 
 		const raw = data.get('period') as string;
 		const periodArray = raw ? raw.split(',').map(Number) : [];
-		const isNumeric = data.get('measurement') === 'numeric';
+
+		// Derive measurement type from form data:
+		// If both targetAmount AND unit are provided → 'numeric', else → 'boolean'
+		const targetAmountRaw = data.get('targetAmount') as string;
+		const unitRaw = data.get('unit') as string;
+		const hasTarget = targetAmountRaw && targetAmountRaw.trim() !== '';
+		const hasUnit = unitRaw && unitRaw.trim() !== '';
+		const isNumeric = hasTarget && hasUnit;
+
 		const habit = {
 			title: data.get('title') as string,
 			notes: data.get('notes') as string,
 			color: data.get('color') as string,
 			frequency: data.get('frequency') as string,
 			period: periodArray,
-			measurement: data.get('measurement') as string,
-			targetAmount: isNumeric ? Number(data.get('targetAmount')) : null,
-			unit: isNumeric ? data.get('unit') : null
+			measurement: isNumeric ? 'numeric' : 'boolean',
+			targetAmount: isNumeric ? Number(targetAmountRaw) : null,
+			unit: isNumeric ? unitRaw : null
 		};
 
 		const res = await fetch('/api/habits', {
@@ -34,7 +41,7 @@ export const actions: Actions = {
 			});
 		}
 
-		// Redirect back to habits list with correct tab
-		throw redirect(303, routes.habits.listWithTab(type));
+		// Redirect back to habits list
+		throw redirect(303, routes.habits.list);
 	}
 };

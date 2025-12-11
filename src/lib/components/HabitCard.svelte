@@ -3,12 +3,10 @@
 
 	let {
 		title = 'Drink Water',
-		habitId = '',
-		type = ''
+		habitId = ''
 	}: {
 		title?: string;
 		habitId?: string;
-		type?: string;
 	} = $props();
 </script>
 
@@ -17,7 +15,7 @@
 >
 	<span class="text-surface-50 font-medium">{title}</span>
 	<a
-		href={routes.habits.edit(habitId, type)}
+		href={routes.habits.edit(habitId)}
 		data-sveltekit-preload-data="hover"
 		class="bg-primary-500 text-surface-50 rounded-lg py-2 px-6 hover:bg-primary-400 transition-all duration-200 cursor-pointer"
 	>

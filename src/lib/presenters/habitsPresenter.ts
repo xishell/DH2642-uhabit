@@ -8,7 +8,6 @@ export type HabitsState = {
 	progressiveHabitList: Habit[];
 	singleStepHabitList: Habit[];
 	habitType: 0 | 1;
-	isNewBtnClicked: boolean;
 	habitsLoading: boolean;
 	habitsError: string | null;
 	quote: string;
@@ -36,7 +35,6 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		progressiveHabitList: initial.progressiveHabitList,
 		singleStepHabitList: initial.singleStepHabitList,
 		habitType: initial.initialTab,
-		isNewBtnClicked: false,
 		habitsLoading: false,
 		habitsError: null,
 		quote: initial.quote ?? 'Let your days echo with the steps you choose to take.',
@@ -66,10 +64,6 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		if (browser) {
 			setCookie('habits-tab', val === 1 ? 'single' : 'progressive');
 		}
-	};
-
-	const toggleNewButton = () => {
-		update((state) => ({ ...state, isNewBtnClicked: !state.isNewBtnClicked }));
 	};
 
 	const refreshHabits = async () => {
@@ -163,7 +157,6 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		state: { subscribe },
 		initHabits,
 		setHabitType,
-		toggleNewButton,
 		refreshHabits,
 		ensureQuote
 	};

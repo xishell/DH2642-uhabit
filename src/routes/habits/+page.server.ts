@@ -1,20 +1,19 @@
 import type { PageServerLoad } from './$types';
 import type { Habit } from '$lib/types/habit';
 import type { GoalWithProgress } from '$lib/types/goal';
+import { COOKIES } from '$lib/constants';
 
 type QuoteData = { quote?: string | null; author?: string | null };
 
-const QUOTE_CACHE_KEY = 'uhabit-quote';
-
 export const load: PageServerLoad = async ({ fetch, cookies }) => {
 	// Read tab state from cookie
-	const savedTab = cookies.get('habits-tab');
+	const savedTab = cookies.get(COOKIES.HABITS_TAB);
 	const initialTab: 0 | 1 = savedTab === 'goals' ? 1 : 0;
 
 	// Use cached quote from cookie to avoid skeleton flash
 	let quote: string | null = null;
 	let author: string | null = null;
-	const quoteCookie = cookies.get(QUOTE_CACHE_KEY);
+	const quoteCookie = cookies.get(COOKIES.QUOTE_CACHE);
 	if (quoteCookie) {
 		try {
 			const parsed = JSON.parse(quoteCookie) as { quote?: string | null; author?: string | null };

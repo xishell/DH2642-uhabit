@@ -1,12 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { KV_KEYS } from '$lib/constants';
 
 type QuoteData = {
 	quote: string | null;
 	author: string | null;
 };
-
-const CACHE_KEY = 'daily-quote';
 const CACHE_TTL = 300;
 const CDN_MAX_AGE = 300;
 const CDN_SWR = 600;
@@ -25,7 +24,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 	// Try KV cache first
 	if (kv) {
 		try {
-			const cached = await kv.get<QuoteData>(CACHE_KEY, 'json');
+			const cached = await kv.get<QuoteData>(KV_KEYS.DAILY_QUOTE, 'json');
 			if (cached) {
 				return json(cached, { headers: cdnCacheHeaders });
 			}
@@ -65,7 +64,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		// Store in KV with TTL (non-blocking)
 		if (kv && result.quote) {
 			platform?.context?.waitUntil(
-				kv.put(CACHE_KEY, JSON.stringify(result), { expirationTtl: CACHE_TTL })
+				kv.put(KV_KEYS.DAILY_QUOTE, JSON.stringify(result), { expirationTtl: CACHE_TTL })
 			);
 		}
 

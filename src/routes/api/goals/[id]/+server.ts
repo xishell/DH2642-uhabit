@@ -4,20 +4,9 @@ import { getDB } from '$lib/server/db';
 import { goal, habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, sql, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth, enforceApiRateLimit } from '$lib/server/api-helpers';
+import { requireAuth, enforceApiRateLimit, parseHabitFromDB } from '$lib/server/api-helpers';
 import { calculateGoalProgress } from '$lib/utils/goal';
 import { startOfDay, endOfDay } from '$lib/utils/date';
-import type { Habit } from '$lib/types/habit';
-
-// Parse habit from DB (handles JSON period/type casts)
-function parseHabit(h: typeof habit.$inferSelect): Habit {
-	return {
-		...h,
-		frequency: h.frequency as Habit['frequency'],
-		measurement: h.measurement as Habit['measurement'],
-		period: h.period ? JSON.parse(h.period) : null
-	};
-}
 
 // Validation schema for goal update
 const updateGoalSchema = z
@@ -91,7 +80,7 @@ export const GET: RequestHandler = async (event) => {
 		);
 
 	// Parse habits
-	const parsedHabits = habits.map(parseHabit);
+	const parsedHabits = habits.map(parseHabitFromDB);
 
 	const goalWithProgress = calculateGoalProgress(goalRecord, parsedHabits, completions);
 
@@ -212,7 +201,7 @@ export const PATCH: RequestHandler = async (event) => {
 			)
 		);
 
-	const parsedHabits = habits.map(parseHabit);
+	const parsedHabits = habits.map(parseHabitFromDB);
 
 	const goalWithProgress = calculateGoalProgress(updatedGoal, parsedHabits, completions);
 

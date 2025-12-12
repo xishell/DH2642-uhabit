@@ -8,11 +8,12 @@ import type { GoalWithHabitStatus } from '$lib/types/goal';
 import { getHabitsForDate } from '$lib/utils/habit';
 import { startOfDay, endOfDay } from '$lib/utils/date';
 import { isGoalActive } from '$lib/utils/goal';
+import { COOKIES } from '$lib/constants';
 
 export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 	// Read UI state from cookies
-	const savedTab = cookies.get('overview-tab') as 'habits' | 'goals' | undefined;
-	const savedModal = cookies.get('overview-modal');
+	const savedTab = cookies.get(COOKIES.OVERVIEW_TAB) as 'habits' | 'goals' | undefined;
+	const savedModal = cookies.get(COOKIES.OVERVIEW_MODAL);
 
 	let initialTab: 'habits' | 'goals' = 'habits';
 	let initialModal: { habitId: string; progress: number } | null = null;

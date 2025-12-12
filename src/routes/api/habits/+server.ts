@@ -8,7 +8,8 @@ import {
 	requireAuth,
 	parsePagination,
 	paginatedResponse,
-	enforceApiRateLimit
+	enforceApiRateLimit,
+	parseHabitFromDB
 } from '$lib/server/api-helpers';
 
 // Validation schema for habit creation
@@ -53,11 +54,6 @@ export const GET: RequestHandler = async (event) => {
 
 	const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
 
-	const parseHabit = (h: typeof habit.$inferSelect) => ({
-		...h,
-		period: h.period ? JSON.parse(h.period) : null
-	});
-
 	const generateETag = (habits: (typeof habit.$inferSelect)[]) => {
 		if (habits.length === 0) return '"empty"';
 		const maxUpdated = habits.reduce(
@@ -95,7 +91,7 @@ export const GET: RequestHandler = async (event) => {
 			ETag: etag
 		});
 
-		return json(paginatedResponse(habits.map(parseHabit), total, pagination));
+		return json(paginatedResponse(habits.map(parseHabitFromDB), total, pagination));
 	}
 
 	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
@@ -111,7 +107,7 @@ export const GET: RequestHandler = async (event) => {
 		ETag: etag
 	});
 
-	return json(habits.map(parseHabit));
+	return json(habits.map(parseHabitFromDB));
 };
 
 // POST /api/habits - Create new habit

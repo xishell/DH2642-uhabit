@@ -5,6 +5,20 @@ import { getDB } from './db';
 import { habit, habitCompletion } from './db/schema';
 import type { z } from 'zod';
 import { checkRateLimit, getClientIP, getRateLimits } from './ratelimit';
+import type { Habit } from '$lib/types/habit';
+
+/**
+ * Parse a habit record from the database, converting JSON fields and casting types.
+ * Use this when fetching habits from the database to ensure proper typing.
+ */
+export function parseHabitFromDB(h: typeof habit.$inferSelect): Habit {
+	return {
+		...h,
+		frequency: h.frequency as Habit['frequency'],
+		measurement: h.measurement as Habit['measurement'],
+		period: h.period ? JSON.parse(h.period) : null
+	};
+}
 
 /** Default pagination limits */
 export const PAGINATION_DEFAULTS = {

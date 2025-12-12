@@ -40,35 +40,36 @@ const createHabitSchema = z
 // GET /api/habits - List all habits for authenticated user
 // Supports optional pagination: ?page=1&limit=20
 // Without pagination params, returns all habits (backward compatible)
-export const GET: RequestHandler = async ({ locals, platform, setHeaders, url }) => {
+export const GET: RequestHandler = async ({ locals, platform, setHeaders, url, request }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
-	// Check if pagination is requested
 	const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
 
-	// Helper to parse habit period JSON
 	const parseHabit = (h: typeof habit.$inferSelect) => ({
 		...h,
 		period: h.period ? JSON.parse(h.period) : null
 	});
 
-	// Cache privately to cut repeated reads while keeping data user-specific
-	setHeaders({
-		'Cache-Control': 'private, max-age=300, stale-while-revalidate=60'
-	});
+	const generateETag = (habits: (typeof habit.$inferSelect)[]) => {
+		if (habits.length === 0) return '"empty"';
+		const maxUpdated = habits.reduce(
+			(max, h) => (h.updatedAt > max ? h.updatedAt : max),
+			habits[0].updatedAt
+		);
+		const timestamp = maxUpdated instanceof Date ? maxUpdated.getTime() : maxUpdated;
+		return `"${userId.slice(0, 8)}-${habits.length}-${timestamp}"`;
+	};
 
 	if (usePagination) {
 		const pagination = parsePagination(url);
 
-		// Get total count
 		const [countResult] = await db
 			.select({ count: sql<number>`count(*)` })
 			.from(habit)
 			.where(eq(habit.userId, userId));
 		const total = Number(countResult?.count ?? 0);
 
-		// Fetch paginated habits
 		const habits = await db
 			.select()
 			.from(habit)
@@ -76,11 +77,33 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders, url })
 			.limit(pagination.limit)
 			.offset(pagination.offset);
 
+		const etag = generateETag(habits);
+		const ifNoneMatch = request.headers.get('If-None-Match');
+		if (ifNoneMatch === etag) {
+			return new Response(null, { status: 304 });
+		}
+
+		setHeaders({
+			'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
+			ETag: etag
+		});
+
 		return json(paginatedResponse(habits.map(parseHabit), total, pagination));
 	}
 
-	// Non-paginated response (backward compatible)
 	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
+
+	const etag = generateETag(habits);
+	const ifNoneMatch = request.headers.get('If-None-Match');
+	if (ifNoneMatch === etag) {
+		return new Response(null, { status: 304 });
+	}
+
+	setHeaders({
+		'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
+		ETag: etag
+	});
+
 	return json(habits.map(parseHabit));
 };
 

@@ -1,24 +1,27 @@
 <script lang="ts">
 	import { DatePicker, parseDate, Portal } from '@skeletonlabs/skeleton-svelte';
 	import type { DateValue } from '@skeletonlabs/skeleton-svelte';
-	import { createEventDispatcher } from 'svelte';
 
-	interface Events {
-		change: DateValue[];
+	interface ValueChangeDetails {
+		value: DateValue[];
+		valueAsString: string[];
+		view: string;
 	}
 
-	const dispatch = createEventDispatcher<Events>();
+	interface Props {
+		value?: DateValue[];
+		onchange?: (value: DateValue[]) => void;
+	}
 
-	let value: DateValue[] = [parseDate('2025-10-15')];
+	let { value = $bindable([parseDate('2025-11-20')]), onchange }: Props = $props();
 
-	function handleValueChange(e: CustomEvent<{ value: DateValue[] }>) {
-		value = e.detail?.value;
-		dispatch('change', value);
+	function handleValueChange(details: ValueChangeDetails) {
+		value = details.value;
+		onchange?.(details.value);
 	}
 </script>
 
-<DatePicker {value} on:valueChange={handleValueChange} class="text-sm w-36">
-	<!-- <DatePicker.Label>Picked date: {value.at(0)?.toString()}</DatePicker.Label> -->
+<DatePicker {value} onValueChange={handleValueChange} class="text-sm w-36">
 	<DatePicker.Control>
 		<DatePicker.Input placeholder="mm/dd/yyyy" />
 		<DatePicker.Trigger />

@@ -2,7 +2,7 @@
 	import DatePicker from './components/DatePicker.svelte';
 	import type { DateValue } from '@skeletonlabs/skeleton-svelte';
 
-	//data
+	// Types
 	type Habit = {
 		habitTitle: string;
 		completionRate: number;
@@ -12,22 +12,24 @@
 		date: string;
 		data: Habit[];
 	};
-	const dailyHabitCompletionArr = [
-		{ habitTitle: 'read books', completionRate: 0.8 },
-		{ habitTitle: 'drink water', completionRate: 0.9 },
-		{ habitTitle: 'work out', completionRate: 0.4 },
-		{ habitTitle: 'work out', completionRate: 0.1 },
-		{ habitTitle: 'work out', completionRate: 0.4 },
-		{ habitTitle: 'work out', completionRate: 0.34 },
-		{ habitTitle: 'work out', completionRate: 0.4 },
-		{ habitTitle: 'work out', completionRate: 0.52 },
-		{ habitTitle: 'work out', completionRate: 0.14 },
-		{ habitTitle: 'work out', completionRate: 0.04 }
-	];
+
+	type HabitType = 'daily' | 'weekly' | 'monthly';
+
+	// Helper function to format DateValue to string (YYYY-MM-DD)
+	function formatDateValue(dateValue: DateValue): string {
+		const year = dateValue.year;
+		const month = String(dateValue.month).padStart(2, '0');
+		const day = String(dateValue.day).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	}
+
+	// Helper function to get data by date
 	function getDataByDate(stats: HabitStat[], targetDate: string): Habit[] {
 		const entry = stats.find((item) => item.date === targetDate);
 		return entry ? entry.data : [];
 	}
+
+	// Mock data
 	const dailyHabitStats: HabitStat[] = [
 		{
 			date: '2025-11-20',
@@ -35,124 +37,107 @@
 				{ habitTitle: 'read books', completionRate: 0.8 },
 				{ habitTitle: 'drink water', completionRate: 0.9 },
 				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.1 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.34 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.52 },
-				{ habitTitle: 'work out', completionRate: 0.14 },
-				{ habitTitle: 'work out', completionRate: 0.04 }
+				{ habitTitle: 'meditation', completionRate: 0.1 },
+				{ habitTitle: 'journaling', completionRate: 0.4 },
+				{ habitTitle: 'coding', completionRate: 0.34 },
+				{ habitTitle: 'walking', completionRate: 0.4 },
+				{ habitTitle: 'stretching', completionRate: 0.52 },
+				{ habitTitle: 'reading news', completionRate: 0.14 },
+				{ habitTitle: 'language study', completionRate: 0.04 }
 			]
 		},
 		{
 			date: '2025-11-21',
 			data: [
-				{ habitTitle: 'read books', completionRate: 0.8 },
-				{ habitTitle: 'drink water', completionRate: 0.9 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.1 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.34 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.52 },
-				{ habitTitle: 'work out', completionRate: 0.14 },
-				{ habitTitle: 'work out', completionRate: 0.04 }
+				{ habitTitle: 'read books', completionRate: 0.6 },
+				{ habitTitle: 'drink water', completionRate: 0.95 },
+				{ habitTitle: 'work out', completionRate: 0.7 },
+				{ habitTitle: 'meditation', completionRate: 0.3 }
 			]
 		}
 	];
-
-	//for weekly and monthly stats, "date" means the last day of a week or month period
-	//so user only choose one day for each stats view
 
 	const weeklyHabitStats: HabitStat[] = [
 		{
 			date: '2025-11-20',
 			data: [
-				{ habitTitle: 'read books', completionRate: 0.8 },
-				{ habitTitle: 'drink water', completionRate: 0.9 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.1 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.34 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.52 },
-				{ habitTitle: 'work out', completionRate: 0.14 },
-				{ habitTitle: 'work out', completionRate: 0.04 }
+				{ habitTitle: 'read books', completionRate: 0.75 },
+				{ habitTitle: 'drink water', completionRate: 0.85 },
+				{ habitTitle: 'work out', completionRate: 0.5 },
+				{ habitTitle: 'meditation', completionRate: 0.25 },
+				{ habitTitle: 'journaling', completionRate: 0.6 }
 			]
 		},
 		{
 			date: '2025-11-21',
 			data: [
-				{ habitTitle: 'read books', completionRate: 0.8 },
-				{ habitTitle: 'drink water', completionRate: 0.9 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.34 },
-				{ habitTitle: 'work out', completionRate: 0.14 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.52 },
-				{ habitTitle: 'work out', completionRate: 0.1 },
-				{ habitTitle: 'work out', completionRate: 0.04 }
+				{ habitTitle: 'read books', completionRate: 0.7 },
+				{ habitTitle: 'drink water', completionRate: 0.88 },
+				{ habitTitle: 'work out', completionRate: 0.45 }
 			]
 		}
 	];
+
 	const monthlyHabitStats: HabitStat[] = [
 		{
 			date: '2025-11-20',
 			data: [
-				{ habitTitle: 'read books', completionRate: 0.8 },
-				{ habitTitle: 'drink water', completionRate: 0.9 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.1 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.34 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.52 },
-				{ habitTitle: 'work out', completionRate: 0.14 },
-				{ habitTitle: 'work out', completionRate: 0.04 }
+				{ habitTitle: 'read books', completionRate: 0.65 },
+				{ habitTitle: 'drink water', completionRate: 0.82 },
+				{ habitTitle: 'work out', completionRate: 0.38 },
+				{ habitTitle: 'meditation', completionRate: 0.2 }
 			]
 		},
 		{
 			date: '2025-11-21',
 			data: [
-				{ habitTitle: 'read books', completionRate: 0.8 },
+				{ habitTitle: 'read books', completionRate: 0.72 },
 				{ habitTitle: 'drink water', completionRate: 0.9 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.1 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.34 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.52 },
-				{ habitTitle: 'work out', completionRate: 0.14 },
-				{ habitTitle: 'work out', completionRate: 0.04 }
+				{ habitTitle: 'work out', completionRate: 0.55 },
+				{ habitTitle: 'meditation', completionRate: 0.35 },
+				{ habitTitle: 'journaling', completionRate: 0.48 }
 			]
 		}
 	];
-	// datePicker Values
-	//-----------?????-----------
-	//have dificulties in get props from childcomponents <DatePickers=>
-	//12.12 tried dispatch events from DatePicker, got a lot of type errors, NEED HELP >_<
-	//-----------?????-----------
-	let selectedDateForDaily: '2025-11-20';
-	let selectedDateForWeekly: '2025-11-21';
-	let selectedDateForMonthly: '2025-11-20';
 
-	//resizable view
+	// DatePicker selected dates (using $state for Svelte 5 reactivity)
+	let selectedDateForDaily = $state('2025-11-20');
+	let selectedDateForWeekly = $state('2025-11-20');
+	let selectedDateForMonthly = $state('2025-11-20');
+
+	// Date change handlers
+	function handleDailyDateChange(value: DateValue[]) {
+		if (value.length > 0) {
+			selectedDateForDaily = formatDateValue(value[0]);
+		}
+	}
+
+	function handleWeeklyDateChange(value: DateValue[]) {
+		if (value.length > 0) {
+			selectedDateForWeekly = formatDateValue(value[0]);
+		}
+	}
+
+	function handleMonthlyDateChange(value: DateValue[]) {
+		if (value.length > 0) {
+			selectedDateForMonthly = formatDateValue(value[0]);
+		}
+	}
+
+	// Resizable view configuration
 	const minHeight = 16;
-	let viewHeight: Record<HabitType, Number> = {
+	let viewHeight: Record<HabitType, number> = $state({
 		daily: 180,
 		weekly: 180,
 		monthly: 180
-	};
+	});
 
-	let dragging = false;
-
-	type HabitType = 'daily' | 'weekly' | 'monthly';
-	let isDragging: Record<HabitType, boolean> = {
+	let dragging = $state(false);
+	let isDragging: Record<HabitType, boolean> = $state({
 		daily: false,
 		weekly: false,
 		monthly: false
-	};
+	});
 
 	function startDrag(targetView: HabitType, event: MouseEvent | TouchEvent) {
 		dragging = true;
@@ -180,18 +165,18 @@
 
 		const stopDrag = () => {
 			dragging = false;
-			isDragging['daily'] = false;
-			isDragging['weekly'] = false;
-			isDragging['monthly'] = false;
+			isDragging.daily = false;
+			isDragging.weekly = false;
+			isDragging.monthly = false;
 			window.removeEventListener('mousemove', onMove);
 			window.removeEventListener('mouseup', stopDrag);
-			window.removeEventListener('touchmove', onMove as any);
+			window.removeEventListener('touchmove', onMove as EventListener);
 			window.removeEventListener('touchend', stopDrag);
 		};
 
 		window.addEventListener('mousemove', onMove);
 		window.addEventListener('mouseup', stopDrag);
-		window.addEventListener('touchmove', onMove as any, { passive: false });
+		window.addEventListener('touchmove', onMove as EventListener, { passive: false });
 		window.addEventListener('touchend', stopDrag);
 	}
 </script>
@@ -202,122 +187,114 @@
 	<!-- statistics -->
 	<div class="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:max-w-[1000px] w-full m-auto">
 		<!-- daily -->
-		<div class="daily-view flex flex-col gap-2 relative">
+		<div class="stat-view flex flex-col gap-2 relative">
 			<div class="view-tab flex justify-between items-center">
 				<span class="text-xl">Daily</span>
-				<!-- <div class="w-16 h-5 rounded-full bg-gray-200"></div> -->
-				<DatePicker
-					on:change={(e) => {
-						selectedDateForDaily =
-							e.detail[0].year.toString() + e.detail[0].month + e.detail[0].day;
-						console.log(selectedDateForDaily);
-					}}
-				/>
-				<!-- don't know how to get the value here, HELPPPPPP-->
+				<DatePicker onchange={handleDailyDateChange} />
 			</div>
 			<div class="relative">
 				<div
 					id="resizable-daily"
-					style="height:{viewHeight['daily']}px"
-					class={`max-h-130 min-h-[${minHeight}] scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto `}
+					style="height:{viewHeight.daily}px"
+					class="max-h-130 min-h-4 scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto"
 				>
-					<div class=" absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
+					<div class="absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
 
 					<!-- habit completion bar list -->
-					{#each getDataByDate(dailyHabitStats, selectedDateForDaily) as habitDaily}
+					{#each getDataByDate(dailyHabitStats, selectedDateForDaily) as habit}
 						<div class="w-full h-6 border border-primary-500 my-4 rounded-r-[10px]">
 							<div
 								class="h-full bg-primary-500 rounded-r-[10px] pl-2 text-primary-50 text-sm flex items-center whitespace-nowrap"
-								style="width: {habitDaily.completionRate * 100}%"
+								style="width: {habit.completionRate * 100}%"
 							>
-								{habitDaily.habitTitle}
+								{habit.habitTitle}
 							</div>
 						</div>
 					{/each}
 
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
-						on:mousedown={(e) => startDrag('daily', e)}
-						on:touchstart={(e) => startDrag('daily', e)}
-						class={`absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl 
+						onmousedown={(e) => startDrag('daily', e)}
+						ontouchstart={(e) => startDrag('daily', e)}
+						class="absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl
 						bg-white/4 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
-          				${isDragging['daily'] ? 'opacity-100' : 'opacity-0'} hover:opacity-100`}
+						{isDragging.daily ? 'opacity-100' : 'opacity-0'} hover:opacity-100"
 					></div>
 				</div>
 			</div>
 		</div>
+
 		<!-- weekly -->
-		<div class="daily-view flex flex-col gap-2 relative">
+		<div class="stat-view flex flex-col gap-2 relative">
 			<div class="view-tab flex justify-between items-center">
 				<span class="text-xl">Weekly</span>
-				<!-- <div class="w-16 h-5 rounded-full bg-gray-200"></div> -->
-				<DatePicker />
+				<DatePicker onchange={handleWeeklyDateChange} />
 			</div>
 			<div class="relative">
 				<div
 					id="resizable-weekly"
-					style="height:{viewHeight['weekly']}px"
-					class={`max-h-130 min-h-[${minHeight}] scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto `}
+					style="height:{viewHeight.weekly}px"
+					class="max-h-130 min-h-4 scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto"
 				>
-					<div class=" absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
+					<div class="absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
 
 					<!-- habit completion bar list -->
-					{#each dailyHabitCompletionArr as habitDaily}
+					{#each getDataByDate(weeklyHabitStats, selectedDateForWeekly) as habit}
 						<div class="w-full h-6 border border-primary-500 my-4 rounded-r-[10px]">
 							<div
 								class="h-full bg-primary-500 rounded-r-[10px] pl-2 text-primary-50 text-sm flex items-center whitespace-nowrap"
-								style="width: {habitDaily.completionRate * 100}%"
+								style="width: {habit.completionRate * 100}%"
 							>
-								{habitDaily.habitTitle}
+								{habit.habitTitle}
 							</div>
 						</div>
 					{/each}
 
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
-						on:mousedown={(e) => startDrag('weekly', e)}
-						on:touchstart={(e) => startDrag('weekly', e)}
-						class={`absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl 
+						onmousedown={(e) => startDrag('weekly', e)}
+						ontouchstart={(e) => startDrag('weekly', e)}
+						class="absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl
 						bg-white/4 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
-          				${isDragging['weekly'] ? 'opacity-100' : 'opacity-0'} hover:opacity-100`}
+						{isDragging.weekly ? 'opacity-100' : 'opacity-0'} hover:opacity-100"
 					></div>
 				</div>
 			</div>
 		</div>
+
 		<!-- monthly -->
-		<div class="daily-view flex flex-col gap-2 relative">
+		<div class="stat-view flex flex-col gap-2 relative">
 			<div class="view-tab flex justify-between items-center">
 				<span class="text-xl">Monthly</span>
-				<!-- <div class="w-16 h-5 rounded-full bg-gray-200"></div> -->
-				<DatePicker />
+				<DatePicker onchange={handleMonthlyDateChange} />
 			</div>
 			<div class="relative">
 				<div
 					id="resizable-monthly"
-					style="height:{viewHeight['monthly']}px"
-					class={`max-h-130 min-h-[${minHeight}] scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto `}
+					style="height:{viewHeight.monthly}px"
+					class="max-h-130 min-h-4 scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto"
 				>
-					<div class=" absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
+					<div class="absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
 
 					<!-- habit completion bar list -->
-					{#each dailyHabitCompletionArr as habitDaily}
+					{#each getDataByDate(monthlyHabitStats, selectedDateForMonthly) as habit}
 						<div class="w-full h-6 border border-primary-500 my-4 rounded-r-[10px]">
 							<div
 								class="h-full bg-primary-500 rounded-r-[10px] pl-2 text-primary-50 text-sm flex items-center whitespace-nowrap"
-								style="width: {habitDaily.completionRate * 100}%"
+								style="width: {habit.completionRate * 100}%"
 							>
-								{habitDaily.habitTitle}
+								{habit.habitTitle}
 							</div>
 						</div>
 					{/each}
 
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
-						on:mousedown={(e) => startDrag('monthly', e)}
-						on:touchstart={(e) => startDrag('monthly', e)}
-						class={`absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl 
+						onmousedown={(e) => startDrag('monthly', e)}
+						ontouchstart={(e) => startDrag('monthly', e)}
+						class="absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl
 						bg-white/4 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
-          				${isDragging['monthly'] ? 'opacity-100' : 'opacity-0'} hover:opacity-100`}
+						{isDragging.monthly ? 'opacity-100' : 'opacity-0'} hover:opacity-100"
 					></div>
 				</div>
 			</div>
@@ -326,9 +303,6 @@
 </div>
 
 <style>
-	/* .scrollbar-ctn {
-		scrollbar-gutter: stable both-edges;
-	} */
 	.scrollbar-ctn::-webkit-scrollbar {
 		width: 26px;
 	}

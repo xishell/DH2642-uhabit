@@ -4,6 +4,7 @@ import {
 	getScheduledDatesForHabit,
 	completionUnitsForHabit,
 	calculateGoalProgress,
+	calculateGoalWithTodayStatus,
 	isGoalActive,
 	filterActiveGoals,
 	sortGoalsByEndDate
@@ -173,6 +174,39 @@ describe('Goal Utilities', () => {
 
 			expect(result).toBe(1); // Capped at 1
 		});
+
+		it('ignores completions on unscheduled days', () => {
+			const habit = createHabit({ frequency: 'weekly', period: [1] }); // Mondays only
+			const completions = [
+				createCompletion({ completedAt: new Date('2025-01-02T12:00:00') }), // Thursday
+				createCompletion({ completedAt: new Date('2025-01-07T12:00:00') }) // Tuesday
+			];
+
+			const result = completionUnitsForHabit(
+				habit,
+				completions,
+				new Date('2025-01-01'),
+				new Date('2025-01-07')
+			);
+
+			expect(result).toBe(0);
+		});
+
+		it('returns 0 units for numeric habits with non-positive target', () => {
+			const habit = createHabit({ measurement: 'numeric', targetAmount: 0 });
+			const completions = [
+				createCompletion({ completedAt: new Date('2025-01-01T12:00:00'), measurement: 5 })
+			];
+
+			const result = completionUnitsForHabit(
+				habit,
+				completions,
+				new Date('2025-01-01'),
+				new Date('2025-01-01')
+			);
+
+			expect(result).toBe(0);
+		});
 	});
 
 	describe('calculateGoalProgress', () => {
@@ -219,6 +253,73 @@ describe('Goal Utilities', () => {
 
 			expect(result.habits).toHaveLength(1);
 			expect(result.habits[0].id).toBe('h1');
+		});
+	});
+
+	describe('calculateGoalWithTodayStatus', () => {
+		it('combines historical progress with today status and caps numeric progress', () => {
+			const goal = createGoal({
+				startDate: new Date('2025-01-01'),
+				endDate: new Date('2025-01-03')
+			});
+			const booleanHabit = createHabit({ id: 'h1', goalId: 'goal-1', measurement: 'boolean' });
+			const numericHabit = createHabit({
+				id: 'h2',
+				goalId: 'goal-1',
+				measurement: 'numeric',
+				targetAmount: 10
+			});
+
+			const completions = [
+				// Boolean habit completed days 1 & 2
+				createCompletion({ habitId: 'h1', completedAt: new Date('2025-01-01T10:00:00') }),
+				createCompletion({ habitId: 'h1', completedAt: new Date('2025-01-02T10:00:00') }),
+				// Numeric habit: 0.5 + 1 + capped 1
+				createCompletion({
+					habitId: 'h2',
+					completedAt: new Date('2025-01-01T10:00:00'),
+					measurement: 5
+				}),
+				createCompletion({
+					habitId: 'h2',
+					completedAt: new Date('2025-01-02T10:00:00'),
+					measurement: 10
+				}),
+				createCompletion({
+					habitId: 'h2',
+					completedAt: new Date('2025-01-03T10:00:00'),
+					measurement: 12
+				})
+			];
+
+			const today = new Date('2025-01-02');
+			const todayStart = new Date('2025-01-02T00:00:00');
+			const todayEnd = new Date('2025-01-02T23:59:59.999');
+			const todayCompletions = completions.filter(
+				(c) => c.completedAt >= todayStart && c.completedAt <= todayEnd
+			);
+
+			const result = calculateGoalWithTodayStatus(
+				goal,
+				[booleanHabit, numericHabit],
+				completions,
+				todayCompletions,
+				today
+			);
+
+			expect(result.totalScheduled).toBe(6); // 2 habits * 3 days
+			expect(result.totalCompleted).toBe(4.5); // 2 boolean + (0.5 + 1 + 1) numeric
+			expect(result.progressPercentage).toBe(75);
+			expect(result.isCompleted).toBe(false);
+			expect(result.todayTotal).toBe(2);
+			expect(result.todayCompleted).toBe(2); // boolean 1 + numeric 1 (capped)
+
+			const todayStatuses = result.habits.map((h) => ({
+				id: h.habit.id,
+				isCompleted: h.isCompleted
+			}));
+			expect(todayStatuses).toContainEqual({ id: 'h1', isCompleted: true });
+			expect(todayStatuses).toContainEqual({ id: 'h2', isCompleted: true });
 		});
 	});
 

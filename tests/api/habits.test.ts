@@ -1,38 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { z } from 'zod';
-
-/**
- * API Route Test Example
- * This demonstrates testing validation schemas and business logic from API routes
- */
-
-// Import the validation schema from the API route
-const createHabitSchema = z
-	.object({
-		title: z.string().min(1).max(255),
-		notes: z.string().optional(),
-		color: z.string().optional(),
-		frequency: z.enum(['daily', 'weekly', 'monthly']).default('daily'),
-		measurement: z.enum(['boolean', 'numeric']).default('boolean'),
-		period: z.string().optional(),
-		targetAmount: z.number().int().positive().optional(),
-		unit: z.string().optional(),
-		categoryId: z.string().uuid().optional(),
-		goalId: z.string().uuid().optional()
-	})
-	.refine(
-		(data) => {
-			// For numeric habits, require targetAmount and unit
-			if (data.measurement === 'numeric') {
-				return data.targetAmount !== undefined && data.unit !== undefined;
-			}
-			return true;
-		},
-		{
-			message: 'Numeric habits require both targetAmount and unit',
-			path: ['targetAmount']
-		}
-	);
+import { describe, it, expect } from 'vitest';
+import { createHabitSchema } from '../../src/routes/api/habits/+server';
 
 describe('Habit API Validation', () => {
 	describe('createHabitSchema', () => {
@@ -48,6 +15,7 @@ describe('Habit API Validation', () => {
 				expect(result.data.title).toBe('Drink water');
 				expect(result.data.frequency).toBe('daily');
 				expect(result.data.measurement).toBe('boolean');
+				expect(result.data.unit).toBeNull();
 			}
 		});
 
@@ -58,7 +26,7 @@ describe('Habit API Validation', () => {
 				color: '#FF5733',
 				frequency: 'weekly' as const,
 				measurement: 'numeric' as const,
-				period: '[1,3,5]',
+				period: [1, 3, 5],
 				targetAmount: 5,
 				unit: 'km',
 				categoryId: '123e4567-e89b-12d3-a456-426614174000',
@@ -69,7 +37,10 @@ describe('Habit API Validation', () => {
 			expect(result.success).toBe(true);
 
 			if (result.success) {
-				expect(result.data).toMatchObject(input);
+				expect(result.data).toMatchObject({
+					...input,
+					unit: 'km'
+				});
 			}
 		});
 
@@ -133,6 +104,18 @@ describe('Habit API Validation', () => {
 			}
 		});
 
+		it('rejects numeric habit with empty unit', () => {
+			const input = {
+				title: 'Run',
+				measurement: 'numeric' as const,
+				targetAmount: 5,
+				unit: '   '
+			};
+
+			const result = createHabitSchema.safeParse(input);
+			expect(result.success).toBe(false);
+		});
+
 		it('rejects invalid frequency', () => {
 			const input = {
 				title: 'Test',
@@ -151,6 +134,32 @@ describe('Habit API Validation', () => {
 
 			const result = createHabitSchema.safeParse(input);
 			expect(result.success).toBe(false);
+		});
+
+		it('rejects invalid period type', () => {
+			const input = {
+				title: 'Test',
+				period: 'not-an-array'
+			};
+
+			const result = createHabitSchema.safeParse(input);
+			expect(result.success).toBe(false);
+		});
+
+		it('normalizes unit casing and whitespace', () => {
+			const input = {
+				title: 'Run',
+				measurement: 'numeric' as const,
+				targetAmount: 5,
+				unit: '  KM  '
+			};
+
+			const result = createHabitSchema.safeParse(input);
+			expect(result.success).toBe(true);
+
+			if (result.success) {
+				expect(result.data.unit).toBe('km');
+			}
 		});
 
 		it('rejects invalid UUID for categoryId', () => {
@@ -180,7 +189,7 @@ describe('Habit API Validation', () => {
 			if (result.success) {
 				expect(result.data.measurement).toBe('boolean');
 				expect(result.data.targetAmount).toBeUndefined();
-				expect(result.data.unit).toBeUndefined();
+				expect(result.data.unit).toBeNull();
 			}
 		});
 	});

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { isToday, startOfDay, endOfDay, formatDate, getDaysBetween } from '$lib/utils/date';
+import {
+	isToday,
+	startOfDay,
+	endOfDay,
+	formatDate,
+	getDaysBetween,
+	getMonthName
+} from '$lib/utils/date';
 
 describe('Date Utilities', () => {
 	describe('isToday', () => {
@@ -88,6 +95,31 @@ describe('Date Utilities', () => {
 			const start = new Date('2025-11-20T23:59:00');
 			const end = new Date('2025-11-21T00:01:00');
 			expect(getDaysBetween(start, end)).toBe(1);
+		});
+	});
+
+	describe('getMonthName', () => {
+		it('returns the correct month name for a given date', () => {
+			const date = new Date('2025-03-15');
+			expect(getMonthName(date)).toBe('March');
+		});
+
+		it('defaults to a valid month name', () => {
+			const result = getMonthName();
+			expect([
+				'January',
+				'February',
+				'March',
+				'April',
+				'May',
+				'June',
+				'July',
+				'August',
+				'September',
+				'October',
+				'November',
+				'December'
+			]).toContain(result);
 		});
 	});
 });

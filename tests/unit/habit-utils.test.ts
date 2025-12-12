@@ -149,6 +149,18 @@ describe('Habit Utilities', () => {
 
 			expect(isCompletionOnDate(completion, new Date('2025-01-16'))).toBe(false);
 		});
+
+		it('includes completions exactly at start of day', () => {
+			const completion = createCompletion({ completedAt: new Date('2025-01-15T00:00:00.000Z') });
+
+			expect(isCompletionOnDate(completion, new Date('2025-01-15'))).toBe(true);
+		});
+
+		it('includes completions exactly at end of day', () => {
+			const completion = createCompletion({ completedAt: new Date('2025-01-15T23:59:59.999Z') });
+
+			expect(isCompletionOnDate(completion, new Date('2025-01-15'))).toBe(true);
+		});
 	});
 
 	describe('getCompletionsForHabitOnDate', () => {
@@ -227,6 +239,23 @@ describe('Habit Utilities', () => {
 			const result = getHabitsForDate(habits, completions, new Date('2025-01-15'));
 
 			expect(result[0].isCompleted).toBe(true);
+		});
+
+		it('does not mark numeric habit as completed when target is zero or missing', () => {
+			const habits = [createHabit({ id: 'h1', measurement: 'numeric', targetAmount: 0 })];
+			const completions = [
+				createCompletion({
+					habitId: 'h1',
+					completedAt: new Date('2025-01-15T12:00:00'),
+					measurement: 5
+				})
+			];
+
+			const result = getHabitsForDate(habits, completions, new Date('2025-01-15'));
+
+			expect(result[0].isCompleted).toBe(false);
+			expect(result[0].progress).toBe(5);
+			expect(result[0].target).toBe(0);
 		});
 
 		it('filters out habits not scheduled for the date', () => {

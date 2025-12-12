@@ -9,6 +9,7 @@
 		GoalWithProgress
 	} from '$lib/types/goal';
 	import type { Habit, HabitWithStatus } from '$lib/types/habit';
+	import { z } from 'zod';
 
 	let {
 		open = false,
@@ -27,6 +28,22 @@
 		oncreatehabit?: (habit: Partial<Habit>) => Promise<Habit>;
 		ondelete?: (goalId: string) => void;
 	} = $props();
+
+	// Validation schema matching server-side validation
+	const goalSchema = z
+		.object({
+			title: z
+				.string()
+				.min(1, 'Title is required')
+				.max(255, 'Title must be 255 characters or less'),
+			description: z.string().max(1000, 'Description must be 1000 characters or less').optional(),
+			startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date is required'),
+			endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date is required')
+		})
+		.refine((data) => new Date(data.endDate) > new Date(data.startDate), {
+			message: 'End date must be after start date',
+			path: ['endDate']
+		});
 
 	const isEditMode = $derived(!!goal);
 	const modalTitle = $derived(isEditMode ? 'Edit Goal' : 'New Goal');
@@ -51,6 +68,35 @@
 
 	let isSubmitting = $state(false);
 	let error = $state<string | null>(null);
+
+	// Field-level errors for accessibility
+	let fieldErrors = $state<Record<string, string | null>>({
+		title: null,
+		description: null,
+		startDate: null,
+		endDate: null
+	});
+
+	function validateField(field: 'title' | 'description' | 'startDate' | 'endDate') {
+		const data = {
+			title: title.trim(),
+			description: description.trim() || undefined,
+			startDate,
+			endDate
+		};
+
+		const result = goalSchema.safeParse(data);
+		if (!result.success) {
+			const fieldError = result.error.issues.find((issue) => issue.path[0] === field);
+			fieldErrors[field] = fieldError?.message ?? null;
+		} else {
+			fieldErrors[field] = null;
+		}
+	}
+
+	function clearFieldError(field: string) {
+		fieldErrors[field] = null;
+	}
 
 	// Nested habit modal state
 	let showHabitModal = $state(false);
@@ -96,6 +142,7 @@
 				selectedHabitIds = new Set();
 			}
 			error = null;
+			fieldErrors = { title: null, description: null, startDate: null, endDate: null };
 		}
 	});
 
@@ -111,18 +158,31 @@
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 
-		if (!title.trim()) {
-			error = 'Title is required';
-			return;
-		}
+		// Validate all fields with Zod
+		const formData = {
+			title: title.trim(),
+			description: description.trim() || undefined,
+			startDate,
+			endDate
+		};
 
-		if (!startDate || !endDate) {
-			error = 'Start and end dates are required';
-			return;
-		}
-
-		if (new Date(endDate) <= new Date(startDate)) {
-			error = 'End date must be after start date';
+		const result = goalSchema.safeParse(formData);
+		if (!result.success) {
+			// Map errors to field-level errors
+			const newFieldErrors: Record<string, string | null> = {
+				title: null,
+				description: null,
+				startDate: null,
+				endDate: null
+			};
+			result.error.issues.forEach((issue) => {
+				const field = issue.path[0] as string;
+				if (field in newFieldErrors) {
+					newFieldErrors[field] = issue.message;
+				}
+			});
+			fieldErrors = newFieldErrors;
+			error = result.error.issues[0]?.message ?? 'Please fix the errors above';
 			return;
 		}
 
@@ -176,7 +236,7 @@
 <Modal {open} title={modalTitle} {onclose}>
 	<form onsubmit={handleSubmit} class="flex flex-col gap-6">
 		{#if error}
-			<p class="text-error-600 text-sm text-center">{error}</p>
+			<p class="text-error-600 text-sm text-center" role="alert">{error}</p>
 		{/if}
 
 		<!-- Goal Details -->
@@ -188,22 +248,44 @@
 				<input
 					id="goal-title"
 					type="text"
-					class="border border-surface-400-600 rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+					class="border rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+					class:border-surface-400-600={!fieldErrors.title}
+					class:border-error-500={fieldErrors.title}
 					placeholder="e.g. Get healthier this month"
 					bind:value={title}
-					required
+					onblur={() => validateField('title')}
+					onfocus={() => clearFieldError('title')}
+					aria-required="true"
+					aria-invalid={!!fieldErrors.title}
+					aria-describedby={fieldErrors.title ? 'goal-title-error' : undefined}
 				/>
+				{#if fieldErrors.title}
+					<p id="goal-title-error" class="text-error-500 text-xs mt-1" role="alert">
+						{fieldErrors.title}
+					</p>
+				{/if}
 			</div>
 
 			<div class="flex flex-col gap-1">
 				<label for="goal-description" class="text-sm font-medium">Description</label>
 				<textarea
 					id="goal-description"
-					class="w-full rounded-md border border-surface-400-600 px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+					class="w-full rounded-md border px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+					class:border-surface-400-600={!fieldErrors.description}
+					class:border-error-500={fieldErrors.description}
 					rows="2"
 					placeholder="Describe your goal..."
 					bind:value={description}
+					onblur={() => validateField('description')}
+					onfocus={() => clearFieldError('description')}
+					aria-invalid={!!fieldErrors.description}
+					aria-describedby={fieldErrors.description ? 'goal-description-error' : undefined}
 				></textarea>
+				{#if fieldErrors.description}
+					<p id="goal-description-error" class="text-error-500 text-xs mt-1" role="alert">
+						{fieldErrors.description}
+					</p>
+				{/if}
 			</div>
 
 			<div class="flex flex-col gap-1">
@@ -240,10 +322,21 @@
 					<input
 						id="goal-start"
 						type="date"
-						class="border border-surface-400-600 rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class="border rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class:border-surface-400-600={!fieldErrors.startDate}
+						class:border-error-500={fieldErrors.startDate}
 						bind:value={startDate}
-						required
+						onblur={() => validateField('startDate')}
+						onfocus={() => clearFieldError('startDate')}
+						aria-required="true"
+						aria-invalid={!!fieldErrors.startDate}
+						aria-describedby={fieldErrors.startDate ? 'goal-start-error' : undefined}
 					/>
+					{#if fieldErrors.startDate}
+						<p id="goal-start-error" class="text-error-500 text-xs mt-1" role="alert">
+							{fieldErrors.startDate}
+						</p>
+					{/if}
 				</div>
 				<div class="flex flex-col gap-1">
 					<label for="goal-end" class="text-sm font-medium"
@@ -252,11 +345,22 @@
 					<input
 						id="goal-end"
 						type="date"
-						class="border border-surface-400-600 rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class="border rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class:border-surface-400-600={!fieldErrors.endDate}
+						class:border-error-500={fieldErrors.endDate}
 						bind:value={endDate}
 						min={startDate}
-						required
+						onblur={() => validateField('endDate')}
+						onfocus={() => clearFieldError('endDate')}
+						aria-required="true"
+						aria-invalid={!!fieldErrors.endDate}
+						aria-describedby={fieldErrors.endDate ? 'goal-end-error' : undefined}
 					/>
+					{#if fieldErrors.endDate}
+						<p id="goal-end-error" class="text-error-500 text-xs mt-1" role="alert">
+							{fieldErrors.endDate}
+						</p>
+					{/if}
 				</div>
 			</div>
 		</div>

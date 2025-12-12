@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createHabitSchema } from '../../src/routes/api/habits/+server';
+import { _createHabitSchema as createHabitSchema } from '../../src/routes/api/habits/+server';
 
 describe('Habit API Validation', () => {
 	describe('createHabitSchema', () => {

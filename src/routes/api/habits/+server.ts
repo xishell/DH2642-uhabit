@@ -13,7 +13,7 @@ import {
 } from '$lib/server/api-helpers';
 
 // Validation schema for habit creation
-export const createHabitSchema = z
+const createHabitSchema = z
 	.object({
 		title: z.string().min(1).max(255),
 		notes: z.string().nullish(),
@@ -42,6 +42,9 @@ export const createHabitSchema = z
 			path: ['targetAmount']
 		}
 	);
+
+// Exported for tests with an underscore so SvelteKit ignores it
+export const _createHabitSchema = createHabitSchema;
 
 // GET /api/habits - List all habits for authenticated user
 // Supports optional pagination: ?page=1&limit=20

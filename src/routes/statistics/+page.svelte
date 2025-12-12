@@ -1,7 +1,17 @@
 <script lang="ts">
 	import DatePicker from './components/DatePicker.svelte';
+	import type { DateValue } from '@skeletonlabs/skeleton-svelte';
 
 	//data
+	type Habit = {
+		habitTitle: string;
+		completionRate: number;
+	};
+
+	type HabitStat = {
+		date: string;
+		data: Habit[];
+	};
 	const dailyHabitCompletionArr = [
 		{ habitTitle: 'read books', completionRate: 0.8 },
 		{ habitTitle: 'drink water', completionRate: 0.9 },
@@ -14,7 +24,11 @@
 		{ habitTitle: 'work out', completionRate: 0.14 },
 		{ habitTitle: 'work out', completionRate: 0.04 }
 	];
-	const dailyHabitStats = [
+	function getDataByDate(stats: HabitStat[], targetDate: string): Habit[] {
+		const entry = stats.find((item) => item.date === targetDate);
+		return entry ? entry.data : [];
+	}
+	const dailyHabitStats: HabitStat[] = [
 		{
 			date: '2025-11-20',
 			data: [
@@ -46,9 +60,43 @@
 			]
 		}
 	];
+
 	//for weekly and monthly stats, "date" means the last day of a week or month period
 	//so user only choose one day for each stats view
-	const weeklyHabitStats = [
+
+	const weeklyHabitStats: HabitStat[] = [
+		{
+			date: '2025-11-20',
+			data: [
+				{ habitTitle: 'read books', completionRate: 0.8 },
+				{ habitTitle: 'drink water', completionRate: 0.9 },
+				{ habitTitle: 'work out', completionRate: 0.4 },
+				{ habitTitle: 'work out', completionRate: 0.1 },
+				{ habitTitle: 'work out', completionRate: 0.4 },
+				{ habitTitle: 'work out', completionRate: 0.34 },
+				{ habitTitle: 'work out', completionRate: 0.4 },
+				{ habitTitle: 'work out', completionRate: 0.52 },
+				{ habitTitle: 'work out', completionRate: 0.14 },
+				{ habitTitle: 'work out', completionRate: 0.04 }
+			]
+		},
+		{
+			date: '2025-11-21',
+			data: [
+				{ habitTitle: 'read books', completionRate: 0.8 },
+				{ habitTitle: 'drink water', completionRate: 0.9 },
+				{ habitTitle: 'work out', completionRate: 0.4 },
+				{ habitTitle: 'work out', completionRate: 0.34 },
+				{ habitTitle: 'work out', completionRate: 0.14 },
+				{ habitTitle: 'work out', completionRate: 0.4 },
+				{ habitTitle: 'work out', completionRate: 0.4 },
+				{ habitTitle: 'work out', completionRate: 0.52 },
+				{ habitTitle: 'work out', completionRate: 0.1 },
+				{ habitTitle: 'work out', completionRate: 0.04 }
+			]
+		}
+	];
+	const monthlyHabitStats: HabitStat[] = [
 		{
 			date: '2025-11-20',
 			data: [
@@ -80,38 +128,14 @@
 			]
 		}
 	];
-	const monthlyHabitStats = [
-		{
-			date: '2025-11-20',
-			data: [
-				{ habitTitle: 'read books', completionRate: 0.8 },
-				{ habitTitle: 'drink water', completionRate: 0.9 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.1 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.34 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.52 },
-				{ habitTitle: 'work out', completionRate: 0.14 },
-				{ habitTitle: 'work out', completionRate: 0.04 }
-			]
-		},
-		{
-			date: '2025-11-21',
-			data: [
-				{ habitTitle: 'read books', completionRate: 0.8 },
-				{ habitTitle: 'drink water', completionRate: 0.9 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.1 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.34 },
-				{ habitTitle: 'work out', completionRate: 0.4 },
-				{ habitTitle: 'work out', completionRate: 0.52 },
-				{ habitTitle: 'work out', completionRate: 0.14 },
-				{ habitTitle: 'work out', completionRate: 0.04 }
-			]
-		}
-	];
+	// datePicker Values
+	//-----------?????-----------
+	//have dificulties in get props from childcomponents <DatePickers=>
+	//12.12 tried dispatch events from DatePicker, got a lot of type errors, NEED HELP >_<
+	//-----------?????-----------
+	let selectedDateForDaily: '2025-11-20';
+	let selectedDateForWeekly: '2025-11-21';
+	let selectedDateForMonthly: '2025-11-20';
 
 	//resizable view
 	const minHeight = 16;
@@ -170,12 +194,6 @@
 		window.addEventListener('touchmove', onMove as any, { passive: false });
 		window.addEventListener('touchend', stopDrag);
 	}
-
-	// datePicker Values
-	//-----------?????-----------
-	//have dificulties in get props from childcomponents <DatePickers=>
-	//-----------?????-----------
-	let selectedDates: Date[] = [];
 </script>
 
 <div class="statistic-view flex flex-col items-center p-7 max-w-[1000px] m-auto">
@@ -188,7 +206,14 @@
 			<div class="view-tab flex justify-between items-center">
 				<span class="text-xl">Daily</span>
 				<!-- <div class="w-16 h-5 rounded-full bg-gray-200"></div> -->
-				<DatePicker />
+				<DatePicker
+					on:change={(e) => {
+						selectedDateForDaily =
+							e.detail[0].year.toString() + e.detail[0].month + e.detail[0].day;
+						console.log(selectedDateForDaily);
+					}}
+				/>
+				<!-- don't know how to get the value here, HELPPPPPP-->
 			</div>
 			<div class="relative">
 				<div
@@ -199,7 +224,7 @@
 					<div class=" absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
 
 					<!-- habit completion bar list -->
-					{#each dailyHabitCompletionArr as habitDaily}
+					{#each getDataByDate(dailyHabitStats, selectedDateForDaily) as habitDaily}
 						<div class="w-full h-6 border border-primary-500 my-4 rounded-r-[10px]">
 							<div
 								class="h-full bg-primary-500 rounded-r-[10px] pl-2 text-primary-50 text-sm flex items-center whitespace-nowrap"
@@ -220,7 +245,6 @@
 					></div>
 				</div>
 			</div>
-			<p>{selectedDates}</p>
 		</div>
 		<!-- weekly -->
 		<div class="daily-view flex flex-col gap-2 relative">
@@ -259,7 +283,6 @@
 					></div>
 				</div>
 			</div>
-			<p>{selectedDates}</p>
 		</div>
 		<!-- monthly -->
 		<div class="daily-view flex flex-col gap-2 relative">
@@ -298,7 +321,6 @@
 					></div>
 				</div>
 			</div>
-			<p>{selectedDates}</p>
 		</div>
 	</div>
 </div>

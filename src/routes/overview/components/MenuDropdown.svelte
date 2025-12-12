@@ -20,7 +20,7 @@
 			</li>
 			<li>
 				<a
-					href="/habits/new"
+					href="/habits?openHabitModal=1"
 					data-sveltekit-preload-data="hover"
 					class="block px-4 py-2 hover:bg-surface-50">Create</a
 				>

@@ -43,6 +43,9 @@ const createHabitSchema = z
 		}
 	);
 
+// Exported for tests with an underscore so SvelteKit ignores it
+export const _createHabitSchema = createHabitSchema;
+
 // GET /api/habits - List all habits for authenticated user
 // Supports optional pagination: ?page=1&limit=20
 // Without pagination params, returns all habits (backward compatible)

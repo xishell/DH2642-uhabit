@@ -8,9 +8,7 @@ export const routes = {
 	register: '/register',
 	overview: '/overview',
 	habits: {
-		list: '/habits',
-		new: '/habits/new',
-		edit: (id: string) => `/habits/${id}`
+		list: '/habits'
 	},
 	goals: {
 		list: '/goals'

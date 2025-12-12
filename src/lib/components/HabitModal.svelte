@@ -4,6 +4,7 @@
 	import SelectMonthDay from './SelectMonthDay.svelte';
 	import SelectOrEdit from './SelectOrEdit.svelte';
 	import type { Habit } from '$lib/types/habit';
+	import { z } from 'zod';
 
 	let {
 		open = false,
@@ -18,6 +19,28 @@
 		onsave: (habit: Partial<Habit>) => void;
 		ondelete?: (habitId: string) => void;
 	} = $props();
+
+	// Validation schema matching server-side validation
+	const habitSchema = z
+		.object({
+			title: z
+				.string()
+				.min(1, 'Title is required')
+				.max(255, 'Title must be 255 characters or less'),
+			notes: z.string().max(1000, 'Notes must be 1000 characters or less').optional(),
+			targetAmount: z.number().int().positive('Target must be a positive number').nullable(),
+			unit: z.string().max(50, 'Unit must be 50 characters or less').nullable()
+		})
+		.refine(
+			(data) => {
+				// If targetAmount is set, unit must also be set
+				if (data.targetAmount !== null && data.targetAmount > 0) {
+					return data.unit !== null && data.unit.trim() !== '';
+				}
+				return true;
+			},
+			{ message: 'Unit is required when target amount is set', path: ['unit'] }
+		);
 
 	const isEditMode = $derived(!!habit);
 	const modalTitle = $derived(isEditMode ? 'Edit Habit' : 'New Habit');
@@ -50,6 +73,35 @@
 	let isSubmitting = $state(false);
 	let error = $state<string | null>(null);
 
+	// Field-level errors for accessibility
+	let fieldErrors = $state<Record<string, string | null>>({
+		title: null,
+		notes: null,
+		targetAmount: null,
+		unit: null
+	});
+
+	function validateField(field: 'title' | 'notes' | 'targetAmount' | 'unit') {
+		const data = {
+			title: title.trim(),
+			notes: notes.trim() || undefined,
+			targetAmount: targetAmount,
+			unit: unit.trim() || null
+		};
+
+		const result = habitSchema.safeParse(data);
+		if (!result.success) {
+			const fieldError = result.error.issues.find((issue) => issue.path[0] === field);
+			fieldErrors[field] = fieldError?.message ?? null;
+		} else {
+			fieldErrors[field] = null;
+		}
+	}
+
+	function clearFieldError(field: string) {
+		fieldErrors[field] = null;
+	}
+
 	// Reset form when modal opens or habit changes
 	$effect(() => {
 		if (open) {
@@ -71,6 +123,7 @@
 				period = [];
 			}
 			error = null;
+			fieldErrors = { title: null, notes: null, targetAmount: null, unit: null };
 		}
 	});
 
@@ -86,9 +139,31 @@
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 
-		const validationError = validateForm();
-		if (validationError) {
-			error = validationError;
+		// Validate all fields with Zod
+		const formData = {
+			title: title.trim(),
+			notes: notes.trim() || undefined,
+			targetAmount: targetAmount,
+			unit: unit.trim() || null
+		};
+
+		const result = habitSchema.safeParse(formData);
+		if (!result.success) {
+			// Map errors to field-level errors
+			const newFieldErrors: Record<string, string | null> = {
+				title: null,
+				notes: null,
+				targetAmount: null,
+				unit: null
+			};
+			result.error.issues.forEach((issue) => {
+				const field = issue.path[0] as string;
+				if (field in newFieldErrors) {
+					newFieldErrors[field] = issue.message;
+				}
+			});
+			fieldErrors = newFieldErrors;
+			error = result.error.issues[0]?.message ?? 'Please fix the errors above';
 			return;
 		}
 
@@ -127,7 +202,7 @@
 <Modal {open} title={modalTitle} {onclose}>
 	<form onsubmit={handleSubmit} class="flex flex-col gap-6">
 		{#if error}
-			<p class="text-error-600 text-sm text-center">{error}</p>
+			<p class="text-error-600 text-sm text-center" role="alert">{error}</p>
 		{/if}
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -140,22 +215,44 @@
 					<input
 						id="habit-title"
 						type="text"
-						class="border border-surface-400-600 rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class="border rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class:border-surface-400-600={!fieldErrors.title}
+						class:border-error-500={fieldErrors.title}
 						placeholder="e.g. drink water"
 						bind:value={title}
-						required
+						onblur={() => validateField('title')}
+						onfocus={() => clearFieldError('title')}
+						aria-required="true"
+						aria-invalid={!!fieldErrors.title}
+						aria-describedby={fieldErrors.title ? 'habit-title-error' : undefined}
 					/>
+					{#if fieldErrors.title}
+						<p id="habit-title-error" class="text-error-500 text-xs mt-1" role="alert">
+							{fieldErrors.title}
+						</p>
+					{/if}
 				</div>
 
 				<div class="flex flex-col gap-1">
 					<label for="habit-notes" class="text-sm font-medium">Notes</label>
 					<textarea
 						id="habit-notes"
-						class="w-full rounded-md border border-surface-400-600 px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class="w-full rounded-md border px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class:border-surface-400-600={!fieldErrors.notes}
+						class:border-error-500={fieldErrors.notes}
 						rows="3"
 						placeholder="Write down your notes for this habit..."
 						bind:value={notes}
+						onblur={() => validateField('notes')}
+						onfocus={() => clearFieldError('notes')}
+						aria-invalid={!!fieldErrors.notes}
+						aria-describedby={fieldErrors.notes ? 'habit-notes-error' : undefined}
 					></textarea>
+					{#if fieldErrors.notes}
+						<p id="habit-notes-error" class="text-error-500 text-xs mt-1" role="alert">
+							{fieldErrors.notes}
+						</p>
+					{/if}
 				</div>
 
 				<div class="flex flex-col gap-1">
@@ -220,17 +317,41 @@
 					<span class="text-sm font-medium"
 						>Target <span class="text-surface-400">(optional)</span></span
 					>
-					<p class="text-xs text-surface-500">Set a target amount to track progress</p>
+					<p id="target-hint" class="text-xs text-surface-500">
+						Set a target amount to track progress
+					</p>
 					<div class="flex gap-3 mt-1">
 						<input
+							id="habit-target"
 							type="number"
-							class="border border-surface-400-600 w-24 h-10 rounded-md text-sm px-3 bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
+							class="border w-24 h-10 rounded-md text-sm px-3 bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
+							class:border-surface-400-600={!fieldErrors.targetAmount}
+							class:border-error-500={fieldErrors.targetAmount}
 							placeholder="100"
 							bind:value={targetAmount}
 							min="1"
+							onblur={() => validateField('targetAmount')}
+							onfocus={() => clearFieldError('targetAmount')}
+							aria-invalid={!!fieldErrors.targetAmount}
+							aria-describedby="target-hint{fieldErrors.targetAmount ? ' habit-target-error' : ''}"
 						/>
-						<SelectOrEdit bind:unit />
+						<SelectOrEdit
+							bind:unit
+							hasError={!!fieldErrors.unit}
+							onblur={() => validateField('unit')}
+							onfocus={() => clearFieldError('unit')}
+						/>
 					</div>
+					{#if fieldErrors.targetAmount}
+						<p id="habit-target-error" class="text-error-500 text-xs mt-1" role="alert">
+							{fieldErrors.targetAmount}
+						</p>
+					{/if}
+					{#if fieldErrors.unit}
+						<p id="habit-unit-error" class="text-error-500 text-xs mt-1" role="alert">
+							{fieldErrors.unit}
+						</p>
+					{/if}
 				</div>
 			</div>
 		</div>

@@ -1,10 +1,16 @@
 <script lang="ts">
 	let {
 		unit = $bindable(''),
-		required = false
+		required = false,
+		hasError = false,
+		onblur: externalBlur,
+		onfocus: externalFocus
 	}: {
 		unit?: string | null;
 		required?: boolean;
+		hasError?: boolean;
+		onblur?: () => void;
+		onfocus?: () => void;
 	} = $props();
 
 	const suggestions = ['times', 'min', 'ml', 'hours', 'km', 'steps', 'pages', 'glasses'];
@@ -14,12 +20,14 @@
 
 	function handleFocus() {
 		showOptions = true;
+		externalFocus?.();
 	}
 
 	function handleBlur() {
 		// Delay to allow click on option
 		setTimeout(() => {
 			showOptions = false;
+			externalBlur?.();
 		}, 150);
 	}
 
@@ -32,13 +40,17 @@
 
 <div class="relative">
 	<input
-		class="border border-surface-400-600 w-28 h-11 rounded-md text-base px-3 pr-8 bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+		id="habit-unit"
+		class="border w-28 h-11 rounded-md text-base px-3 pr-8 bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+		class:border-surface-400-600={!hasError}
+		class:border-red-500={hasError}
 		name="unit"
 		bind:value={unit}
 		bind:this={inputEl}
 		placeholder="Unit"
 		autocomplete="off"
 		{required}
+		aria-invalid={hasError}
 		onfocus={handleFocus}
 		onblur={handleBlur}
 	/>

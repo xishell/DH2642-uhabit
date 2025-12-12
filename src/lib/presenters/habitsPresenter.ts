@@ -38,6 +38,8 @@ const QUOTE_CACHE_KEY = 'uhabit-quote';
 const MODAL_COOKIE_KEY = 'habits-modal';
 const HABIT_MODAL_COOKIE = 'habits-modal-habit';
 const GOAL_MODAL_COOKIE = 'habits-modal-goal';
+const HABITS_ETAG_KEY = 'uhabit-habits-etag';
+const GOALS_ETAG_KEY = 'uhabit-goals-etag';
 
 export function createHabitsPresenter({ initial, fetcher, browser, storage }: HabitsPresenterDeps) {
 	const readCachedQuote = (): QuoteData | null => {
@@ -175,20 +177,51 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		}));
 	};
 
+	const getStoredETag = (key: string): string | null => {
+		if (!browser || !storage) return null;
+		return storage.getItem(key);
+	};
+
+	const storeETag = (key: string, etag: string | null) => {
+		if (!browser || !storage || !etag) return;
+		storage.setItem(key, etag);
+	};
+
 	const refreshData = async () => {
 		update((state) => ({ ...state, habitsLoading: true, habitsError: null }));
 		try {
+			const habitsETag = getStoredETag(HABITS_ETAG_KEY);
+			const goalsETag = getStoredETag(GOALS_ETAG_KEY);
+
+			const habitsHeaders: HeadersInit = {};
+			const goalsHeaders: HeadersInit = {};
+			if (habitsETag) habitsHeaders['If-None-Match'] = habitsETag;
+			if (goalsETag) goalsHeaders['If-None-Match'] = goalsETag;
+
 			const [habitsRes, goalsRes] = await Promise.all([
-				fetcher('/api/habits', { cache: 'no-store' }),
-				fetcher('/api/goals', { cache: 'no-store' })
+				fetcher('/api/habits', { headers: habitsHeaders }),
+				fetcher('/api/goals', { headers: goalsHeaders })
 			]);
 
-			if (!habitsRes.ok || !goalsRes.ok) {
-				throw new Error('Failed to load data');
+			let habits: Habit[];
+			if (habitsRes.status === 304) {
+				habits = getState().habits;
+			} else if (habitsRes.ok) {
+				habits = (await habitsRes.json()) as Habit[];
+				storeETag(HABITS_ETAG_KEY, habitsRes.headers.get('ETag'));
+			} else {
+				throw new Error('Failed to load habits');
 			}
 
-			const habits = (await habitsRes.json()) as Habit[];
-			const goals = (await goalsRes.json()) as GoalWithProgress[];
+			let goals: GoalWithProgress[];
+			if (goalsRes.status === 304) {
+				goals = getState().goals;
+			} else if (goalsRes.ok) {
+				goals = (await goalsRes.json()) as GoalWithProgress[];
+				storeETag(GOALS_ETAG_KEY, goalsRes.headers.get('ETag'));
+			} else {
+				throw new Error('Failed to load goals');
+			}
 
 			syncFromServer(habits, goals);
 			const habitModalState = habitModal.sync(habits);

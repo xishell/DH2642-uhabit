@@ -34,18 +34,25 @@ const createGoalSchema = z
 		path: ['endDate']
 	});
 
+function generateGoalsETag(goals: (typeof goal.$inferSelect)[], userId: string): string {
+	if (goals.length === 0) return '"empty"';
+	const maxUpdated = goals.reduce(
+		(max, g) => (g.updatedAt > max ? g.updatedAt : max),
+		goals[0].updatedAt
+	);
+	const timestamp = maxUpdated instanceof Date ? maxUpdated.getTime() : maxUpdated;
+	return `"${userId.slice(0, 8)}-${goals.length}-${timestamp}"`;
+}
+
 // GET /api/goals - List all goals for authenticated user with habits
-export const GET: RequestHandler = async ({ locals, platform, setHeaders, url }) => {
+export const GET: RequestHandler = async ({ locals, platform, setHeaders, url, request }) => {
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
-	// Check if pagination is requested
 	const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
-
-	// Check if we should only return active goals
 	const activeOnly = url.searchParams.get('active') === 'true';
+	const ifNoneMatch = request.headers.get('If-None-Match');
 
-	// Build base query conditions
 	const conditions = [eq(goal.userId, userId)];
 
 	if (activeOnly) {
@@ -113,8 +120,14 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders, url })
 
 		const goalsWithProgress = goals.map((g) => calculateGoalProgress(g, parsedHabits, completions));
 
+		const etag = generateGoalsETag(goals, userId);
+		if (ifNoneMatch === etag) {
+			return new Response(null, { status: 304 });
+		}
+
 		setHeaders({
-			'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
+			'Cache-Control': 'private, max-age=60, stale-while-revalidate=30',
+			ETag: etag
 		});
 
 		return json(paginatedResponse(goalsWithProgress, total, pagination));
@@ -127,8 +140,13 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders, url })
 		.where(and(...conditions));
 
 	if (goals.length === 0) {
+		const etag = '"empty"';
+		if (ifNoneMatch === etag) {
+			return new Response(null, { status: 304 });
+		}
 		setHeaders({
-			'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
+			'Cache-Control': 'private, max-age=60, stale-while-revalidate=30',
+			ETag: etag
 		});
 		return json([]);
 	}
@@ -159,8 +177,14 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders, url })
 
 	const goalsWithProgress = goals.map((g) => calculateGoalProgress(g, parsedHabits, completions));
 
+	const etag = generateGoalsETag(goals, userId);
+	if (ifNoneMatch === etag) {
+		return new Response(null, { status: 304 });
+	}
+
 	setHeaders({
-		'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
+		'Cache-Control': 'private, max-age=60, stale-while-revalidate=30',
+		ETag: etag
 	});
 
 	return json(goalsWithProgress);

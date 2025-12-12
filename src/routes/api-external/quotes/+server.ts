@@ -7,7 +7,16 @@ type QuoteData = {
 };
 
 const CACHE_KEY = 'daily-quote';
-const CACHE_TTL = 300; // 5 minutes in seconds
+const CACHE_TTL = 300;
+const CDN_MAX_AGE = 300;
+const CDN_SWR = 600;
+
+const cdnCacheHeaders = {
+	'Cache-Control': `public, max-age=${CDN_MAX_AGE}, s-maxage=${CDN_MAX_AGE}, stale-while-revalidate=${CDN_SWR}`,
+	'CDN-Cache-Control': `public, max-age=${CDN_MAX_AGE}`,
+	'Cloudflare-CDN-Cache-Control': `max-age=${CDN_MAX_AGE}`,
+	Vary: 'Accept-Encoding'
+};
 
 export const GET: RequestHandler = async ({ platform, url }) => {
 	const kv = platform?.env?.QUOTES_CACHE;
@@ -18,9 +27,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		try {
 			const cached = await kv.get<QuoteData>(CACHE_KEY, 'json');
 			if (cached) {
-				return json(cached, {
-					headers: { 'Cache-Control': 'public, max-age=60' }
-				});
+				return json(cached, { headers: cdnCacheHeaders });
 			}
 
 			// If cache-only requested and nothing in KV, return early
@@ -62,9 +69,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			);
 		}
 
-		return json(result, {
-			headers: { 'Cache-Control': 'public, max-age=60' }
-		});
+		return json(result, { headers: cdnCacheHeaders });
 	} catch (err) {
 		console.error('ZenQuotes fetch failed', err);
 		return json({ quote: null, author: null }, { status: 502 });

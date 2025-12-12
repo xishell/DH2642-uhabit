@@ -126,58 +126,72 @@
 
 	// Resizable view configuration
 	const minHeight = 16;
-	let viewHeight: Record<HabitType, number> = $state({
-		daily: 180,
-		weekly: 180,
-		monthly: 180
-	});
+	const maxHeight = 520; // max-h-130 = 130 * 4 = 520px
 
-	let dragging = $state(false);
-	let isDragging: Record<HabitType, boolean> = $state({
-		daily: false,
-		weekly: false,
-		monthly: false
-	});
+	let viewHeight = $state({ daily: 180, weekly: 180, monthly: 180 });
+	let isDragging = $state({ daily: false, weekly: false, monthly: false });
 
-	function startDrag(targetView: HabitType, event: MouseEvent | TouchEvent) {
-		dragging = true;
+	function draggable(node: HTMLElement, targetView: HabitType) {
+		let active = false;
 
-		if (event instanceof TouchEvent) {
+		function onMouseDown(event: MouseEvent) {
 			event.preventDefault();
+			active = true;
+			isDragging[targetView] = true;
+			window.addEventListener('mousemove', onMouseMove);
+			window.addEventListener('mouseup', onMouseUp);
 		}
 
-		const onMove = (event: MouseEvent | TouchEvent) => {
-			if (!dragging) return;
-
-			let clientY: number = 0;
-			if (event instanceof MouseEvent) {
-				clientY = event.clientY;
-			} else if (event instanceof TouchEvent) {
-				event.preventDefault();
-				clientY = event.touches[0].clientY;
-			}
-
+		function onTouchStart(event: TouchEvent) {
+			event.preventDefault();
+			active = true;
 			isDragging[targetView] = true;
-			const divEl = document.getElementById(`resizable-${targetView}`)!;
+			window.addEventListener('touchmove', onTouchMove, { passive: false });
+			window.addEventListener('touchend', onTouchEnd);
+		}
+
+		function onMouseMove(event: MouseEvent) {
+			if (!active) return;
+			updateHeight(event.clientY, targetView);
+		}
+
+		function onTouchMove(event: TouchEvent) {
+			if (!active) return;
+			event.preventDefault();
+			updateHeight(event.touches[0].clientY, targetView);
+		}
+
+		function onMouseUp() {
+			active = false;
+			isDragging[targetView] = false;
+			window.removeEventListener('mousemove', onMouseMove);
+			window.removeEventListener('mouseup', onMouseUp);
+		}
+
+		function onTouchEnd() {
+			active = false;
+			isDragging[targetView] = false;
+			window.removeEventListener('touchmove', onTouchMove);
+			window.removeEventListener('touchend', onTouchEnd);
+		}
+
+		function updateHeight(clientY: number, view: HabitType) {
+			const divEl = document.getElementById(`resizable-${view}`);
+			if (!divEl) return;
 			const divTop = divEl.getBoundingClientRect().top;
-			viewHeight[targetView] = Math.max(clientY - divTop, minHeight);
-		};
+			const newHeight = Math.min(Math.max(clientY - divTop, minHeight), maxHeight);
+			viewHeight[view] = newHeight;
+		}
 
-		const stopDrag = () => {
-			dragging = false;
-			isDragging.daily = false;
-			isDragging.weekly = false;
-			isDragging.monthly = false;
-			window.removeEventListener('mousemove', onMove);
-			window.removeEventListener('mouseup', stopDrag);
-			window.removeEventListener('touchmove', onMove as EventListener);
-			window.removeEventListener('touchend', stopDrag);
-		};
+		node.addEventListener('mousedown', onMouseDown);
+		node.addEventListener('touchstart', onTouchStart, { passive: false });
 
-		window.addEventListener('mousemove', onMove);
-		window.addEventListener('mouseup', stopDrag);
-		window.addEventListener('touchmove', onMove as EventListener, { passive: false });
-		window.addEventListener('touchend', stopDrag);
+		return {
+			destroy() {
+				node.removeEventListener('mousedown', onMouseDown);
+				node.removeEventListener('touchstart', onTouchStart);
+			}
+		};
 	}
 </script>
 
@@ -211,16 +225,13 @@
 							</div>
 						</div>
 					{/each}
-
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<div
-						onmousedown={(e) => startDrag('daily', e)}
-						ontouchstart={(e) => startDrag('daily', e)}
-						class="absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl
-						bg-white/4 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
-						{isDragging.daily ? 'opacity-100' : 'opacity-0'} hover:opacity-100"
-					></div>
 				</div>
+				<div
+					use:draggable={'daily'}
+					class="absolute bottom-0 left-1 right-1 h-3 cursor-row-resize rounded-2xl
+					bg-white/10 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
+					{isDragging.daily ? 'opacity-100' : 'opacity-50'} hover:opacity-100"
+				></div>
 			</div>
 		</div>
 
@@ -249,16 +260,13 @@
 							</div>
 						</div>
 					{/each}
-
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<div
-						onmousedown={(e) => startDrag('weekly', e)}
-						ontouchstart={(e) => startDrag('weekly', e)}
-						class="absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl
-						bg-white/4 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
-						{isDragging.weekly ? 'opacity-100' : 'opacity-0'} hover:opacity-100"
-					></div>
 				</div>
+				<div
+					use:draggable={'weekly'}
+					class="absolute bottom-0 left-1 right-1 h-3 cursor-row-resize rounded-2xl
+					bg-white/10 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
+					{isDragging.weekly ? 'opacity-100' : 'opacity-50'} hover:opacity-100"
+				></div>
 			</div>
 		</div>
 
@@ -287,16 +295,13 @@
 							</div>
 						</div>
 					{/each}
-
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<div
-						onmousedown={(e) => startDrag('monthly', e)}
-						ontouchstart={(e) => startDrag('monthly', e)}
-						class="absolute bottom-px left-1 right-1 h-2 cursor-row-resize rounded-2xl
-						bg-white/4 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
-						{isDragging.monthly ? 'opacity-100' : 'opacity-0'} hover:opacity-100"
-					></div>
 				</div>
+				<div
+					use:draggable={'monthly'}
+					class="absolute bottom-0 left-1 right-1 h-3 cursor-row-resize rounded-2xl
+					bg-white/10 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
+					{isDragging.monthly ? 'opacity-100' : 'opacity-50'} hover:opacity-100"
+				></div>
 			</div>
 		</div>
 	</div>

@@ -4,6 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import { getDB } from './db';
 import { habit, habitCompletion } from './db/schema';
 import type { z } from 'zod';
+import { checkRateLimit, getClientIP, getRateLimits } from './ratelimit';
 
 /** Default pagination limits */
 export const PAGINATION_DEFAULTS = {
@@ -201,4 +202,44 @@ export function parseDateRangeParams(url: URL): {
 	validateDateParam(to, 'to');
 
 	return { date, from, to };
+}
+
+/**
+ * Rate limit result with headers to set on response
+ */
+export interface RateLimitResult {
+	headers: Record<string, string>;
+}
+
+/**
+ * Enforces API rate limiting. Throws 429 error if rate limit exceeded.
+ * Returns headers to include in the response for rate limit info.
+ */
+export async function enforceApiRateLimit(event: RequestEvent): Promise<RateLimitResult> {
+	const clientIP = getClientIP(event.request);
+	const url = event.url.origin;
+
+	// Detect dev/staging environments for relaxed limits
+	const isStagingOrPreview =
+		/preview-\d+\..*\.pages\.dev/.test(url) ||
+		url.includes('staging.') ||
+		url.includes('localhost') ||
+		url.includes('127.0.0.1');
+
+	const rateLimits = getRateLimits(isStagingOrPreview);
+	const kv = event.platform?.env?.RATE_LIMIT;
+
+	const result = await checkRateLimit(`api:${clientIP}`, rateLimits.API, kv);
+
+	if (!result.allowed) {
+		throw error(429, 'Too many requests. Please try again later.');
+	}
+
+	return {
+		headers: {
+			'X-RateLimit-Limit': result.limit.toString(),
+			'X-RateLimit-Remaining': result.remaining.toString(),
+			'X-RateLimit-Reset': result.resetAt.toString()
+		}
+	};
 }

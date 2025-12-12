@@ -8,13 +8,16 @@ import {
 	requireAuth,
 	parsePagination,
 	paginatedResponse,
-	parseDateRangeParams
+	parseDateRangeParams,
+	enforceApiRateLimit
 } from '$lib/server/api-helpers';
 
 // GET /api/completions: user completions with optional date filter
 // Supports pagination: ?page=1&limit=20
 // Supports ?date=YYYY-MM-DD or ?from=YYYY-MM-DD&to=YYYY-MM-DD
-export const GET: RequestHandler = async ({ url, locals, platform, setHeaders }) => {
+export const GET: RequestHandler = async (event) => {
+	const { url, locals, platform, setHeaders } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 

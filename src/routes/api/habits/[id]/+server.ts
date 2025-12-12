@@ -4,7 +4,7 @@ import { getDB } from '$lib/server/db';
 import { habit } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth, verifyHabitOwnership } from '$lib/server/api-helpers';
+import { requireAuth, verifyHabitOwnership, enforceApiRateLimit } from '$lib/server/api-helpers';
 
 // Validation schema for habit updates
 const updateHabitSchema = z.object({
@@ -24,7 +24,9 @@ const updateHabitSchema = z.object({
 });
 
 // GET /api/habits/[id] - Get single habit by ID
-export const GET: RequestHandler = async ({ params, locals, platform, setHeaders }) => {
+export const GET: RequestHandler = async (event) => {
+	const { params, locals, platform, setHeaders } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
@@ -43,7 +45,9 @@ export const GET: RequestHandler = async ({ params, locals, platform, setHeaders
 };
 
 // PATCH /api/habits/[id] - Update existing habit
-export const PATCH: RequestHandler = async ({ params, request, locals, platform }) => {
+export const PATCH: RequestHandler = async (event) => {
+	const { params, request, locals, platform } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 
 	// Parse and validate request body
@@ -111,7 +115,9 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 };
 
 // DELETE /api/habits/[id] - Delete habit
-export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
+export const DELETE: RequestHandler = async (event) => {
+	const { params, locals, platform } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 

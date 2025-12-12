@@ -4,7 +4,12 @@ import { getDB } from '$lib/server/db';
 import { goal, habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth, parsePagination, paginatedResponse } from '$lib/server/api-helpers';
+import {
+	requireAuth,
+	parsePagination,
+	paginatedResponse,
+	enforceApiRateLimit
+} from '$lib/server/api-helpers';
 import { startOfDay, endOfDay } from '$lib/utils/date';
 import { calculateGoalProgress } from '$lib/utils/goal';
 import type { Habit } from '$lib/types/habit';
@@ -45,7 +50,9 @@ function generateGoalsETag(goals: (typeof goal.$inferSelect)[], userId: string):
 }
 
 // GET /api/goals - List all goals for authenticated user with habits
-export const GET: RequestHandler = async ({ locals, platform, setHeaders, url, request }) => {
+export const GET: RequestHandler = async (event) => {
+	const { locals, platform, setHeaders, url, request } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
@@ -191,7 +198,9 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders, url, r
 };
 
 // POST /api/goals - Create new goal
-export const POST: RequestHandler = async ({ request, locals, platform }) => {
+export const POST: RequestHandler = async (event) => {
+	const { request, locals, platform } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 
 	// Parse and validate request body

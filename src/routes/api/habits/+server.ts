@@ -4,7 +4,12 @@ import { getDB } from '$lib/server/db';
 import { habit } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth, parsePagination, paginatedResponse } from '$lib/server/api-helpers';
+import {
+	requireAuth,
+	parsePagination,
+	paginatedResponse,
+	enforceApiRateLimit
+} from '$lib/server/api-helpers';
 
 // Validation schema for habit creation
 const createHabitSchema = z
@@ -40,7 +45,9 @@ const createHabitSchema = z
 // GET /api/habits - List all habits for authenticated user
 // Supports optional pagination: ?page=1&limit=20
 // Without pagination params, returns all habits (backward compatible)
-export const GET: RequestHandler = async ({ locals, platform, setHeaders, url, request }) => {
+export const GET: RequestHandler = async (event) => {
+	const { locals, platform, setHeaders, url, request } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
@@ -108,7 +115,9 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders, url, r
 };
 
 // POST /api/habits - Create new habit
-export const POST: RequestHandler = async ({ request, locals, platform }) => {
+export const POST: RequestHandler = async (event) => {
+	const { request, locals, platform } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 
 	// Parse and validate request body

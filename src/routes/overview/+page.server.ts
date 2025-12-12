@@ -1,4 +1,5 @@
 import type { PageServerLoad, Actions } from './$types';
+import { fail } from '@sveltejs/kit';
 import { getDB } from '$lib/server/db';
 import { habit, habitCompletion, goal } from '$lib/server/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
@@ -7,8 +8,6 @@ import type { GoalWithHabitStatus } from '$lib/types/goal';
 import { getHabitsForDate } from '$lib/utils/habit';
 import { startOfDay, endOfDay } from '$lib/utils/date';
 import { isGoalActive } from '$lib/utils/goal';
-
-const IS_DEV = import.meta.env.MODE === 'development';
 
 export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 	// Read UI state from cookies
@@ -30,10 +29,11 @@ export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 		}
 	}
 
-	// Mock user for development
-	const user = locals.user ?? (IS_DEV ? { id: 'dev-user-123', name: 'Dev User' } : null);
+	if (!locals.user) {
+		return { habits: [], goals: [], initialTab, initialModal, totalHabits: 0 };
+	}
 
-	if (!user) return { habits: [], goals: [], initialTab, initialModal };
+	const user = locals.user;
 
 	const db = getDB(platform!.env.DB);
 
@@ -130,8 +130,10 @@ export const load: PageServerLoad = async ({ locals, platform, cookies }) => {
 
 export const actions: Actions = {
 	toggleSingle: async ({ request, platform, locals }) => {
-		const user = locals.user ?? (IS_DEV ? { id: 'dev-user-123' } : null);
-		if (!user) return { success: false };
+		if (!locals.user) {
+			return fail(401, { success: false, message: 'Unauthorized' });
+		}
+		const user = locals.user;
 
 		const db = getDB(platform!.env.DB);
 		const form = await request.formData();
@@ -167,19 +169,28 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	updateProgressiveTarget: async ({ request, platform }) => {
+	updateProgressiveTarget: async ({ request, platform, locals }) => {
+		if (!locals.user) {
+			return fail(401, { success: false, message: 'Unauthorized' });
+		}
 		const form = await request.formData();
 		const id = form.get('id') as string;
 		const targetAmount = Number(form.get('targetAmount'));
 		const db = getDB(platform!.env.DB);
 
-		await db.update(habit).set({ targetAmount }).where(eq(habit.id, id));
+		// Only update habits belonging to the user
+		await db
+			.update(habit)
+			.set({ targetAmount })
+			.where(and(eq(habit.id, id), eq(habit.userId, locals.user.id)));
 		return { success: true };
 	},
 
 	updateProgressValue: async ({ request, platform, locals }) => {
-		const user = locals.user ?? (IS_DEV ? { id: 'dev-user-123' } : null);
-		if (!user) return { success: false };
+		if (!locals.user) {
+			return fail(401, { success: false, message: 'Unauthorized' });
+		}
+		const user = locals.user;
 
 		const db = getDB(platform!.env.DB);
 		const form = await request.formData();

@@ -13,7 +13,7 @@ import {
 } from '$lib/server/api-helpers';
 
 // Validation schema for habit creation
-const createHabitSchema = z
+export const createHabitSchema = z
 	.object({
 		title: z.string().min(1).max(255),
 		notes: z.string().nullish(),

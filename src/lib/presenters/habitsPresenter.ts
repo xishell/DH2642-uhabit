@@ -65,7 +65,10 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 	const initialQuoteLoading = !(initial.quote || cachedQuote?.quote);
 
 	const habitModal = createModalManager<Habit>({ browser, cookieKey: COOKIES.HABIT_MODAL });
-	const goalModal = createModalManager<GoalWithProgress>({ browser, cookieKey: COOKIES.GOAL_MODAL });
+	const goalModal = createModalManager<GoalWithProgress>({
+		browser,
+		cookieKey: COOKIES.GOAL_MODAL
+	});
 	const restoredHabitModal = habitModal.restore(initial.habits);
 	const restoredGoalModal = goalModal.restore(initial.goals);
 

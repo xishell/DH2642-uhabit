@@ -49,17 +49,17 @@
 
 		<!-- Modal content -->
 		<div
-			class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-surface-50-900 rounded-xl shadow-xl"
+			class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-surface-100-900 text-surface-900-100 rounded-xl shadow-xl"
 			transition:fly={{ y: 20, duration: 200 }}
 		>
 			<!-- Header -->
 			<div
-				class="sticky top-0 flex items-center justify-between p-4 border-b border-surface-200-700 bg-surface-50-900 rounded-t-xl"
+				class="sticky top-0 flex items-center justify-between p-4 border-b border-surface-300-700 bg-surface-100-900 rounded-t-xl"
 			>
 				<h2 id="modal-title" class="text-lg font-semibold">{title}</h2>
 				<button
 					type="button"
-					class="p-1 rounded-full hover:bg-surface-200-700 transition-colors"
+					class="p-1 rounded-full hover:bg-surface-200-800 transition-colors"
 					onclick={onclose}
 					aria-label="Close modal"
 				>

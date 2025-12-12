@@ -126,7 +126,7 @@
 					<input
 						id="habit-title"
 						type="text"
-						class="border border-surface-300-600 rounded-md px-3 py-2 text-sm bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class="border border-surface-400-600 rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
 						placeholder="e.g. drink water"
 						bind:value={title}
 						required
@@ -137,7 +137,7 @@
 					<label for="habit-notes" class="text-sm font-medium">Notes</label>
 					<textarea
 						id="habit-notes"
-						class="w-full rounded-md border border-surface-300-600 px-3 py-2 text-sm bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class="w-full rounded-md border border-surface-400-600 px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
 						rows="3"
 						placeholder="Write down your notes for this habit..."
 						bind:value={notes}
@@ -179,11 +179,11 @@
 						{#each frequencyArr as freq}
 							<button
 								type="button"
-								class="btn capitalize text-sm px-3 py-1.5 rounded-md border transition-colors duration-200"
+								class="btn capitalize text-sm px-3 py-1.5 rounded-md border transition-colors duration-200 bg-surface-200-800"
 								class:bg-primary-500={selectedFrequency === freq.value}
 								class:text-white={selectedFrequency === freq.value}
 								class:border-primary-500={selectedFrequency === freq.value}
-								class:border-surface-300-600={selectedFrequency !== freq.value}
+								class:border-surface-400-600={selectedFrequency !== freq.value}
 								onclick={() => (selectedFrequency = freq.value)}
 								title={freq.label}
 							>
@@ -210,7 +210,7 @@
 					<div class="flex gap-3 mt-1">
 						<input
 							type="number"
-							class="border border-surface-300-600 w-24 h-10 rounded-md text-sm px-3 bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
+							class="border border-surface-400-600 w-24 h-10 rounded-md text-sm px-3 bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
 							placeholder="100"
 							bind:value={targetAmount}
 							min="1"
@@ -222,7 +222,7 @@
 		</div>
 
 		<!-- Actions -->
-		<div class="flex justify-end gap-3 pt-4 border-t border-surface-200-700">
+		<div class="flex justify-end gap-3 pt-4 border-t border-surface-300-700">
 			{#if habit?.id && ondelete}
 				<button
 					type="button"
@@ -235,7 +235,7 @@
 			{/if}
 			<button
 				type="button"
-				class="px-4 py-2 text-sm rounded-md border border-surface-300-600 hover:bg-surface-200-700 transition-colors"
+				class="px-4 py-2 text-sm rounded-md border border-surface-400-600 hover:bg-surface-200-800 transition-colors"
 				onclick={onclose}
 				disabled={isSubmitting}
 			>

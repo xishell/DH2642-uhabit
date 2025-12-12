@@ -170,7 +170,7 @@
 				<input
 					id="goal-title"
 					type="text"
-					class="border border-surface-300-600 rounded-md px-3 py-2 text-sm bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+					class="border border-surface-400-600 rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
 					placeholder="e.g. Get healthier this month"
 					bind:value={title}
 					required
@@ -181,7 +181,7 @@
 				<label for="goal-description" class="text-sm font-medium">Description</label>
 				<textarea
 					id="goal-description"
-					class="w-full rounded-md border border-surface-300-600 px-3 py-2 text-sm bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+					class="w-full rounded-md border border-surface-400-600 px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
 					rows="2"
 					placeholder="Describe your goal..."
 					bind:value={description}
@@ -196,7 +196,7 @@
 					<input
 						id="goal-start"
 						type="date"
-						class="border border-surface-300-600 rounded-md px-3 py-2 text-sm bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class="border border-surface-400-600 rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
 						bind:value={startDate}
 						required
 					/>
@@ -208,7 +208,7 @@
 					<input
 						id="goal-end"
 						type="date"
-						class="border border-surface-300-600 rounded-md px-3 py-2 text-sm bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+						class="border border-surface-400-600 rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
 						bind:value={endDate}
 						min={startDate}
 						required
@@ -244,15 +244,15 @@
 							type="button"
 							class="flex items-center gap-3 p-3 rounded-lg border transition-colors text-left"
 							class:border-primary-500={selectedHabitIds.has(habit.id)}
-							class:bg-primary-50-900={selectedHabitIds.has(habit.id)}
-							class:border-surface-200-700={!selectedHabitIds.has(habit.id)}
+							class:bg-primary-100-900={selectedHabitIds.has(habit.id)}
+							class:border-surface-300-700={!selectedHabitIds.has(habit.id)}
 							onclick={() => toggleHabit(habit.id)}
 						>
 							<div
 								class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
 								class:border-primary-500={selectedHabitIds.has(habit.id)}
 								class:bg-primary-500={selectedHabitIds.has(habit.id)}
-								class:border-surface-300-600={!selectedHabitIds.has(habit.id)}
+								class:border-surface-400-600={!selectedHabitIds.has(habit.id)}
 							>
 								{#if selectedHabitIds.has(habit.id)}
 									<Check size={14} class="text-white" />
@@ -272,7 +272,7 @@
 		</div>
 
 		<!-- Actions -->
-		<div class="flex justify-end gap-3 pt-4 border-t border-surface-200-700">
+		<div class="flex justify-end gap-3 pt-4 border-t border-surface-300-700">
 			{#if isEditMode && goal?.id && ondelete}
 				<button
 					type="button"
@@ -285,7 +285,7 @@
 			{/if}
 			<button
 				type="button"
-				class="px-4 py-2 text-sm rounded-md border border-surface-300-600 hover:bg-surface-200-700 transition-colors"
+				class="px-4 py-2 text-sm rounded-md border border-surface-400-600 hover:bg-surface-200-800 transition-colors"
 				onclick={onclose}
 				disabled={isSubmitting}
 			>

@@ -4,20 +4,9 @@ import { getDB } from '$lib/server/db';
 import { goal, habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, sql, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth } from '$lib/server/api-helpers';
+import { requireAuth, enforceApiRateLimit, parseHabitFromDB } from '$lib/server/api-helpers';
 import { calculateGoalProgress } from '$lib/utils/goal';
 import { startOfDay, endOfDay } from '$lib/utils/date';
-import type { Habit } from '$lib/types/habit';
-
-// Parse habit from DB (handles JSON period/type casts)
-function parseHabit(h: typeof habit.$inferSelect): Habit {
-	return {
-		...h,
-		frequency: h.frequency as Habit['frequency'],
-		measurement: h.measurement as Habit['measurement'],
-		period: h.period ? JSON.parse(h.period) : null
-	};
-}
 
 // Validation schema for goal update
 const updateGoalSchema = z
@@ -62,7 +51,9 @@ async function verifyGoalOwnership(db: ReturnType<typeof getDB>, goalId: string,
 }
 
 // GET /api/goals/[id]: goal with habits and progress
-export const GET: RequestHandler = async ({ params, locals, platform, setHeaders }) => {
+export const GET: RequestHandler = async (event) => {
+	const { params, locals, platform, setHeaders } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
@@ -89,7 +80,7 @@ export const GET: RequestHandler = async ({ params, locals, platform, setHeaders
 		);
 
 	// Parse habits
-	const parsedHabits = habits.map(parseHabit);
+	const parsedHabits = habits.map(parseHabitFromDB);
 
 	const goalWithProgress = calculateGoalProgress(goalRecord, parsedHabits, completions);
 
@@ -97,7 +88,9 @@ export const GET: RequestHandler = async ({ params, locals, platform, setHeaders
 };
 
 // PATCH /api/goals/[id]: update goal
-export const PATCH: RequestHandler = async ({ params, request, locals, platform }) => {
+export const PATCH: RequestHandler = async (event) => {
+	const { params, request, locals, platform } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 
@@ -208,7 +201,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 			)
 		);
 
-	const parsedHabits = habits.map(parseHabit);
+	const parsedHabits = habits.map(parseHabitFromDB);
 
 	const goalWithProgress = calculateGoalProgress(updatedGoal, parsedHabits, completions);
 
@@ -216,7 +209,9 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 };
 
 // DELETE /api/goals/[id]: delete goal (habits become standalone)
-export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
+export const DELETE: RequestHandler = async (event) => {
+	const { params, locals, platform } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 

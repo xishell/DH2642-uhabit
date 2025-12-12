@@ -3,6 +3,7 @@ import type { HabitWithStatus } from '$lib/types/habit';
 import type { GoalWithHabitStatus } from '$lib/types/goal';
 import { setCookie } from '$lib/utils/cookie';
 import { createModalManager } from '$lib/utils/modalManager';
+import { COOKIES } from '$lib/constants';
 
 export type OverviewState = {
 	activeTab: 'habits' | 'goals';
@@ -28,7 +29,7 @@ type OverviewPresenterDeps = {
 export function createOverviewPresenter({ initial, fetcher, browser }: OverviewPresenterDeps) {
 	const progressiveModal = createModalManager<HabitWithStatus & { id: string }>({
 		browser,
-		cookieKey: 'overview-modal'
+		cookieKey: COOKIES.OVERVIEW_MODAL
 	});
 
 	const toModalItem = (h: HabitWithStatus): HabitWithStatus & { id: string } => ({
@@ -263,7 +264,7 @@ export function createOverviewPresenter({ initial, fetcher, browser }: OverviewP
 		const activeTab = val === 0 ? 'habits' : 'goals';
 		update((state) => ({ ...state, activeTab }));
 		if (browser) {
-			setCookie('overview-tab', activeTab);
+			setCookie(COOKIES.OVERVIEW_TAB, activeTab);
 		}
 	};
 

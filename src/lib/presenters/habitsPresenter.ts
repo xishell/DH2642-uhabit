@@ -1,8 +1,9 @@
 import { writable } from 'svelte/store';
 import type { Habit } from '$lib/types/habit';
 import type { GoalWithProgress } from '$lib/types/goal';
-import { setCookie, setJsonCookie, deleteCookie, getJsonCookie } from '$lib/utils/cookie';
+import { setCookie, setJsonCookie, getJsonCookie } from '$lib/utils/cookie';
 import { createModalManager } from '$lib/utils/modalManager';
+import { COOKIES, STORAGE_KEYS } from '$lib/constants';
 
 type QuoteData = { quote?: string | null; author?: string | null };
 
@@ -34,22 +35,15 @@ type HabitsPresenterDeps = {
 	storage: Storage | null;
 };
 
-const QUOTE_CACHE_KEY = 'uhabit-quote';
-const MODAL_COOKIE_KEY = 'habits-modal';
-const HABIT_MODAL_COOKIE = 'habits-modal-habit';
-const GOAL_MODAL_COOKIE = 'habits-modal-goal';
-const HABITS_ETAG_KEY = 'uhabit-habits-etag';
-const GOALS_ETAG_KEY = 'uhabit-goals-etag';
-
 export function createHabitsPresenter({ initial, fetcher, browser, storage }: HabitsPresenterDeps) {
 	const readCachedQuote = (): QuoteData | null => {
 		if (!browser || !storage) return null;
 		try {
-			const raw = storage.getItem(QUOTE_CACHE_KEY);
+			const raw = storage.getItem(STORAGE_KEYS.QUOTE_CACHE);
 			return raw ? (JSON.parse(raw) as QuoteData) : null;
 		} catch (error) {
 			console.error('Failed to read cached quote', error);
-			storage.removeItem(QUOTE_CACHE_KEY);
+			storage.removeItem(STORAGE_KEYS.QUOTE_CACHE);
 			return null;
 		}
 	};
@@ -57,8 +51,8 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 	const writeCachedQuote = (quote: string, author: string) => {
 		if (!browser || !storage) return;
 		try {
-			storage.setItem(QUOTE_CACHE_KEY, JSON.stringify({ quote, author }));
-			setJsonCookie(QUOTE_CACHE_KEY, { quote, author });
+			storage.setItem(STORAGE_KEYS.QUOTE_CACHE, JSON.stringify({ quote, author }));
+			setJsonCookie(COOKIES.QUOTE_CACHE, { quote, author });
 		} catch (error) {
 			console.error('Failed to cache quote', error);
 		}
@@ -70,8 +64,11 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 	const initialAuthor = initial.author ?? cachedQuote?.author ?? '';
 	const initialQuoteLoading = !(initial.quote || cachedQuote?.quote);
 
-	const habitModal = createModalManager<Habit>({ browser, cookieKey: HABIT_MODAL_COOKIE });
-	const goalModal = createModalManager<GoalWithProgress>({ browser, cookieKey: GOAL_MODAL_COOKIE });
+	const habitModal = createModalManager<Habit>({ browser, cookieKey: COOKIES.HABIT_MODAL });
+	const goalModal = createModalManager<GoalWithProgress>({
+		browser,
+		cookieKey: COOKIES.GOAL_MODAL
+	});
 	const restoredHabitModal = habitModal.restore(initial.habits);
 	const restoredGoalModal = goalModal.restore(initial.goals);
 
@@ -137,7 +134,7 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 	const setActiveTab = (val: 0 | 1) => {
 		update((state) => ({ ...state, activeTab: val }));
 		if (browser) {
-			setCookie('habits-tab', val === 1 ? 'goals' : 'habits');
+			setCookie(COOKIES.HABITS_TAB, val === 1 ? 'goals' : 'habits');
 		}
 	};
 
@@ -190,8 +187,8 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 	const refreshData = async () => {
 		update((state) => ({ ...state, habitsLoading: true, habitsError: null }));
 		try {
-			const habitsETag = getStoredETag(HABITS_ETAG_KEY);
-			const goalsETag = getStoredETag(GOALS_ETAG_KEY);
+			const habitsETag = getStoredETag(STORAGE_KEYS.HABITS_ETAG);
+			const goalsETag = getStoredETag(STORAGE_KEYS.GOALS_ETAG);
 
 			const habitsHeaders: HeadersInit = {};
 			const goalsHeaders: HeadersInit = {};
@@ -208,7 +205,7 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 				habits = getState().habits;
 			} else if (habitsRes.ok) {
 				habits = (await habitsRes.json()) as Habit[];
-				storeETag(HABITS_ETAG_KEY, habitsRes.headers.get('ETag'));
+				storeETag(STORAGE_KEYS.HABITS_ETAG, habitsRes.headers.get('ETag'));
 			} else {
 				throw new Error('Failed to load habits');
 			}
@@ -218,7 +215,7 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 				goals = getState().goals;
 			} else if (goalsRes.ok) {
 				goals = (await goalsRes.json()) as GoalWithProgress[];
-				storeETag(GOALS_ETAG_KEY, goalsRes.headers.get('ETag'));
+				storeETag(STORAGE_KEYS.GOALS_ETAG, goalsRes.headers.get('ETag'));
 			} else {
 				throw new Error('Failed to load goals');
 			}
@@ -286,7 +283,7 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 	// Restore modal state from cookie (browser only)
 	if (browser) {
 		const modalCookie = getJsonCookie<{ type: 'habit' | 'goal'; id: string | null }>(
-			MODAL_COOKIE_KEY
+			COOKIES.HABITS_MODAL
 		);
 		if (modalCookie) {
 			const { type, id } = modalCookie;

@@ -9,13 +9,16 @@ import {
 	verifyHabitOwnership,
 	parsePagination,
 	paginatedResponse,
-	validateDateParam
+	validateDateParam,
+	enforceApiRateLimit
 } from '$lib/server/api-helpers';
 
 // GET /api/habits/[id]/completions: history (optional date range)
 // Supports pagination ?page=1&limit=20
 // Supports ?from=YYYY-MM-DD&to=YYYY-MM-DD
-export const GET: RequestHandler = async ({ params, url, locals, platform, setHeaders }) => {
+export const GET: RequestHandler = async (event) => {
+	const { params, url, locals, platform, setHeaders } = event;
+	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
 	const db = getDB(platform!.env.DB);
 

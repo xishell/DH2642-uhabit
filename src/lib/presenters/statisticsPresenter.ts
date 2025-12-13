@@ -1,0 +1,406 @@
+/**
+ * Statistics presenter
+ * Manages state, caching, and data fetching for the statistics page
+ */
+
+import { writable } from 'svelte/store';
+import type { Habit, HabitCompletion } from '$lib/types/habit';
+import type {
+	Scope,
+	PeriodStats,
+	HabitTrend,
+	HeatCell,
+	Snapshot,
+	Insights,
+	ActivityItem,
+	DateRange
+} from '$lib/stats/types';
+import {
+	computeCompletionRate,
+	computeOverallStreak,
+	computeHeatmap,
+	computeTrends,
+	computeInsights,
+	getHeatmapRange,
+	getPeriodRanges,
+	findMostConsistent,
+	findNeedsAttention,
+	findBestDayOfWeek,
+	findBestDate
+} from '$lib/stats';
+import { createStatsCache, type StatsCache } from '$lib/cache/statsCache';
+import { STATS_CACHE } from '$lib/constants';
+import { formatDate, startOfDay, endOfDay, getMonthName } from '$lib/utils/date';
+
+export type StatisticsState = {
+	scope: Scope;
+	selectedDate: Date;
+	isLoading: boolean;
+	isSyncing: boolean;
+	isOffline: boolean;
+	error: string | null;
+	lastSync: Date | null;
+	// Computed statistics
+	periodStats: PeriodStats | null;
+	trends: HabitTrend[];
+	heatmap: HeatCell[];
+	snapshot: Snapshot | null;
+	insights: Insights | null;
+	activity: ActivityItem[];
+};
+
+type StatisticsPresenterDeps = {
+	fetcher: typeof fetch;
+	browser: boolean;
+	initialScope?: Scope;
+	initialDate?: Date;
+};
+
+export function createStatisticsPresenter({
+	fetcher,
+	browser,
+	initialScope = 'daily',
+	initialDate = new Date()
+}: StatisticsPresenterDeps) {
+	let cache: StatsCache | null = null;
+	let habits: Habit[] = [];
+	let completions: HabitCompletion[] = [];
+
+	const initialState: StatisticsState = {
+		scope: initialScope,
+		selectedDate: initialDate,
+		isLoading: true,
+		isSyncing: false,
+		isOffline: false,
+		error: null,
+		lastSync: null,
+		periodStats: null,
+		trends: [],
+		heatmap: [],
+		snapshot: null,
+		insights: null,
+		activity: []
+	};
+
+	const state = writable<StatisticsState>(initialState);
+	const { subscribe, update } = state;
+
+	/**
+	 * Get current state synchronously
+	 */
+	function getState(): StatisticsState {
+		let current: StatisticsState = initialState;
+		subscribe((v) => (current = v))();
+		return current;
+	}
+
+	/**
+	 * Format range label based on scope and date
+	 */
+	function formatRangeLabel(scope: Scope, date: Date): string {
+		if (scope === 'daily') {
+			const today = startOfDay(new Date());
+			const target = startOfDay(date);
+			if (today.getTime() === target.getTime()) {
+				return `Today (${getMonthName(date).slice(0, 3)} ${date.getDate()})`;
+			}
+			return `${getMonthName(date).slice(0, 3)} ${date.getDate()}`;
+		} else if (scope === 'weekly') {
+			return 'This week';
+		} else {
+			return `${getMonthName(date)} ${date.getFullYear()}`;
+		}
+	}
+
+	/**
+	 * Build activity items from trends
+	 */
+	function buildActivity(trends: HabitTrend[]): ActivityItem[] {
+		return trends.slice(0, 4).map((trend) => {
+			let kind: 'win' | 'neutral' | 'warning';
+			let meta: string;
+
+			if (trend.delta > 0.05) {
+				kind = 'win';
+				meta = trend.streak > 3 ? `${trend.streak}-day streak` : 'Improving';
+			} else if (trend.delta < -0.05) {
+				kind = 'warning';
+				meta = 'Needs attention';
+			} else {
+				kind = 'neutral';
+				meta = 'Steady';
+			}
+
+			return {
+				habitId: trend.habitId,
+				title: trend.title,
+				meta,
+				delta: `${trend.delta >= 0 ? '+' : ''}${Math.round(trend.delta * 100)}%`,
+				kind
+			};
+		});
+	}
+
+	/**
+	 * Compute all statistics from raw data
+	 */
+	function computeStatistics(scope: Scope, date: Date): void {
+		if (habits.length === 0) {
+			update((s) => ({
+				...s,
+				isLoading: false,
+				periodStats: null,
+				trends: [],
+				heatmap: [],
+				snapshot: null,
+				insights: null,
+				activity: []
+			}));
+			return;
+		}
+
+		const { current: currentRange, previous: previousRange } = getPeriodRanges(scope, date);
+		const heatmapRange = getHeatmapRange(scope, date);
+
+		// Compute all stats
+		const currentRate = computeCompletionRate(habits, completions, currentRange);
+		const previousRate = computeCompletionRate(habits, completions, previousRange);
+		const overallStreak = computeOverallStreak(habits, completions, date);
+		const heatmap = computeHeatmap(habits, completions, heatmapRange, scope);
+		const trends = computeTrends(habits, completions, scope, date);
+		const insights = computeInsights(habits, completions, heatmapRange, date);
+
+		// Build period stats
+		const periodStats: PeriodStats = {
+			rangeLabel: formatRangeLabel(scope, date),
+			completionRate: currentRate.rate,
+			bestDay:
+				scope === 'daily'
+					? findBestDayOfWeek(habits, completions, heatmapRange)
+					: findBestDate(habits, completions, currentRange),
+			completions: currentRate.completed,
+			streak: overallStreak.currentStreak,
+			longestStreak: overallStreak.longestStreak
+		};
+
+		// Build snapshot
+		const snapshot: Snapshot = {
+			currentStreak: overallStreak.currentStreak,
+			overallCompletion: currentRate.rate,
+			weeklyDelta: currentRate.rate - previousRate.rate,
+			mostConsistent: findMostConsistent(trends),
+			needsAttention: findNeedsAttention(trends)
+		};
+
+		// Build activity
+		const activity = buildActivity(trends);
+
+		update((s) => ({
+			...s,
+			isLoading: false,
+			periodStats,
+			trends,
+			heatmap,
+			snapshot,
+			insights,
+			activity
+		}));
+	}
+
+	/**
+	 * Fetch habits from API
+	 */
+	async function fetchHabits(): Promise<Habit[]> {
+		const response = await fetcher('/api/habits');
+		if (!response.ok) throw new Error('Failed to fetch habits');
+		return response.json();
+	}
+
+	/**
+	 * Fetch completions from API with optional date filter
+	 */
+	async function fetchCompletions(from: Date): Promise<HabitCompletion[]> {
+		const params = new URLSearchParams({ from: formatDate(from) });
+		const response = await fetcher(`/api/completions?${params}`);
+		if (!response.ok) throw new Error('Failed to fetch completions');
+		return response.json();
+	}
+
+	/**
+	 * Main sync function
+	 */
+	async function sync(): Promise<void> {
+		update((s) => ({ ...s, isSyncing: true, error: null }));
+
+		try {
+			const currentState = getState();
+			const heatmapRange = getHeatmapRange(currentState.scope, currentState.selectedDate);
+
+			// Calculate how far back we need data
+			const historyDays = STATS_CACHE.HISTORY_DAYS;
+			const historyStart = new Date();
+			historyStart.setDate(historyStart.getDate() - historyDays);
+			const fetchFrom = heatmapRange.from < historyStart ? heatmapRange.from : historyStart;
+
+			let metadata = cache ? await cache.getMetadata() : null;
+
+			if (cache && metadata?.lastHabitsSync) {
+				// Load from cache first
+				habits = await cache.getHabits();
+				completions = await cache.getCompletions();
+
+				// Fetch incremental completions
+				const lastSync = metadata.lastCompletionsSync || fetchFrom;
+				try {
+					const newCompletions = await fetchCompletions(lastSync);
+					if (newCompletions.length > 0) {
+						// Merge new completions (dedupe by id)
+						const existingIds = new Set(completions.map((c) => c.id));
+						const uniqueNew = newCompletions.filter((c) => !existingIds.has(c.id));
+						completions = [...completions, ...uniqueNew];
+						await cache.addCompletions(uniqueNew);
+					}
+
+					// Refresh habits if needed
+					const newHabits = await fetchHabits();
+					habits = newHabits;
+					await cache.setHabits(habits);
+
+					await cache.setMetadata({
+						lastHabitsSync: new Date(),
+						lastCompletionsSync: new Date()
+					});
+
+					update((s) => ({ ...s, isOffline: false }));
+				} catch (error) {
+					// Network error - use cached data
+					console.warn('Sync failed, using cached data:', error);
+					update((s) => ({ ...s, isOffline: true }));
+				}
+			} else {
+				// Cold start - fetch everything
+				try {
+					habits = await fetchHabits();
+					completions = await fetchCompletions(fetchFrom);
+
+					if (cache) {
+						await cache.setHabits(habits);
+						await cache.addCompletions(completions);
+						await cache.setMetadata({
+							lastHabitsSync: new Date(),
+							lastCompletionsSync: new Date(),
+							version: 1
+						});
+					}
+
+					update((s) => ({ ...s, isOffline: false }));
+				} catch (error) {
+					console.error('Initial fetch failed:', error);
+					update((s) => ({
+						...s,
+						isLoading: false,
+						isSyncing: false,
+						isOffline: true,
+						error: 'Failed to load data. Please check your connection.'
+					}));
+					return;
+				}
+			}
+
+			// Compute statistics
+			computeStatistics(currentState.scope, currentState.selectedDate);
+
+			update((s) => ({
+				...s,
+				isSyncing: false,
+				lastSync: new Date()
+			}));
+		} catch (error) {
+			console.error('Statistics sync error:', error);
+			update((s) => ({
+				...s,
+				isLoading: false,
+				isSyncing: false,
+				error: 'Failed to load statistics. Please try again.'
+			}));
+		}
+	}
+
+	/**
+	 * Initialize the presenter
+	 */
+	async function initialize(): Promise<void> {
+		if (!browser) return;
+
+		update((s) => ({ ...s, isLoading: true }));
+
+		// Initialize cache
+		cache = createStatsCache();
+		await cache.open();
+
+		// Listen for online/offline events
+		window.addEventListener('online', () => {
+			update((s) => ({ ...s, isOffline: false }));
+			sync();
+		});
+		window.addEventListener('offline', () => {
+			update((s) => ({ ...s, isOffline: true }));
+		});
+
+		// Check initial online status
+		update((s) => ({ ...s, isOffline: !navigator.onLine }));
+
+		// Start sync
+		await sync();
+	}
+
+	/**
+	 * Change scope (daily/weekly/monthly)
+	 */
+	function setScope(scope: Scope): void {
+		update((s) => ({ ...s, scope, isLoading: true }));
+		// Recompute with existing data
+		const currentState = getState();
+		computeStatistics(scope, currentState.selectedDate);
+	}
+
+	/**
+	 * Change selected date
+	 */
+	function setSelectedDate(date: Date): void {
+		update((s) => ({ ...s, selectedDate: date, isLoading: true }));
+		// Recompute with existing data
+		const currentState = getState();
+		computeStatistics(currentState.scope, date);
+	}
+
+	/**
+	 * Force a full refresh
+	 */
+	async function refresh(): Promise<void> {
+		await sync();
+	}
+
+	/**
+	 * Clear all cached data
+	 */
+	async function clearCache(): Promise<void> {
+		if (cache) {
+			await cache.clearAll();
+		}
+		habits = [];
+		completions = [];
+		await sync();
+	}
+
+	return {
+		state: { subscribe },
+		initialize,
+		setScope,
+		setSelectedDate,
+		refresh,
+		clearCache
+	};
+}
+
+export type StatisticsPresenter = ReturnType<typeof createStatisticsPresenter>;

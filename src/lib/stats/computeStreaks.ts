@@ -59,7 +59,7 @@ export function computeHabitStreak(
 				if (tempStreak > longestStreak) {
 					longestStreak = tempStreak;
 				}
-				if (isCurrentStreakActive && tempStreak > 0) {
+				if (isCurrentStreakActive) {
 					currentStreak = tempStreak;
 					streakStartDate = tempStreakStart;
 					isCurrentStreakActive = false;
@@ -143,7 +143,7 @@ export function computeOverallStreak(
 				if (tempStreak > longestStreak) {
 					longestStreak = tempStreak;
 				}
-				if (isCurrentStreakActive && tempStreak > 0) {
+				if (isCurrentStreakActive) {
 					currentStreak = tempStreak;
 					streakStartDate = tempStreakStart;
 					isCurrentStreakActive = false;

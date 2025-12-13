@@ -5,29 +5,24 @@ import { COOKIES } from '$lib/constants';
 
 type QuoteData = { quote?: string | null; author?: string | null };
 
-export const load: PageServerLoad = async ({ fetch, cookies }) => {
-	// Read tab state from cookie
-	const savedTab = cookies.get(COOKIES.HABITS_TAB);
-	const initialTab: 0 | 1 = savedTab === 'goals' ? 1 : 0;
+import type { Cookies } from '@sveltejs/kit';
 
-	// Use cached quote from cookie to avoid skeleton flash
-	let quote: string | null = null;
-	let author: string | null = null;
+const readTabFromCookie = (cookies: Cookies) =>
+	(cookies.get(COOKIES.HABITS_TAB) === 'goals' ? 1 : 0) as 0 | 1;
+
+const readQuoteFromCookie = (cookies: Cookies): QuoteData => {
 	const quoteCookie = cookies.get(COOKIES.QUOTE_CACHE);
-	if (quoteCookie) {
-		try {
-			const parsed = JSON.parse(quoteCookie) as { quote?: string | null; author?: string | null };
-			quote = parsed.quote ?? null;
-			author = parsed.author ?? null;
-		} catch {
-			quote = null;
-			author = null;
-		}
+	if (!quoteCookie) return { quote: null, author: null };
+	try {
+		const parsed = JSON.parse(quoteCookie) as QuoteData;
+		return { quote: parsed.quote ?? null, author: parsed.author ?? null };
+	} catch {
+		return { quote: null, author: null };
 	}
+};
 
-	// Fetch habits and goals in parallel
-	const [habitsRes, goalsRes] = await Promise.all([fetch('/api/habits'), fetch('/api/goals')]);
-
+const fetchHabitsAndGoals = async (fetchFn: typeof fetch) => {
+	const [habitsRes, goalsRes] = await Promise.all([fetchFn('/api/habits'), fetchFn('/api/goals')]);
 	const habitsData = habitsRes.ok ? await habitsRes.json() : [];
 	const goalsData = goalsRes.ok ? await goalsRes.json() : [];
 
@@ -36,25 +31,37 @@ export const load: PageServerLoad = async ({ fetch, cookies }) => {
 		: [];
 	const goals = Array.isArray(goalsData) ? (goalsData as GoalWithProgress[]) : [];
 
-	// If no cookie, fall back to server-side cached quote endpoint
-	if (!quote) {
-		try {
-			const quoteRes = await fetch('/api-external/quotes?cacheOnly=1');
-			if (quoteRes.ok && quoteRes.status === 200) {
-				const body = (await quoteRes.json()) as QuoteData;
-				quote = body?.quote ?? null;
-				author = body?.author ?? null;
-			}
-		} catch (e) {
-			console.error('Failed to load cached quote', e);
+	return { habits, goals };
+};
+
+const fetchQuoteIfMissing = async (fetchFn: typeof fetch, currentQuote: QuoteData) => {
+	if (currentQuote.quote) return currentQuote;
+	try {
+		const quoteRes = await fetchFn('/api-external/quotes?cacheOnly=1');
+		if (quoteRes.ok && quoteRes.status === 200) {
+			const body = (await quoteRes.json()) as QuoteData;
+			return { quote: body?.quote ?? null, author: body?.author ?? null };
 		}
+	} catch (e) {
+		console.error('Failed to load cached quote', e);
 	}
+	return currentQuote;
+};
+
+export const load: PageServerLoad = async ({ fetch, cookies }) => {
+	const initialTab = readTabFromCookie(cookies);
+	const cookieQuote = readQuoteFromCookie(cookies);
+
+	const [{ habits, goals }, quoteData] = await Promise.all([
+		fetchHabitsAndGoals(fetch),
+		fetchQuoteIfMissing(fetch, cookieQuote)
+	]);
 
 	return {
 		habits,
 		goals,
-		quote,
-		author,
+		quote: quoteData.quote,
+		author: quoteData.author,
 		initialTab
 	};
 };

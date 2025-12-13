@@ -17,31 +17,16 @@ const cdnCacheHeaders = {
 	Vary: 'Accept-Encoding'
 };
 
-export const GET: RequestHandler = async ({ platform, url }) => {
-	const kv = platform?.env?.QUOTES_CACHE;
-	const cacheOnly = url.searchParams.get('cacheOnly') === '1';
-
-	// Try KV cache first
-	if (kv) {
-		try {
-			const cached = await kv.get<QuoteData>(KV_KEYS.DAILY_QUOTE, 'json');
-			if (cached) {
-				return json(cached, { headers: cdnCacheHeaders });
-			}
-
-			// If cache-only requested and nothing in KV, return early
-			if (cacheOnly) {
-				return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
-			}
-		} catch {
-			// KV read failed, continue to fetch
-		}
-	} else if (cacheOnly) {
-		// No KV available and cache-only requested
-		return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+const readFromKV = async (kv: KVNamespace | undefined) => {
+	if (!kv) return null;
+	try {
+		return await kv.get<QuoteData>(KV_KEYS.DAILY_QUOTE, 'json');
+	} catch {
+		return null;
 	}
+};
 
-	// Fetch fresh quote
+const fetchQuote = async () => {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), 1200);
 
@@ -51,28 +36,49 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		});
 
 		if (!res.ok) {
-			return json({ quote: null, author: null }, { status: 502 });
+			return null;
 		}
 
 		const data = await res.json();
 		const first = Array.isArray(data) ? data[0] : null;
-		const result: QuoteData = {
+		return {
 			quote: first?.q ?? null,
 			author: first?.a ?? null
-		};
-
-		// Store in KV with TTL (non-blocking)
-		if (kv && result.quote) {
-			platform?.context?.waitUntil(
-				kv.put(KV_KEYS.DAILY_QUOTE, JSON.stringify(result), { expirationTtl: CACHE_TTL })
-			);
-		}
-
-		return json(result, { headers: cdnCacheHeaders });
+		} satisfies QuoteData;
 	} catch (err) {
 		console.error('ZenQuotes fetch failed', err);
-		return json({ quote: null, author: null }, { status: 502 });
+		return null;
 	} finally {
 		clearTimeout(timeout);
 	}
+};
+
+const cacheQuote = (kv: KVNamespace | undefined, quote: QuoteData) => {
+	if (kv && quote.quote) {
+		kv.put(KV_KEYS.DAILY_QUOTE, JSON.stringify(quote), { expirationTtl: CACHE_TTL }).catch(
+			() => {}
+		);
+	}
+};
+
+export const GET: RequestHandler = async ({ platform, url }) => {
+	const kv = platform?.env?.QUOTES_CACHE;
+	const cacheOnly = url.searchParams.get('cacheOnly') === '1';
+
+	const cached = await readFromKV(kv);
+	if (cached) {
+		return json(cached, { headers: cdnCacheHeaders });
+	}
+
+	if (cacheOnly) {
+		return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+	}
+
+	const result = await fetchQuote();
+	if (!result) {
+		return json({ quote: null, author: null }, { status: 502 });
+	}
+
+	cacheQuote(kv, result);
+	return json(result, { headers: cdnCacheHeaders });
 };

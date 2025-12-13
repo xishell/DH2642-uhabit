@@ -1,11 +1,10 @@
 import { writable } from 'svelte/store';
 import type { Habit } from '$lib/types/habit';
 import type { GoalWithProgress } from '$lib/types/goal';
-import { setCookie, setJsonCookie, getJsonCookie } from '$lib/utils/cookie';
+import { setCookie, getJsonCookie } from '$lib/utils/cookie';
 import { createModalManager } from '$lib/utils/modalManager';
 import { COOKIES, STORAGE_KEYS } from '$lib/constants';
-
-type QuoteData = { quote?: string | null; author?: string | null };
+import { readQuoteCache, writeQuoteCache, type QuoteData } from './quoteCache';
 
 export type HabitsState = {
 	habits: Habit[];
@@ -35,34 +34,21 @@ type HabitsPresenterDeps = {
 	storage: Storage | null;
 };
 
-export function createHabitsPresenter({ initial, fetcher, browser, storage }: HabitsPresenterDeps) {
-	const readCachedQuote = (): QuoteData | null => {
-		if (!browser || !storage) return null;
-		try {
-			const raw = storage.getItem(STORAGE_KEYS.QUOTE_CACHE);
-			return raw ? (JSON.parse(raw) as QuoteData) : null;
-		} catch (error) {
-			console.error('Failed to read cached quote', error);
-			storage.removeItem(STORAGE_KEYS.QUOTE_CACHE);
-			return null;
-		}
-	};
-
-	const writeCachedQuote = (quote: string, author: string) => {
-		if (!browser || !storage) return;
-		try {
-			storage.setItem(STORAGE_KEYS.QUOTE_CACHE, JSON.stringify({ quote, author }));
-			setJsonCookie(COOKIES.QUOTE_CACHE, { quote, author });
-		} catch (error) {
-			console.error('Failed to cache quote', error);
-		}
-	};
-
-	const cachedQuote = browser ? readCachedQuote() : null;
-	const initialQuote =
+const hydrateQuote = (
+	initial: HabitsPresenterDeps['initial'],
+	browser: boolean,
+	storage: Storage | null
+) => {
+	const cachedQuote = browser ? readQuoteCache(storage, browser, STORAGE_KEYS.QUOTE_CACHE) : null;
+	const quote =
 		initial.quote ?? cachedQuote?.quote ?? 'Let your days echo with the steps you choose to take.';
-	const initialAuthor = initial.author ?? cachedQuote?.author ?? '';
-	const initialQuoteLoading = !(initial.quote || cachedQuote?.quote);
+	const author = initial.author ?? cachedQuote?.author ?? '';
+	const isQuoteLoading = !(initial.quote || cachedQuote?.quote);
+	return { quote, author, isQuoteLoading };
+};
+
+export function createHabitsPresenter({ initial, fetcher, browser, storage }: HabitsPresenterDeps) {
+	const { quote, author, isQuoteLoading } = hydrateQuote(initial, browser, storage);
 
 	const habitModal = createModalManager<Habit>({ browser, cookieKey: COOKIES.HABIT_MODAL });
 	const goalModal = createModalManager<GoalWithProgress>({
@@ -78,9 +64,9 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		activeTab: initial.initialTab,
 		habitsLoading: false,
 		habitsError: null,
-		quote: initialQuote,
-		author: initialAuthor,
-		isQuoteLoading: initialQuoteLoading,
+		quote,
+		author,
+		isQuoteLoading,
 		showHabitModal: restoredHabitModal.open,
 		showGoalModal: restoredGoalModal.open,
 		editingHabit: restoredHabitModal.editing,
@@ -244,7 +230,7 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		const state = getState();
 		if (state.quote && !state.isQuoteLoading) return;
 
-		const cached = readCachedQuote();
+		const cached = readQuoteCache(storage, browser, STORAGE_KEYS.QUOTE_CACHE);
 		if (cached?.quote) {
 			update((s) => ({
 				...s,
@@ -270,7 +256,7 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 					author: body.author ?? '',
 					isQuoteLoading: false
 				}));
-				writeCachedQuote(body.quote, body.author ?? '');
+				writeQuoteCache(storage, browser, COOKIES.QUOTE_CACHE, body.quote, body.author ?? '');
 			} else {
 				update((s) => ({ ...s, isQuoteLoading: false }));
 			}

@@ -3,7 +3,7 @@
  */
 
 import type { Habit, HabitCompletion, HabitWithStatus } from '$lib/types/habit';
-import type { Goal, GoalWithHabits, GoalWithProgress, GoalWithHabitStatus } from '$lib/types/goal';
+import type { Goal, GoalWithProgress, GoalWithHabitStatus } from '$lib/types/goal';
 import { startOfDay, endOfDay } from './date';
 import { shouldShowHabitOnDate, getCompletionsForHabitOnDate } from './habit';
 

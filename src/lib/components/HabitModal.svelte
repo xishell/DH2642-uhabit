@@ -69,18 +69,23 @@
 		selectedColor = color;
 	}
 
+	function validateForm(): string | null {
+		if (!title.trim()) return 'Title is required';
+		return null;
+	}
+
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 
-		if (!title.trim()) {
-			error = 'Title is required';
+		const validationError = validateForm();
+		if (validationError) {
+			error = validationError;
 			return;
 		}
 
 		isSubmitting = true;
 		error = null;
 
-		// Derive measurement type from form data
 		const hasTarget = targetAmount !== null && targetAmount > 0;
 		const hasUnit = unit.trim() !== '';
 		const isNumeric = hasTarget && hasUnit;
@@ -117,7 +122,7 @@
 		{/if}
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-			<!-- Left column -->
+			<!-- Left column: Title, Notes, Color -->
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-col gap-1">
 					<label for="habit-title" class="text-sm font-medium"

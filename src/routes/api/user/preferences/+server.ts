@@ -90,84 +90,16 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 
 	const drizzle = getDB(db);
 
-	let body;
-	try {
-		const rawBody = await request.json();
-		body = preferencesSchema.parse(rawBody);
-	} catch (e) {
-		if (e instanceof z.ZodError) {
-			return error(400, `Validation error: ${e.issues.map((err) => err.message).join(', ')}`);
-		}
-		return error(400, 'Invalid request body');
-	}
+	const body = await parsePreferencesBody(request);
+	const updates = await buildPreferenceUpdates(drizzle, userId, body);
+	const nextPreferences = body.preferences
+		? await computeNextPreferences(drizzle, userId, body.preferences)
+		: null;
 
-	const updates: {
-		firstName?: string;
-		lastName?: string;
-		username?: string;
-		name?: string;
-		displayName?: string;
-		theme?: string;
-		country?: string;
-		preferences?: string;
-	} = {};
-
-	if (body.firstName !== undefined) {
-		updates.firstName = body.firstName;
-	}
-
-	if (body.lastName !== undefined) {
-		updates.lastName = body.lastName;
-	}
-
-	// Keep name in sync with first/last for Better Auth
-	if (body.firstName !== undefined || body.lastName !== undefined) {
-		const [currentUser] = await drizzle
-			.select({ firstName: user.firstName, lastName: user.lastName })
-			.from(user)
-			.where(eq(user.id, userId));
-
-		const newFirstName = body.firstName ?? currentUser?.firstName ?? '';
-		const newLastName = body.lastName ?? currentUser?.lastName ?? '';
-		updates.name = [newFirstName, newLastName].filter(Boolean).join(' ') || 'User';
-	}
-
-	if (body.username !== undefined) {
-		updates.username = body.username.toLowerCase().trim();
-	}
-
-	if (body.displayName !== undefined) {
-		updates.displayName = body.displayName;
-	}
-
-	if (body.theme !== undefined) {
-		updates.theme = body.theme;
-	}
-
-	if (body.country !== undefined) {
-		updates.country = body.country;
-	}
-
-	if (body.preferences !== undefined) {
-		const [currentUser] = await drizzle
-			.select({ preferences: user.preferences })
-			.from(user)
-			.where(eq(user.id, userId));
-
-		let currentPrefs = {};
-		if (currentUser?.preferences) {
-			try {
-				currentPrefs = JSON.parse(currentUser.preferences as string);
-			} catch (e) {
-				console.error('Failed to parse existing preferences JSON:', e);
-			}
-		}
-
-		const mergedPrefs = { ...currentPrefs, ...body.preferences };
-		updates.preferences = JSON.stringify(mergedPrefs);
-	}
-
-	await drizzle.update(user).set(updates).where(eq(user.id, userId));
+	await drizzle
+		.update(user)
+		.set({ ...updates, preferences: nextPreferences })
+		.where(eq(user.id, userId));
 
 	const [updatedUser] = await drizzle
 		.select({
@@ -183,13 +115,7 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		.where(eq(user.id, userId));
 
 	let preferences = {};
-	if (updatedUser.preferences) {
-		try {
-			preferences = JSON.parse(updatedUser.preferences as string);
-		} catch (e) {
-			console.error('Failed to parse updated preferences JSON:', e);
-		}
-	}
+	preferences = nextPreferences ? JSON.parse(nextPreferences) : {};
 
 	return json({
 		firstName: updatedUser.firstName,
@@ -200,4 +126,90 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		country: updatedUser.country,
 		preferences
 	});
+};
+
+const parsePreferencesBody = async (request: Request) => {
+	try {
+		const rawBody = await request.json();
+		return preferencesSchema.parse(rawBody);
+	} catch (e) {
+		if (e instanceof z.ZodError) {
+			throw error(400, `Validation error: ${e.issues.map((err) => err.message).join(', ')}`);
+		}
+		throw error(400, 'Invalid request body');
+	}
+};
+
+const buildPreferenceUpdates = async (
+	drizzle: ReturnType<typeof getDB>,
+	userId: string,
+	body: z.infer<typeof preferencesSchema>
+) => {
+	const updates = buildSimpleUpdates(body);
+	await syncNameIfNeeded(drizzle, userId, body, updates);
+	return updates;
+};
+
+const buildSimpleUpdates = (body: z.infer<typeof preferencesSchema>) => {
+	const updates: Partial<typeof user.$inferInsert> = { updatedAt: new Date() };
+	const simpleFields: Partial<typeof user.$inferInsert> = {
+		firstName: body.firstName,
+		lastName: body.lastName,
+		username: body.username ? body.username.toLowerCase().trim() : undefined,
+		displayName: body.displayName,
+		theme: body.theme,
+		country: body.country
+	};
+
+	for (const [key, value] of Object.entries(simpleFields)) {
+		if (value !== undefined) {
+			// @ts-expect-error - dynamic assignment
+			updates[key] = value;
+		}
+	}
+
+	return updates;
+};
+
+const syncNameIfNeeded = async (
+	drizzle: ReturnType<typeof getDB>,
+	userId: string,
+	body: z.infer<typeof preferencesSchema>,
+	updates: Partial<typeof user.$inferInsert>
+) => {
+	if (body.firstName === undefined && body.lastName === undefined) return;
+
+	const [currentUser] = await drizzle
+		.select({ firstName: user.firstName, lastName: user.lastName })
+		.from(user)
+		.where(eq(user.id, userId));
+
+	const newFirstName = body.firstName ?? currentUser?.firstName ?? '';
+	const newLastName = body.lastName ?? currentUser?.lastName ?? '';
+	updates.name = [newFirstName, newLastName].filter(Boolean).join(' ') || 'User';
+};
+
+const loadCurrentPreferences = async (drizzle: ReturnType<typeof getDB>, userId: string) => {
+	const [currentUser] = await drizzle
+		.select({ preferences: user.preferences })
+		.from(user)
+		.where(eq(user.id, userId));
+
+	if (!currentUser?.preferences) return {};
+	try {
+		return JSON.parse(currentUser.preferences as string);
+	} catch (e) {
+		console.error('Failed to parse existing preferences JSON:', e);
+		return {};
+	}
+};
+
+const computeNextPreferences = async (
+	drizzle: ReturnType<typeof getDB>,
+	userId: string,
+	partialPrefs: Record<string, unknown> | undefined
+) => {
+	if (partialPrefs === undefined) return null;
+	const currentPrefs = await loadCurrentPreferences(drizzle, userId);
+	return JSON.stringify({ ...currentPrefs, ...partialPrefs });
 };

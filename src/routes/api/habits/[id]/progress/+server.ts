@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
-import { habit, habitCompletion } from '$lib/server/db/schema';
+import { habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 import { startOfDay, endOfDay } from '$lib/utils/date';

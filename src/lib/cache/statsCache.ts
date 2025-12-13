@@ -141,11 +141,13 @@ export function createStatsCache() {
 			request.onerror = () => reject(request.error);
 			request.onsuccess = () => {
 				// Convert dates back from stored format
-				const habits = request.result.map((h: Habit & { createdAt: string; updatedAt: string }) => ({
-					...h,
-					createdAt: new Date(h.createdAt),
-					updatedAt: new Date(h.updatedAt)
-				}));
+				const habits = request.result.map(
+					(h: Habit & { createdAt: string; updatedAt: string }) => ({
+						...h,
+						createdAt: new Date(h.createdAt),
+						updatedAt: new Date(h.updatedAt)
+					})
+				);
 				resolve(habits);
 			};
 		});

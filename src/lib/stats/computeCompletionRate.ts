@@ -69,7 +69,10 @@ export function computeCompletionRate(
 					}
 				} else {
 					// Numeric: sum measurements and compare to target
-					const sum = habitCompletions.reduce((acc, c) => acc + (c.measurement ?? 0), 0);
+					const sum = habitCompletions.reduce(
+						(acc: number, c: HabitCompletion) => acc + (c.measurement ?? 0),
+						0
+					);
 					const target = habit.targetAmount ?? 0;
 					if (target > 0 && sum >= target) {
 						habitStats.completed++;

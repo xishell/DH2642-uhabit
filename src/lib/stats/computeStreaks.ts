@@ -29,9 +29,7 @@ export function computeHabitStreak(
 	}
 
 	// Build set of completion dates for O(1) lookup
-	const completionDates = new Set(
-		habitCompletions.map((c) => formatDate(new Date(c.completedAt)))
-	);
+	const completionDates = new Set(habitCompletions.map((c) => formatDate(new Date(c.completedAt))));
 
 	const today = startOfDay(asOfDate);
 	let currentStreak = 0;

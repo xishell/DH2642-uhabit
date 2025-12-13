@@ -2,7 +2,13 @@
 	import '@skeletonlabs/skeleton-svelte';
 	import { signUp } from '$lib/auth/client';
 	import PasswordStrengthIndicator from '$lib/components/PasswordStrengthIndicator.svelte';
-	import { z } from 'zod';
+	import RegisterErrorAlert from './RegisterErrorAlert.svelte';
+	import {
+		emailSchema,
+		usernameSchema,
+		validateEmailValue,
+		validateUsernameValue
+	} from './validation';
 
 	let firstName = $state('');
 	let lastName = $state('');
@@ -15,40 +21,83 @@
 	let emailError = $state<string | null>(null);
 	let usernameError = $state<string | null>(null);
 
-	// Email validation schema
-	const emailSchema = z.string().email('Please enter a valid email address').toLowerCase();
-
-	// Username validation schema
-	const usernameSchema = z
-		.string()
-		.min(3, 'Username must be at least 3 characters')
-		.max(20, 'Username must be at most 20 characters')
-		.regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores')
-		.toLowerCase();
-
 	// Validate email on blur for immediate feedback
 	function validateEmail() {
-		emailError = null;
-		try {
-			emailSchema.parse(email);
-		} catch (err) {
-			if (err instanceof z.ZodError) {
-				emailError = err.issues[0].message;
-			}
-		}
+		emailError = validateEmailValue(email);
 	}
 
 	// Validate username on blur for immediate feedback
 	function validateUsername() {
-		usernameError = null;
-		if (!username) return;
-		try {
-			usernameSchema.parse(username);
-		} catch (err) {
-			if (err instanceof z.ZodError) {
-				usernameError = err.issues[0].message;
-			}
+		usernameError = validateUsernameValue(username);
+	}
+
+	function getErrorFeedback(err: unknown): { message: string; hint: string | null } {
+		if (!(err instanceof Error)) {
+			return {
+				message: 'Something went wrong during registration.',
+				hint: 'Please try again in a moment.'
+			};
 		}
+
+		const msg = err.message.toLowerCase();
+		const checks: { test: (m: string) => boolean; message: string; hint: string | null }[] = [
+			{
+				test: (m) =>
+					m.includes('password') &&
+					(m.includes('common') || m.includes('breach') || m.includes('compromised')),
+				message: 'This password is too common and may be easy to guess.',
+				hint: 'Try adding numbers, symbols, or making it longer.'
+			},
+			{
+				test: (m) =>
+					m.includes('password') &&
+					(m.includes('weak') || m.includes('short') || m.includes('length')),
+				message: "Your password doesn't meet the requirements.",
+				hint: 'Check the password requirements below.'
+			},
+			{
+				test: (m) => m.includes('password'),
+				message: err.message,
+				hint: 'Please choose a stronger password.'
+			},
+			{
+				test: (m) =>
+					m.includes('email') &&
+					(m.includes('already') || m.includes('exists') || m.includes('taken')),
+				message: 'An account with this email may already exist.',
+				hint: 'login-hint'
+			},
+			{
+				test: (m) => m.includes('email') && m.includes('invalid'),
+				message: 'Please check your email address.',
+				hint: "Make sure it's formatted correctly (e.g., name@example.com)."
+			},
+			{
+				test: (m) =>
+					m.includes('username') &&
+					(m.includes('already') || m.includes('exists') || m.includes('taken')),
+				message: 'This username is already taken.',
+				hint: 'Please choose a different username.'
+			},
+			{
+				test: (m) => m.includes('too many') || m.includes('rate limit'),
+				message: 'Too many attempts. Please wait a moment.',
+				hint: 'Try again in a few minutes.'
+			},
+			{
+				test: (m) => m.includes('network') || m.includes('fetch') || m.includes('connection'),
+				message: 'Connection problem. Please check your internet.',
+				hint: 'Try refreshing the page and submitting again.'
+			}
+		];
+
+		const match = checks.find((item) => item.test(msg));
+		if (match) return { message: match.message, hint: match.hint };
+
+		return {
+			message: 'Something went wrong during registration.',
+			hint: 'Please check your information and try again.'
+		};
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
@@ -59,90 +108,29 @@
 		usernameError = null;
 		loading = true;
 
-		// Validate email before submission
-		try {
-			email = emailSchema.parse(email);
-		} catch (err) {
-			if (err instanceof z.ZodError) {
-				emailError = err.issues[0].message;
-				loading = false;
-				return;
-			}
+		const emailValidation = validateEmailValue(email);
+		if (emailValidation) {
+			emailError = emailValidation;
+			loading = false;
+			return;
 		}
+		email = emailSchema.parse(email);
 
-		// Validate username before submission
-		try {
-			username = usernameSchema.parse(username);
-		} catch (err) {
-			if (err instanceof z.ZodError) {
-				usernameError = err.issues[0].message;
-				loading = false;
-				return;
-			}
+		const usernameValidation = validateUsernameValue(username);
+		if (usernameValidation) {
+			usernameError = usernameValidation;
+			loading = false;
+			return;
 		}
+		username = usernameSchema.parse(username);
 
 		try {
 			await signUp({ email, password, firstName, lastName, username });
 			window.location.href = '/overview';
 		} catch (err) {
-			if (err instanceof Error) {
-				const msg = err.message.toLowerCase();
-
-				// Password-related errors
-				if (
-					msg.includes('password') &&
-					(msg.includes('common') || msg.includes('breach') || msg.includes('compromised'))
-				) {
-					errorMessage = 'This password is too common and may be easy to guess.';
-					errorHint = 'Try adding numbers, symbols, or making it longer.';
-				} else if (
-					msg.includes('password') &&
-					(msg.includes('weak') || msg.includes('short') || msg.includes('length'))
-				) {
-					errorMessage = "Your password doesn't meet the requirements.";
-					errorHint = 'Check the password requirements below.';
-				} else if (msg.includes('password')) {
-					errorMessage = err.message;
-					errorHint = 'Please choose a stronger password.';
-				}
-				// Email-related errors
-				else if (
-					msg.includes('email') &&
-					(msg.includes('already') || msg.includes('exists') || msg.includes('taken'))
-				) {
-					errorMessage = 'An account with this email may already exist.';
-					errorHint = 'login-hint';
-				} else if (msg.includes('email') && msg.includes('invalid')) {
-					errorMessage = 'Please check your email address.';
-					errorHint = "Make sure it's formatted correctly (e.g., name@example.com).";
-				}
-				// Username-related errors
-				else if (
-					msg.includes('username') &&
-					(msg.includes('already') || msg.includes('exists') || msg.includes('taken'))
-				) {
-					errorMessage = 'This username is already taken.';
-					errorHint = 'Please choose a different username.';
-				}
-				// Rate limiting
-				else if (msg.includes('too many') || msg.includes('rate limit')) {
-					errorMessage = 'Too many attempts. Please wait a moment.';
-					errorHint = 'Try again in a few minutes.';
-				}
-				// Network/server errors
-				else if (msg.includes('network') || msg.includes('fetch') || msg.includes('connection')) {
-					errorMessage = 'Connection problem. Please check your internet.';
-					errorHint = 'Try refreshing the page and submitting again.';
-				}
-				// Generic fallback
-				else {
-					errorMessage = 'Something went wrong during registration.';
-					errorHint = 'Please check your information and try again.';
-				}
-			} else {
-				errorMessage = 'Something went wrong during registration.';
-				errorHint = 'Please try again in a moment.';
-			}
+			const feedback = getErrorFeedback(err);
+			errorMessage = feedback.message;
+			errorHint = feedback.hint;
 			console.error('Registration error:', err);
 		} finally {
 			loading = false;
@@ -154,40 +142,7 @@
 	<h1 class="text-2xl font-semibold text-center">Create an Account</h1>
 
 	{#if errorMessage}
-		<div
-			class="p-4 bg-error-50 dark:bg-error-900/30 border border-error-200 dark:border-error-800 rounded-lg"
-			role="alert"
-		>
-			<div class="flex items-start gap-3">
-				<svg
-					class="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5"
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-					/>
-				</svg>
-				<div class="flex-1">
-					<p class="font-medium text-error-700 dark:text-error-300">{errorMessage}</p>
-					{#if errorHint === 'login-hint'}
-						<p class="mt-1 text-sm text-error-600 dark:text-error-400">
-							Try <a
-								href="/login"
-								class="underline font-medium hover:text-error-800 dark:hover:text-error-200"
-								>signing in</a
-							> instead, or use a different email.
-						</p>
-					{:else if errorHint}
-						<p class="mt-1 text-sm text-error-600 dark:text-error-400">{errorHint}</p>
-					{/if}
-				</div>
-			</div>
-		</div>
+		<RegisterErrorAlert {errorMessage} {errorHint} />
 	{/if}
 
 	<div class="grid grid-cols-2 gap-4">

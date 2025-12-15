@@ -7,9 +7,19 @@ import type { z } from 'zod';
 import { checkRateLimit, getClientIP, getRateLimits } from './ratelimit';
 import type { Habit } from '$lib/types/habit';
 
+/** Database instance type returned by getDB */
+export type DB = ReturnType<typeof getDB>;
+
 /**
  * Parse a habit record from the database, converting JSON fields and casting types.
  * Use this when fetching habits from the database to ensure proper typing.
+ *
+ * @param h - Raw habit record from the database
+ * @returns Parsed habit with proper types for frequency, measurement, and period
+ *
+ * @example
+ * const habits = await db.select().from(habit).where(eq(habit.userId, userId));
+ * const parsed = habits.map(parseHabitFromDB);
  */
 export function parseHabitFromDB(h: typeof habit.$inferSelect): Habit {
 	return {
@@ -48,7 +58,16 @@ export interface PaginatedResponse<T> {
 
 /**
  * Requires authentication and returns the authenticated user's ID.
- * Throws 401 error if user is not authenticated.
+ *
+ * @param locals - The locals object from the request event
+ * @returns The authenticated user's ID
+ * @throws {HttpError} 401 if user is not authenticated
+ *
+ * @example
+ * export const GET: RequestHandler = async ({ locals }) => {
+ *   const userId = requireAuth(locals);
+ *   // userId is guaranteed to be a valid string here
+ * };
  */
 export function requireAuth(locals: RequestEvent['locals']): string {
 	if (!locals.user) {
@@ -58,14 +77,37 @@ export function requireAuth(locals: RequestEvent['locals']): string {
 }
 
 /**
- * Verifies that a habit exists and belongs to the authenticated user.
- * Throws 404 error if habit not found or doesn't belong to user.
+ * Requires a valid database connection from the platform environment.
+ *
+ * @param platform - The platform object from the request event
+ * @returns A database instance ready for queries
+ * @throws {HttpError} 500 if database is not configured
+ *
+ * @example
+ * export const GET: RequestHandler = async ({ platform }) => {
+ *   const db = requireDB(platform);
+ *   const results = await db.select().from(habit);
+ * };
  */
-export async function verifyHabitOwnership(
-	db: ReturnType<typeof getDB>,
-	habitId: string,
-	userId: string
-) {
+export function requireDB(platform: RequestEvent['platform']): DB {
+	const db = platform?.env?.DB;
+	if (!db) {
+		console.error('[API] Database not available in platform.env');
+		throw error(500, 'Database not configured');
+	}
+	return getDB(db);
+}
+
+/**
+ * Verifies that a habit exists and belongs to the authenticated user.
+ *
+ * @param db - Database instance
+ * @param habitId - The ID of the habit to verify
+ * @param userId - The authenticated user's ID
+ * @returns The habit record if found and owned by user
+ * @throws {HttpError} 404 if habit not found or doesn't belong to user
+ */
+export async function verifyHabitOwnership(db: DB, habitId: string, userId: string) {
 	const habits = await db
 		.select()
 		.from(habit)
@@ -81,10 +123,16 @@ export async function verifyHabitOwnership(
 
 /**
  * Verifies that both a habit and completion exist and belong to the authenticated user.
- * Throws 404 error if either not found or don't belong to user.
+ *
+ * @param db - Database instance
+ * @param habitId - The ID of the habit
+ * @param completionId - The ID of the completion to verify
+ * @param userId - The authenticated user's ID
+ * @returns Object containing both the habit and completion records
+ * @throws {HttpError} 404 if habit or completion not found or don't belong to user
  */
 export async function verifyCompletionOwnership(
-	db: ReturnType<typeof getDB>,
+	db: DB,
 	habitId: string,
 	completionId: string,
 	userId: string
@@ -109,7 +157,11 @@ export async function verifyCompletionOwnership(
 /**
  * Safely parses JSON from a request body with proper error handling.
  * Returns an empty object for empty bodies (allows optional body requests).
- * Throws 400 error for malformed JSON.
+ *
+ * @template T - The expected type of the parsed body
+ * @param request - The incoming HTTP request
+ * @returns Parsed JSON body, or empty object if body is empty
+ * @throws {HttpError} 400 for malformed JSON
  */
 export async function parseJsonBody<T = unknown>(request: Request): Promise<T> {
 	const text = await request.text();
@@ -128,7 +180,16 @@ export async function parseJsonBody<T = unknown>(request: Request): Promise<T> {
 
 /**
  * Parses and validates request body against a Zod schema.
- * Throws 400 error for invalid JSON or validation failures.
+ *
+ * @template T - Zod schema type
+ * @param request - The incoming HTTP request
+ * @param schema - Zod schema to validate against
+ * @returns Validated and typed data from the request body
+ * @throws {HttpError} 400 for invalid JSON or validation failures
+ *
+ * @example
+ * const data = await parseAndValidate(request, createHabitSchema);
+ * // data is fully typed based on the schema
  */
 export async function parseAndValidate<T extends z.ZodTypeAny>(
 	request: Request,
@@ -146,7 +207,15 @@ export async function parseAndValidate<T extends z.ZodTypeAny>(
 
 /**
  * Parses pagination parameters from URL search params.
- * Ensures values are within valid ranges.
+ * Ensures values are within valid ranges (page >= 1, limit between 1 and maxLimit).
+ *
+ * @param url - The request URL containing search params
+ * @returns Pagination parameters with page, limit, and calculated offset
+ *
+ * @example
+ * // URL: /api/habits?page=2&limit=10
+ * const pagination = parsePagination(url);
+ * // { page: 2, limit: 10, offset: 10 }
  */
 export function parsePagination(url: URL): PaginationParams {
 	const pageParam = url.searchParams.get('page');
@@ -163,7 +232,13 @@ export function parsePagination(url: URL): PaginationParams {
 }
 
 /**
- * Creates a paginated response wrapper.
+ * Creates a paginated response wrapper with metadata.
+ *
+ * @template T - Type of items in the data array
+ * @param data - Array of items for the current page
+ * @param total - Total count of all items across all pages
+ * @param pagination - Pagination parameters used for the query
+ * @returns Wrapped response with data and pagination metadata
  */
 export function paginatedResponse<T>(
 	data: T[],
@@ -226,8 +301,18 @@ export interface RateLimitResult {
 }
 
 /**
- * Enforces API rate limiting. Throws 429 error if rate limit exceeded.
- * Returns headers to include in the response for rate limit info.
+ * Enforces API rate limiting based on client IP.
+ * Automatically detects dev/staging environments for relaxed limits.
+ *
+ * @param event - The SvelteKit request event
+ * @returns Rate limit headers to include in the response
+ * @throws {HttpError} 429 if rate limit exceeded
+ *
+ * @example
+ * export const GET: RequestHandler = async (event) => {
+ *   await enforceApiRateLimit(event);
+ *   // Continue with request handling...
+ * };
  */
 export async function enforceApiRateLimit(event: RequestEvent): Promise<RateLimitResult> {
 	const clientIP = getClientIP(event.request);

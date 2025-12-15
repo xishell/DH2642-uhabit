@@ -1,11 +1,11 @@
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import type { Habit } from '$lib/types/habit';
-import type { GoalWithProgress } from '$lib/types/goal';
-import { setCookie, setJsonCookie, getJsonCookie } from '$lib/utils/cookie';
+import type { Goal, GoalWithProgress } from '$lib/types/goal';
+import { setCookie, getJsonCookie } from '$lib/utils/cookie';
 import { createModalManager } from '$lib/utils/modalManager';
 import { COOKIES, STORAGE_KEYS } from '$lib/constants';
-
-type QuoteData = { quote?: string | null; author?: string | null };
+import { readQuoteCache, writeQuoteCache } from './quoteCache';
+import { createHabitsApi } from '$lib/api/habitsApi';
 
 export type HabitsState = {
 	habits: Habit[];
@@ -35,34 +35,22 @@ type HabitsPresenterDeps = {
 	storage: Storage | null;
 };
 
-export function createHabitsPresenter({ initial, fetcher, browser, storage }: HabitsPresenterDeps) {
-	const readCachedQuote = (): QuoteData | null => {
-		if (!browser || !storage) return null;
-		try {
-			const raw = storage.getItem(STORAGE_KEYS.QUOTE_CACHE);
-			return raw ? (JSON.parse(raw) as QuoteData) : null;
-		} catch (error) {
-			console.error('Failed to read cached quote', error);
-			storage.removeItem(STORAGE_KEYS.QUOTE_CACHE);
-			return null;
-		}
-	};
-
-	const writeCachedQuote = (quote: string, author: string) => {
-		if (!browser || !storage) return;
-		try {
-			storage.setItem(STORAGE_KEYS.QUOTE_CACHE, JSON.stringify({ quote, author }));
-			setJsonCookie(COOKIES.QUOTE_CACHE, { quote, author });
-		} catch (error) {
-			console.error('Failed to cache quote', error);
-		}
-	};
-
-	const cachedQuote = browser ? readCachedQuote() : null;
-	const initialQuote =
+const hydrateQuote = (
+	initial: HabitsPresenterDeps['initial'],
+	browser: boolean,
+	storage: Storage | null
+) => {
+	const cachedQuote = browser ? readQuoteCache(storage, browser, STORAGE_KEYS.QUOTE_CACHE) : null;
+	const quote =
 		initial.quote ?? cachedQuote?.quote ?? 'Let your days echo with the steps you choose to take.';
-	const initialAuthor = initial.author ?? cachedQuote?.author ?? '';
-	const initialQuoteLoading = !(initial.quote || cachedQuote?.quote);
+	const author = initial.author ?? cachedQuote?.author ?? '';
+	const isQuoteLoading = !(initial.quote || cachedQuote?.quote);
+	return { quote, author, isQuoteLoading };
+};
+
+export function createHabitsPresenter({ initial, fetcher, browser, storage }: HabitsPresenterDeps) {
+	const { quote, author, isQuoteLoading } = hydrateQuote(initial, browser, storage);
+	const api = createHabitsApi({ fetcher });
 
 	const habitModal = createModalManager<Habit>({ browser, cookieKey: COOKIES.HABIT_MODAL });
 	const goalModal = createModalManager<GoalWithProgress>({
@@ -78,9 +66,9 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		activeTab: initial.initialTab,
 		habitsLoading: false,
 		habitsError: null,
-		quote: initialQuote,
-		author: initialAuthor,
-		isQuoteLoading: initialQuoteLoading,
+		quote,
+		author,
+		isQuoteLoading,
 		showHabitModal: restoredHabitModal.open,
 		showGoalModal: restoredGoalModal.open,
 		editingHabit: restoredHabitModal.editing,
@@ -190,14 +178,12 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 			const habitsETag = getStoredETag(STORAGE_KEYS.HABITS_ETAG);
 			const goalsETag = getStoredETag(STORAGE_KEYS.GOALS_ETAG);
 
-			const habitsHeaders: HeadersInit = {};
-			const goalsHeaders: HeadersInit = {};
-			if (habitsETag) habitsHeaders['If-None-Match'] = habitsETag;
-			if (goalsETag) goalsHeaders['If-None-Match'] = goalsETag;
+			const habitsHeaders: HeadersInit = habitsETag ? { 'If-None-Match': habitsETag } : {};
+			const goalsHeaders: HeadersInit = goalsETag ? { 'If-None-Match': goalsETag } : {};
 
 			const [habitsRes, goalsRes] = await Promise.all([
-				fetcher('/api/habits', { headers: habitsHeaders }),
-				fetcher('/api/goals', { headers: goalsHeaders })
+				api.fetchHabits(habitsHeaders),
+				api.fetchGoals(goalsHeaders)
 			]);
 
 			let habits: Habit[];
@@ -241,10 +227,10 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 	};
 
 	const ensureQuote = async () => {
-		const state = getState();
-		if (state.quote && !state.isQuoteLoading) return;
+		const currentState = getState();
+		if (currentState.quote && !currentState.isQuoteLoading) return;
 
-		const cached = readCachedQuote();
+		const cached = readQuoteCache(storage, browser, STORAGE_KEYS.QUOTE_CACHE);
 		if (cached?.quote) {
 			update((s) => ({
 				...s,
@@ -259,10 +245,8 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		try {
 			const controller = new AbortController();
 			const timeout = setTimeout(() => controller.abort(), 1200);
-			const res = await fetcher('/api-external/quotes', { signal: controller.signal });
+			const body = await api.fetchQuote(controller.signal);
 			clearTimeout(timeout);
-			if (!res.ok) throw new Error('Quote fetch failed');
-			const body = (await res.json()) as QuoteData;
 			if (body?.quote) {
 				update((s) => ({
 					...s,
@@ -270,7 +254,7 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 					author: body.author ?? '',
 					isQuoteLoading: false
 				}));
-				writeCachedQuote(body.quote, body.author ?? '');
+				writeQuoteCache(storage, browser, COOKIES.QUOTE_CACHE, body.quote, body.author ?? '');
 			} else {
 				update((s) => ({ ...s, isQuoteLoading: false }));
 			}
@@ -297,8 +281,56 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		}
 	}
 
+	// CRUD Operations - Orchestrate API calls and state updates
+
+	const saveHabit = async (habitData: Partial<Habit>) => {
+		if (habitData.id) {
+			await api.updateHabit(habitData.id, habitData);
+		} else {
+			await api.createHabit(habitData);
+		}
+		closeHabitModal();
+		setActiveTab(0);
+		await refreshData();
+	};
+
+	const deleteHabit = async (habitId: string) => {
+		await api.deleteHabit(habitId);
+		closeHabitModal();
+		update((s) => ({ ...s, habits: s.habits.filter((h) => h.id !== habitId) }));
+		await refreshData();
+	};
+
+	const saveGoal = async (goalData: Partial<Goal>, habitIds: string[]) => {
+		if (goalData.id) {
+			await api.updateGoal(goalData.id, goalData, habitIds);
+		} else {
+			await api.createGoal(goalData, habitIds);
+		}
+		closeGoalModal();
+		setActiveTab(1);
+		await refreshData();
+	};
+
+	const deleteGoal = async (goalId: string) => {
+		await api.deleteGoal(goalId);
+		closeGoalModal();
+		update((s) => ({ ...s, goals: s.goals.filter((g) => g.id !== goalId) }));
+		await refreshData();
+	};
+
+	const createHabitForGoal = async (habitData: Partial<Habit>): Promise<Habit> => {
+		const newHabit = await api.createHabit(habitData);
+		await refreshData();
+		return newHabit;
+	};
+
+	// Derived state: habits not attached to any goal
+	const standaloneHabits = derived(state, ($state) => $state.habits.filter((h) => !h.goalId));
+
 	return {
 		state: { subscribe, set },
+		standaloneHabits,
 		initData,
 		setActiveTab,
 		refreshData,
@@ -306,6 +338,12 @@ export function createHabitsPresenter({ initial, fetcher, browser, storage }: Ha
 		openHabitModal,
 		closeHabitModal,
 		openGoalModal,
-		closeGoalModal
+		closeGoalModal,
+		// CRUD operations
+		saveHabit,
+		deleteHabit,
+		saveGoal,
+		deleteGoal,
+		createHabitForGoal
 	};
 }

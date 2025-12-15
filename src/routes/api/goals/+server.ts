@@ -1,11 +1,11 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getDB } from '$lib/server/db';
 import { goal, habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
 	requireAuth,
+	requireDB,
 	parsePagination,
 	paginatedResponse,
 	enforceApiRateLimit,
@@ -40,11 +40,13 @@ function generateGoalsETag(goals: (typeof goal.$inferSelect)[], userId: string):
 }
 
 // GET /api/goals - List all goals for authenticated user with habits
+const CACHE_CONTROL_PRIVATE = 'private, max-age=60, stale-while-revalidate=30';
+
 export const GET: RequestHandler = async (event) => {
 	const { locals, platform, setHeaders, url, request } = event;
 	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
-	const db = getDB(platform!.env.DB);
+	const db = requireDB(platform);
 
 	const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
 	const activeOnly = url.searchParams.get('active') === 'true';
@@ -123,7 +125,7 @@ export const GET: RequestHandler = async (event) => {
 		}
 
 		setHeaders({
-			'Cache-Control': 'private, max-age=60, stale-while-revalidate=30',
+			'Cache-Control': CACHE_CONTROL_PRIVATE,
 			ETag: etag
 		});
 
@@ -142,7 +144,7 @@ export const GET: RequestHandler = async (event) => {
 			return new Response(null, { status: 304 });
 		}
 		setHeaders({
-			'Cache-Control': 'private, max-age=60, stale-while-revalidate=30',
+			'Cache-Control': CACHE_CONTROL_PRIVATE,
 			ETag: etag
 		});
 		return json([]);
@@ -192,6 +194,7 @@ export const POST: RequestHandler = async (event) => {
 	const { request, locals, platform } = event;
 	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
+	const db = requireDB(platform);
 
 	// Parse and validate request body
 	const body = await request.json();
@@ -206,12 +209,8 @@ export const POST: RequestHandler = async (event) => {
 
 	const data = validationResult.data;
 
-	if (!platform?.env?.DB) {
-		throw error(500, 'Database not configured');
-	}
-
-	const d1 = platform.env.DB;
-	const db = getDB(d1);
+	// D1 reference for batch operations (requireDB already validated it exists)
+	const d1 = platform!.env.DB;
 
 	// Create goal
 	const goalId = crypto.randomUUID();

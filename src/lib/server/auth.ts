@@ -5,33 +5,47 @@ import { APIError } from 'better-auth/api';
 import { getDB } from './db';
 import * as schema from './db/schema';
 
-export function createAuth(db: D1Database, secret: string, url: string, devMode = false) {
-	// Detect if URL is a staging/preview environment (dev mode allowed)
-	// Preview: preview-123.uhabit.pages.dev
-	// Staging: staging.uhabit.pages.dev
+const resolveAuthMode = (url: string, devMode: boolean) => {
 	const isStagingOrPreview =
 		/preview-\d+\..*\.pages\.dev/.test(url) || url.includes('staging.') || url.includes('preview.');
-
-	// Detect production URL (custom domain or main pages.dev)
 	const isProductionUrl =
 		(!url.includes('.pages.dev') && !url.includes('.workers.dev') && url.startsWith('https://')) ||
 		(url.includes('.pages.dev') && !isStagingOrPreview);
-
-	// Only allow dev mode for local development URLs or staging/preview
 	const isLocalUrl = url.includes('localhost') || url.includes('127.0.0.1');
 	const isDevEnvironment = isLocalUrl || isStagingOrPreview;
 
-	// Safety check: Prevent dev mode from being enabled in production
-	if (devMode && isProductionUrl && !isDevEnvironment) {
+	const allowDevMode = !(isProductionUrl && !isDevEnvironment);
+	const isDev = (allowDevMode && devMode) || isDevEnvironment;
+
+	return { isDev, isProductionUrl, allowDevMode };
+};
+
+const warnWeakSecret = (url: string, secret: string | null | undefined) => {
+	const isStagingOrPreview =
+		/preview-\d+\..*\.pages\.dev/.test(url) || url.includes('staging.') || url.includes('preview.');
+	const isProduction =
+		url.startsWith('https://') &&
+		!url.includes('localhost') &&
+		!url.includes('127.0.0.1') &&
+		!isStagingOrPreview;
+	if (isProduction && secret && secret.length < 32) {
 		console.error(
-			'[AUTH] SECURITY WARNING: DEV_MODE=true detected with production URL. ' +
-				'Ignoring DEV_MODE to prevent security misconfiguration. URL:',
+			'[AUTH] SECURITY WARNING: BETTER_AUTH_SECRET is too short for production. ' +
+				'Use at least 32 characters.'
+		);
+	}
+};
+
+export function createAuth(db: D1Database, secret: string, url: string, devMode = false) {
+	const { isDev, isProductionUrl, allowDevMode } = resolveAuthMode(url, devMode);
+	if (!allowDevMode && devMode) {
+		console.error(
+			'[AUTH] SECURITY WARNING: DEV_MODE=true detected with production URL. Ignoring DEV_MODE. URL:',
 			url
 		);
-		devMode = false;
 	}
 
-	const isDev = devMode || isDevEnvironment;
+	warnWeakSecret(url, secret);
 
 	if (isDev) {
 		console.log('[AUTH] Running in DEVELOPMENT mode - relaxed security settings enabled');

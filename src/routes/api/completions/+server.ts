@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
 import { habitCompletion } from '$lib/server/db/schema';
@@ -30,20 +30,21 @@ export const GET: RequestHandler = async (event) => {
 	// Build query conditions
 	const conditions = [eq(habitCompletion.userId, userId)];
 
+	const DAY_SUFFIX = 'T00:00:00Z';
 	// If specific date provided, use it for both from and to
 	if (dateParam) {
-		const targetDate = new Date(dateParam + 'T00:00:00Z');
+		const targetDate = new Date(dateParam + DAY_SUFFIX);
 		conditions.push(gte(habitCompletion.completedAt, startOfDay(targetDate)));
 		conditions.push(lte(habitCompletion.completedAt, endOfDay(targetDate)));
 	} else {
 		// Otherwise use from/to range if provided
 		if (fromParam) {
-			const fromDate = startOfDay(new Date(fromParam + 'T00:00:00Z'));
+			const fromDate = startOfDay(new Date(fromParam + DAY_SUFFIX));
 			conditions.push(gte(habitCompletion.completedAt, fromDate));
 		}
 
 		if (toParam) {
-			const toDate = endOfDay(new Date(toParam + 'T00:00:00Z'));
+			const toDate = endOfDay(new Date(toParam + DAY_SUFFIX));
 			conditions.push(lte(habitCompletion.completedAt, toDate));
 		}
 	}

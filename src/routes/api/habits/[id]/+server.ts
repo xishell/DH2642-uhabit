@@ -44,13 +44,7 @@ export const GET: RequestHandler = async (event) => {
 	});
 };
 
-// PATCH /api/habits/[id] - Update existing habit
-export const PATCH: RequestHandler = async (event) => {
-	const { params, request, locals, platform } = event;
-	await enforceApiRateLimit(event);
-	const userId = requireAuth(locals);
-
-	// Parse and validate request body
+const parseUpdateBody = async (request: Request) => {
 	const body = await request.json();
 	const validationResult = updateHabitSchema.safeParse(body);
 
@@ -61,11 +55,13 @@ export const PATCH: RequestHandler = async (event) => {
 		);
 	}
 
-	const data = validationResult.data;
-	const db = getDB(platform!.env.DB);
+	return validationResult.data;
+};
 
-	// Check if habit exists and belongs to user
-	const existingHabit = await verifyHabitOwnership(db, params.id, userId);
+const validateNumericHabit = (
+	data: z.infer<typeof updateHabitSchema>,
+	existingHabit: typeof habit.$inferSelect
+) => {
 	const effectiveMeasurement = data.measurement ?? existingHabit.measurement;
 	const effectiveTargetAmount = data.targetAmount ?? existingHabit.targetAmount;
 	const effectiveUnit = data.unit ?? existingHabit.unit;
@@ -76,20 +72,60 @@ export const PATCH: RequestHandler = async (event) => {
 	) {
 		throw error(400, 'Numeric habits require both targetAmount and unit');
 	}
+};
 
+const buildUpdateData = (
+	data: z.infer<typeof updateHabitSchema>,
+	existingHabit: typeof habit.$inferSelect
+) => {
 	const serializedPeriod = data.period ? JSON.stringify(data.period) : null;
-
 	const updateData: Record<string, unknown> = { updatedAt: new Date() };
-	if (data.title !== undefined) updateData.title = data.title;
-	if (data.notes !== undefined) updateData.notes = data.notes;
-	if (data.color !== undefined) updateData.color = data.color;
-	if (data.frequency !== undefined) updateData.frequency = data.frequency;
-	if (data.measurement !== undefined) updateData.measurement = data.measurement;
-	if (data.period !== undefined) updateData.period = serializedPeriod;
-	if (data.targetAmount !== undefined) updateData.targetAmount = data.targetAmount;
-	if (data.unit !== undefined) updateData.unit = data.unit;
-	if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
-	if (data.goalId !== undefined) updateData.goalId = data.goalId;
+
+	const maybeSet = (key: keyof typeof updateData, value: unknown) => {
+		if (value !== undefined) updateData[key] = value;
+	};
+
+	maybeSet('title', data.title);
+	maybeSet('notes', data.notes);
+	maybeSet('color', data.color);
+	maybeSet('frequency', data.frequency);
+	maybeSet('measurement', data.measurement);
+	maybeSet('period', data.period !== undefined ? serializedPeriod : undefined);
+	maybeSet('targetAmount', data.targetAmount);
+	maybeSet('unit', data.unit);
+	maybeSet('categoryId', data.categoryId);
+	maybeSet('goalId', data.goalId);
+
+	const mergedPeriod =
+		data.period !== undefined
+			? data.period
+			: existingHabit.period
+				? JSON.parse(existingHabit.period)
+				: null;
+
+	const updatedHabit = {
+		...existingHabit,
+		...updateData,
+		period: mergedPeriod
+	};
+
+	return { updateData, updatedHabit };
+};
+
+// PATCH /api/habits/[id] - Update existing habit
+export const PATCH: RequestHandler = async (event) => {
+	const { params, request, locals, platform } = event;
+	await enforceApiRateLimit(event);
+	const userId = requireAuth(locals);
+
+	const data = await parseUpdateBody(request);
+	const db = getDB(platform!.env.DB);
+
+	// Check if habit exists and belongs to user
+	const existingHabit = await verifyHabitOwnership(db, params.id, userId);
+	validateNumericHabit(data, existingHabit);
+
+	const { updateData, updatedHabit } = buildUpdateData(data, existingHabit);
 
 	// Update habit
 	await db
@@ -98,18 +134,6 @@ export const PATCH: RequestHandler = async (event) => {
 			...updateData
 		})
 		.where(and(eq(habit.id, params.id), eq(habit.userId, userId)));
-
-	// Merge existing habit with updates to skip extra SELECT
-	const updatedHabit = {
-		...existingHabit,
-		...updateData,
-		period:
-			data.period !== undefined
-				? data.period
-				: existingHabit.period
-					? JSON.parse(existingHabit.period)
-					: null
-	};
 
 	return json(updatedHabit);
 };

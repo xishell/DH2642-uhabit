@@ -1,15 +1,16 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getDB } from '$lib/server/db';
 import { habit } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
 	requireAuth,
+	requireDB,
 	parsePagination,
 	paginatedResponse,
 	enforceApiRateLimit,
-	parseHabitFromDB
+	parseHabitFromDB,
+	type DB
 } from '$lib/server/api-helpers';
 
 // Validation schema for habit creation
@@ -43,80 +44,74 @@ const createHabitSchema = z
 		}
 	);
 
-// GET /api/habits - List all habits for authenticated user
-// Supports optional pagination: ?page=1&limit=20
-// Without pagination params, returns all habits (backward compatible)
-export const GET: RequestHandler = async (event) => {
-	const { locals, platform, setHeaders, url, request } = event;
-	await enforceApiRateLimit(event);
-	const userId = requireAuth(locals);
-	const db = getDB(platform!.env.DB);
+const generateETag = (userId: string, habits: (typeof habit.$inferSelect)[]) => {
+	if (habits.length === 0) return '"empty"';
+	const maxUpdated = habits.reduce(
+		(max, h) => (h.updatedAt > max ? h.updatedAt : max),
+		habits[0].updatedAt
+	);
+	const timestamp = maxUpdated instanceof Date ? maxUpdated.getTime() : maxUpdated;
+	return `"${userId.slice(0, 8)}-${habits.length}-${timestamp}"`;
+};
 
-	const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
-
-	const generateETag = (habits: (typeof habit.$inferSelect)[]) => {
-		if (habits.length === 0) return '"empty"';
-		const maxUpdated = habits.reduce(
-			(max, h) => (h.updatedAt > max ? h.updatedAt : max),
-			habits[0].updatedAt
-		);
-		const timestamp = maxUpdated instanceof Date ? maxUpdated.getTime() : maxUpdated;
-		return `"${userId.slice(0, 8)}-${habits.length}-${timestamp}"`;
-	};
-
-	if (usePagination) {
-		const pagination = parsePagination(url);
-
-		const [countResult] = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(habit)
-			.where(eq(habit.userId, userId));
-		const total = Number(countResult?.count ?? 0);
-
-		const habits = await db
-			.select()
-			.from(habit)
-			.where(eq(habit.userId, userId))
-			.limit(pagination.limit)
-			.offset(pagination.offset);
-
-		const etag = generateETag(habits);
-		const ifNoneMatch = request.headers.get('If-None-Match');
-		if (ifNoneMatch === etag) {
-			return new Response(null, { status: 304 });
-		}
-
-		setHeaders({
-			'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
-			ETag: etag
-		});
-
-		return json(paginatedResponse(habits.map(parseHabitFromDB), total, pagination));
-	}
-
-	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
-
-	const etag = generateETag(habits);
+const sendCachedIfMatch = (
+	request: Request,
+	setHeaders: (headers: Record<string, string>) => void,
+	userId: string,
+	habits: (typeof habit.$inferSelect)[]
+) => {
+	const etag = generateETag(userId, habits);
 	const ifNoneMatch = request.headers.get('If-None-Match');
 	if (ifNoneMatch === etag) {
 		return new Response(null, { status: 304 });
 	}
-
 	setHeaders({
 		'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
 		ETag: etag
 	});
-
-	return json(habits.map(parseHabitFromDB));
+	return etag;
 };
 
-// POST /api/habits - Create new habit
-export const POST: RequestHandler = async (event) => {
-	const { request, locals, platform } = event;
-	await enforceApiRateLimit(event);
-	const userId = requireAuth(locals);
+const listHabitsPaginated = async (
+	db: DB,
+	userId: string,
+	url: URL,
+	request: Request,
+	setHeaders: (headers: Record<string, string>) => void
+) => {
+	const pagination = parsePagination(url);
+	const [countResult] = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(habit)
+		.where(eq(habit.userId, userId));
+	const total = Number(countResult?.count ?? 0);
 
-	// Parse and validate request body
+	const habitsResult = await db
+		.select()
+		.from(habit)
+		.where(eq(habit.userId, userId))
+		.limit(pagination.limit)
+		.offset(pagination.offset);
+
+	const etag = sendCachedIfMatch(request, setHeaders, userId, habitsResult);
+	if (!etag) return null;
+
+	return json(paginatedResponse(habitsResult.map(parseHabitFromDB), total, pagination));
+};
+
+const listHabitsFull = async (
+	db: DB,
+	userId: string,
+	request: Request,
+	setHeaders: (headers: Record<string, string>) => void
+) => {
+	const habitsResult = await db.select().from(habit).where(eq(habit.userId, userId));
+	const etag = sendCachedIfMatch(request, setHeaders, userId, habitsResult);
+	if (!etag) return null;
+	return json(habitsResult.map(parseHabitFromDB));
+};
+
+const parseHabitRequest = async (request: Request) => {
 	const body = await request.json();
 	const validationResult = createHabitSchema.safeParse(body);
 
@@ -127,23 +122,14 @@ export const POST: RequestHandler = async (event) => {
 		);
 	}
 
-	const data = validationResult.data;
+	return validationResult.data;
+};
 
-	// Debug: Check if DB is available
-	if (!platform?.env?.DB) {
-		console.error('DB not available in platform.env');
-		throw error(500, 'Database not configured');
-	}
-
-	const db = getDB(platform.env.DB);
-
+const buildHabitRecord = (data: z.infer<typeof createHabitSchema>, userId: string) => {
 	const serializedPeriod = data.period ? JSON.stringify(data.period) : null;
-
-	// Create habit
 	const habitId = crypto.randomUUID();
 	const now = new Date();
-
-	const habitData = {
+	return {
 		id: habitId,
 		userId,
 		title: data.title,
@@ -159,6 +145,32 @@ export const POST: RequestHandler = async (event) => {
 		createdAt: now,
 		updatedAt: now
 	};
+};
+
+// GET /api/habits - List all habits for authenticated user
+export const GET: RequestHandler = async (event) => {
+	const { locals, platform, setHeaders, url, request } = event;
+	await enforceApiRateLimit(event);
+	const userId = requireAuth(locals);
+	const db = requireDB(platform);
+
+	const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
+	const response = usePagination
+		? await listHabitsPaginated(db, userId, url, request, setHeaders)
+		: await listHabitsFull(db, userId, request, setHeaders);
+
+	return response ?? new Response(null, { status: 304 });
+};
+
+// POST /api/habits - Create new habit
+export const POST: RequestHandler = async (event) => {
+	const { request, locals, platform } = event;
+	await enforceApiRateLimit(event);
+	const userId = requireAuth(locals);
+	const db = requireDB(platform);
+
+	const data = await parseHabitRequest(request);
+	const habitData = buildHabitRecord(data, userId);
 
 	try {
 		await db.insert(habit).values(habitData);

@@ -1,10 +1,15 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getDB } from '$lib/server/db';
 import { goal, habit, habitCompletion } from '$lib/server/db/schema';
 import { eq, and, sql, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth, enforceApiRateLimit, parseHabitFromDB } from '$lib/server/api-helpers';
+import {
+	requireAuth,
+	requireDB,
+	enforceApiRateLimit,
+	parseHabitFromDB,
+	type DB
+} from '$lib/server/api-helpers';
 import { calculateGoalProgress } from '$lib/utils/goal';
 import { startOfDay, endOfDay } from '$lib/utils/date';
 
@@ -36,7 +41,7 @@ const updateGoalSchema = z
 /**
  * Verifies that a goal exists and belongs to the authenticated user.
  */
-async function verifyGoalOwnership(db: ReturnType<typeof getDB>, goalId: string, userId: string) {
+async function verifyGoalOwnership(db: DB, goalId: string, userId: string) {
 	const goals = await db
 		.select()
 		.from(goal)
@@ -50,24 +55,19 @@ async function verifyGoalOwnership(db: ReturnType<typeof getDB>, goalId: string,
 	return goals[0];
 }
 
-// GET /api/goals/[id]: goal with habits and progress
-export const GET: RequestHandler = async (event) => {
-	const { params, locals, platform, setHeaders } = event;
-	await enforceApiRateLimit(event);
-	const userId = requireAuth(locals);
-	const db = getDB(platform!.env.DB);
+const fetchGoalWithProgress = async (
+	db: DB,
+	userId: string,
+	goalId: string,
+	setHeaders?: (headers: Record<string, string>) => void
+) => {
+	const goalRecord = await verifyGoalOwnership(db, goalId, userId);
 
-	const goalRecord = await verifyGoalOwnership(db, params.id, userId);
-
-	// Cache privately
-	setHeaders({
+	setHeaders?.({
 		'Cache-Control': 'private, max-age=60, stale-while-revalidate=30'
 	});
 
-	// Fetch attached habits
-	const habits = await db.select().from(habit).where(eq(habit.goalId, params.id));
-
-	// Fetch completions filtered by goal date range
+	const habitsForGoal = await db.select().from(habit).where(eq(habit.goalId, goalId));
 	const completions = await db
 		.select()
 		.from(habitCompletion)
@@ -79,25 +79,23 @@ export const GET: RequestHandler = async (event) => {
 			)
 		);
 
-	// Parse habits
-	const parsedHabits = habits.map(parseHabitFromDB);
+	const parsedHabits = habitsForGoal.map(parseHabitFromDB);
+	return calculateGoalProgress(goalRecord, parsedHabits, completions);
+};
 
-	const goalWithProgress = calculateGoalProgress(goalRecord, parsedHabits, completions);
+// GET /api/goals/[id]: goal with habits and progress
+export const GET: RequestHandler = async (event) => {
+	const { params, locals, platform, setHeaders } = event;
+	await enforceApiRateLimit(event);
+	const userId = requireAuth(locals);
+	const db = requireDB(platform);
 
+	const goalWithProgress = await fetchGoalWithProgress(db, userId, params.id, setHeaders);
 	return json(goalWithProgress);
 };
 
 // PATCH /api/goals/[id]: update goal
-export const PATCH: RequestHandler = async (event) => {
-	const { params, request, locals, platform } = event;
-	await enforceApiRateLimit(event);
-	const userId = requireAuth(locals);
-	const db = getDB(platform!.env.DB);
-
-	// Verify ownership
-	const existingGoal = await verifyGoalOwnership(db, params.id, userId);
-
-	// Parse and validate request body
+const parseGoalUpdate = async (request: Request) => {
 	const body = await request.json();
 	const validationResult = updateGoalSchema.safeParse(body);
 
@@ -108,30 +106,13 @@ export const PATCH: RequestHandler = async (event) => {
 		);
 	}
 
-	const data = validationResult.data;
+	return validationResult.data;
+};
 
-	// Build update object
-	const updates: Partial<typeof goal.$inferInsert> = {
-		updatedAt: new Date()
-	};
-
-	if (data.title !== undefined) {
-		updates.title = data.title;
-	}
-
-	if (data.description !== undefined) {
-		updates.description = data.description;
-	}
-
-	if (data.startDate !== undefined) {
-		updates.startDate = new Date(data.startDate + 'T00:00:00Z');
-	}
-
-	if (data.endDate !== undefined) {
-		updates.endDate = new Date(data.endDate + 'T23:59:59Z');
-	}
-
-	// Validate date range if only one date is being updated
+const validateDateRangeUpdate = (
+	data: z.infer<typeof updateGoalSchema>,
+	existingGoal: typeof goal.$inferSelect
+) => {
 	if (data.startDate && !data.endDate) {
 		const newStart = new Date(data.startDate + 'T00:00:00Z');
 		if (newStart >= existingGoal.endDate) {
@@ -145,66 +126,72 @@ export const PATCH: RequestHandler = async (event) => {
 			throw error(400, 'End date must be after start date');
 		}
 	}
+};
 
-	await db.update(goal).set(updates).where(eq(goal.id, params.id));
+const buildGoalUpdates = (data: z.infer<typeof updateGoalSchema>) => {
+	const updates: Partial<typeof goal.$inferInsert> = { updatedAt: new Date() };
+	if (data.title !== undefined) updates.title = data.title;
+	if (data.description !== undefined) updates.description = data.description;
+	if (data.startDate !== undefined) updates.startDate = new Date(data.startDate + 'T00:00:00Z');
+	if (data.endDate !== undefined) updates.endDate = new Date(data.endDate + 'T23:59:59Z');
+	return updates;
+};
 
-	// Update habit attachments if provided
-	if (data.habitIds !== undefined) {
-		const habitIds = data.habitIds;
-		const now = new Date();
+const updateHabitAttachments = async (
+	db: DB,
+	userId: string,
+	goalId: string,
+	habitIds: string[] | undefined
+) => {
+	if (habitIds === undefined) return;
+	const now = new Date();
+	const baseDetachCondition = and(eq(habit.userId, userId), eq(habit.goalId, goalId));
 
-		// Validate ownership of provided habits
-		if (habitIds.length > 0) {
-			const ownedHabits = await db
-				.select({ id: habit.id })
-				.from(habit)
-				.where(and(eq(habit.userId, userId), sql`${habit.id} IN (${sql.join(habitIds, sql`, `)})`));
-
-			const ownedIds = new Set(ownedHabits.map((h) => h.id));
-			const invalid = habitIds.filter((id) => !ownedIds.has(id));
-			if (invalid.length > 0) {
-				throw error(400, 'One or more habits are invalid or do not belong to the user.');
-			}
-		}
-
-		// Detach habits removed from the new list
-		const baseDetachCondition = and(eq(habit.userId, userId), eq(habit.goalId, params.id));
-		if (habitIds.length === 0) {
-			await db.update(habit).set({ goalId: null, updatedAt: now }).where(baseDetachCondition);
-		} else {
-			await db
-				.update(habit)
-				.set({ goalId: null, updatedAt: now })
-				.where(and(baseDetachCondition, sql`${habit.id} NOT IN (${sql.join(habitIds, sql`, `)})`));
-
-			// Attach the provided habits to this goal
-			await db
-				.update(habit)
-				.set({ goalId: params.id, updatedAt: now })
-				.where(and(eq(habit.userId, userId), sql`${habit.id} IN (${sql.join(habitIds, sql`, `)})`));
-		}
+	if (habitIds.length === 0) {
+		await db.update(habit).set({ goalId: null, updatedAt: now }).where(baseDetachCondition);
+		return;
 	}
 
+	const ownedHabits = await db
+		.select({ id: habit.id })
+		.from(habit)
+		.where(and(eq(habit.userId, userId), sql`${habit.id} IN (${sql.join(habitIds, sql`, `)})`));
+
+	const ownedIds = new Set(ownedHabits.map((h) => h.id));
+	const invalid = habitIds.filter((id) => !ownedIds.has(id));
+	if (invalid.length > 0) {
+		throw error(400, 'One or more habits are invalid or do not belong to the user.');
+	}
+
+	await db
+		.update(habit)
+		.set({ goalId: null, updatedAt: now })
+		.where(and(baseDetachCondition, sql`${habit.id} NOT IN (${sql.join(habitIds, sql`, `)})`));
+
+	await db
+		.update(habit)
+		.set({ goalId, updatedAt: now })
+		.where(and(eq(habit.userId, userId), sql`${habit.id} IN (${sql.join(habitIds, sql`, `)})`));
+};
+
+// PATCH /api/goals/[id]: update goal
+export const PATCH: RequestHandler = async (event) => {
+	const { params, request, locals, platform } = event;
+	await enforceApiRateLimit(event);
+	const userId = requireAuth(locals);
+	const db = requireDB(platform);
+
+	const existingGoal = await verifyGoalOwnership(db, params.id, userId);
+	const data = await parseGoalUpdate(request);
+
+	validateDateRangeUpdate(data, existingGoal);
+	const updates = buildGoalUpdates(data);
+	await db.update(goal).set(updates).where(eq(goal.id, params.id));
+
+	await updateHabitAttachments(db, userId, params.id, data.habitIds);
+
 	// Fetch updated goal with habits
-	const [updatedGoal] = await db.select().from(goal).where(eq(goal.id, params.id));
-
-	const habits = await db.select().from(habit).where(eq(habit.goalId, params.id));
-
-	const completions = await db
-		.select()
-		.from(habitCompletion)
-		.where(
-			and(
-				eq(habitCompletion.userId, userId),
-				gte(habitCompletion.completedAt, startOfDay(updatedGoal.startDate)),
-				lte(habitCompletion.completedAt, endOfDay(updatedGoal.endDate))
-			)
-		);
-
-	const parsedHabits = habits.map(parseHabitFromDB);
-
-	const goalWithProgress = calculateGoalProgress(updatedGoal, parsedHabits, completions);
-
+	const goalWithProgress = await fetchGoalWithProgress(db, userId, params.id);
 	return json(goalWithProgress);
 };
 
@@ -213,7 +200,7 @@ export const DELETE: RequestHandler = async (event) => {
 	const { params, locals, platform } = event;
 	await enforceApiRateLimit(event);
 	const userId = requireAuth(locals);
-	const db = getDB(platform!.env.DB);
+	const db = requireDB(platform);
 
 	// Verify ownership
 	await verifyGoalOwnership(db, params.id, userId);

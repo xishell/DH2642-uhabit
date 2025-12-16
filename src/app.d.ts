@@ -35,6 +35,8 @@ declare global {
 				DEV_MODE?: string; // Optional: set to "true" for dev mode
 				RATE_LIMIT?: KVNamespace; // Optional: KV namespace for rate limiting
 				QUOTES_CACHE?: KVNamespace; // Optional: KV namespace for quotes caching
+				VAPID_PUBLIC_KEY?: string; // Optional: VAPID public key for push notifications
+				VAPID_PRIVATE_KEY?: string; // Optional: VAPID private key for push notifications
 			};
 			context: {
 				waitUntil(promise: Promise<unknown>): void;

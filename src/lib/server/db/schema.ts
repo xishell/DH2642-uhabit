@@ -156,6 +156,27 @@ export const habit = sqliteTable(
 	})
 );
 
+// Stats cache table for storing computed statistics server-side
+export const statsCache = sqliteTable(
+	'stats_cache',
+	{
+		id: text('id').primaryKey(), // Format: `${userId}-${scope}-${dateKey}`
+		userId: text('userId')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		scope: text('scope').notNull(), // 'daily', 'weekly', 'monthly'
+		dateKey: text('dateKey').notNull(), // YYYY-MM-DD for the period
+		// Computed stats stored as JSON
+		data: text('data').notNull(), // JSON string of ComputedStatistics
+		computedAt: integer('computedAt', { mode: 'timestamp' }).notNull(),
+		validUntil: integer('validUntil', { mode: 'timestamp' }).notNull()
+	},
+	(table) => ({
+		userScopeIdx: index('stats_cache_user_scope_idx').on(table.userId, table.scope),
+		validUntilIdx: index('stats_cache_valid_until_idx').on(table.validUntil)
+	})
+);
+
 // Habit completions table for tracking when users complete habits
 export const habitCompletion = sqliteTable(
 	'habit_completion',

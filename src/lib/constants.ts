@@ -36,3 +36,17 @@ export const KV_KEYS = {
 	/** Daily quote cache */
 	DAILY_QUOTE: 'daily-quote'
 } as const;
+
+// Statistics cache configuration
+export const STATS_CACHE = {
+	/** IndexedDB database name */
+	DB_NAME: 'uhabit-stats-cache',
+	/** IndexedDB schema version */
+	DB_VERSION: 1,
+	/** How long computed stats are valid (5 minutes) */
+	TTL_MS: 5 * 60 * 1000,
+	/** How many days of history to fetch on first load */
+	HISTORY_DAYS: 90,
+	/** How long before forcing a full sync (24 hours) */
+	FULL_SYNC_INTERVAL_MS: 24 * 60 * 60 * 1000
+} as const;

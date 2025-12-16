@@ -13,7 +13,7 @@ import type {
 	Snapshot,
 	Insights,
 	ActivityItem,
-	DateRange
+	ComputedStatistics
 } from '$lib/stats/types';
 import {
 	computeCompletionRate,
@@ -29,8 +29,9 @@ import {
 	findBestDate
 } from '$lib/stats';
 import { createStatsCache, type StatsCache } from '$lib/cache/statsCache';
+import { createStatsApi, type StatsApi } from '$lib/api/statsApi';
 import { STATS_CACHE } from '$lib/constants';
-import { formatDate, startOfDay, endOfDay, getMonthName } from '$lib/utils/date';
+import { formatRangeLabel, buildActivity, getDateKey } from './statisticsHelpers';
 
 export type StatisticsState = {
 	scope: Scope;
@@ -54,14 +55,17 @@ type StatisticsPresenterDeps = {
 	browser: boolean;
 	initialScope?: Scope;
 	initialDate?: Date;
+	cacheFactory?: () => StatsCache;
 };
 
 export function createStatisticsPresenter({
 	fetcher,
 	browser,
 	initialScope = 'daily',
-	initialDate = new Date()
+	initialDate = new Date(),
+	cacheFactory = createStatsCache
 }: StatisticsPresenterDeps) {
+	const api: StatsApi = createStatsApi({ fetcher });
 	let cache: StatsCache | null = null;
 	let habits: Habit[] = [];
 	let completions: HabitCompletion[] = [];
@@ -85,66 +89,13 @@ export function createStatisticsPresenter({
 	const state = writable<StatisticsState>(initialState);
 	const { subscribe, update } = state;
 
-	/**
-	 * Get current state synchronously
-	 */
 	function getState(): StatisticsState {
 		let current: StatisticsState = initialState;
 		subscribe((v) => (current = v))();
 		return current;
 	}
 
-	/**
-	 * Format range label based on scope and date
-	 */
-	function formatRangeLabel(scope: Scope, date: Date): string {
-		if (scope === 'daily') {
-			const today = startOfDay(new Date());
-			const target = startOfDay(date);
-			if (today.getTime() === target.getTime()) {
-				return `Today (${getMonthName(date).slice(0, 3)} ${date.getDate()})`;
-			}
-			return `${getMonthName(date).slice(0, 3)} ${date.getDate()}`;
-		} else if (scope === 'weekly') {
-			return 'This week';
-		} else {
-			return `${getMonthName(date)} ${date.getFullYear()}`;
-		}
-	}
-
-	/**
-	 * Build activity items from trends
-	 */
-	function buildActivity(trends: HabitTrend[]): ActivityItem[] {
-		return trends.slice(0, 4).map((trend) => {
-			let kind: 'win' | 'neutral' | 'warning';
-			let meta: string;
-
-			if (trend.delta > 0.05) {
-				kind = 'win';
-				meta = trend.streak > 3 ? `${trend.streak}-day streak` : 'Improving';
-			} else if (trend.delta < -0.05) {
-				kind = 'warning';
-				meta = 'Needs attention';
-			} else {
-				kind = 'neutral';
-				meta = 'Steady';
-			}
-
-			return {
-				habitId: trend.habitId,
-				title: trend.title,
-				meta,
-				delta: `${trend.delta >= 0 ? '+' : ''}${Math.round(trend.delta * 100)}%`,
-				kind
-			};
-		});
-	}
-
-	/**
-	 * Compute all statistics from raw data
-	 */
-	function computeStatistics(scope: Scope, date: Date): void {
+	function computeStatistics(scope: Scope, date: Date): ComputedStatistics | null {
 		if (habits.length === 0) {
 			update((s) => ({
 				...s,
@@ -156,21 +107,16 @@ export function createStatisticsPresenter({
 				insights: null,
 				activity: []
 			}));
-			return;
+			return null;
 		}
-
 		const { current: currentRange, previous: previousRange } = getPeriodRanges(scope, date);
 		const heatmapRange = getHeatmapRange(scope, date);
-
-		// Compute all stats
 		const currentRate = computeCompletionRate(habits, completions, currentRange);
 		const previousRate = computeCompletionRate(habits, completions, previousRange);
 		const overallStreak = computeOverallStreak(habits, completions, date);
 		const heatmap = computeHeatmap(habits, completions, heatmapRange, scope);
 		const trends = computeTrends(habits, completions, scope, date);
 		const insights = computeInsights(habits, completions, heatmapRange, date);
-
-		// Build period stats
 		const periodStats: PeriodStats = {
 			rangeLabel: formatRangeLabel(scope, date),
 			completionRate: currentRate.rate,
@@ -182,8 +128,6 @@ export function createStatisticsPresenter({
 			streak: overallStreak.currentStreak,
 			longestStreak: overallStreak.longestStreak
 		};
-
-		// Build snapshot
 		const snapshot: Snapshot = {
 			currentStreak: overallStreak.currentStreak,
 			overallCompletion: currentRate.rate,
@@ -191,44 +135,22 @@ export function createStatisticsPresenter({
 			mostConsistent: findMostConsistent(trends),
 			needsAttention: findNeedsAttention(trends)
 		};
-
-		// Build activity
-		const activity = buildActivity(trends);
-
-		update((s) => ({
-			...s,
-			isLoading: false,
+		const computed: ComputedStatistics = {
 			periodStats,
 			trends,
 			heatmap,
 			snapshot,
 			insights,
-			activity
-		}));
+			activity: buildActivity(trends)
+		};
+		update((s) => ({ ...s, isLoading: false, ...computed }));
+		return computed;
 	}
 
-	/**
-	 * Fetch habits from API
-	 */
-	async function fetchHabits(): Promise<Habit[]> {
-		const response = await fetcher('/api/habits');
-		if (!response.ok) throw new Error('Failed to fetch habits');
-		return response.json();
+	function applyStats(stats: ComputedStatistics): void {
+		update((s) => ({ ...s, isLoading: false, ...stats }));
 	}
 
-	/**
-	 * Fetch completions from API with optional date filter
-	 */
-	async function fetchCompletions(from: Date): Promise<HabitCompletion[]> {
-		const params = new URLSearchParams({ from: formatDate(from) });
-		const response = await fetcher(`/api/completions?${params}`);
-		if (!response.ok) throw new Error('Failed to fetch completions');
-		return response.json();
-	}
-
-	/**
-	 * Main sync function
-	 */
 	async function sync(): Promise<void> {
 		update((s) => ({ ...s, isSyncing: true, error: null }));
 
@@ -252,7 +174,7 @@ export function createStatisticsPresenter({
 				// Fetch incremental completions
 				const lastSync = metadata.lastCompletionsSync || fetchFrom;
 				try {
-					const newCompletions = await fetchCompletions(lastSync);
+					const newCompletions = await api.fetchCompletions(lastSync);
 					if (newCompletions.length > 0) {
 						// Merge new completions (dedupe by id)
 						const existingIds = new Set(completions.map((c) => c.id));
@@ -262,7 +184,7 @@ export function createStatisticsPresenter({
 					}
 
 					// Refresh habits if needed
-					const newHabits = await fetchHabits();
+					const newHabits = await api.fetchHabits();
 					habits = newHabits;
 					await cache.setHabits(habits);
 
@@ -278,10 +200,28 @@ export function createStatisticsPresenter({
 					update((s) => ({ ...s, isOffline: true }));
 				}
 			} else {
-				// Cold start - fetch everything
+				// Cold start - try server cache first for quick loading on new devices
+				const dateKey = getDateKey(currentState.scope, currentState.selectedDate);
 				try {
-					habits = await fetchHabits();
-					completions = await fetchCompletions(fetchFrom);
+					const serverCache = await api.getServerCache(currentState.scope, dateKey);
+					if (serverCache) {
+						// Server cache hit - use it immediately
+						applyStats(serverCache.data);
+						update((s) => ({ ...s, isSyncing: false, lastSync: new Date() }));
+
+						// Fetch fresh data in background for next time
+						api.fetchHabits().then((h) => (habits = h));
+						api.fetchCompletions(fetchFrom).then((c) => (completions = c));
+						return;
+					}
+				} catch {
+					// Server cache miss or error - continue with full fetch
+				}
+
+				// No server cache - fetch everything
+				try {
+					habits = await api.fetchHabits();
+					completions = await api.fetchCompletions(fetchFrom);
 
 					if (cache) {
 						await cache.setHabits(habits);
@@ -308,7 +248,17 @@ export function createStatisticsPresenter({
 			}
 
 			// Compute statistics
-			computeStatistics(currentState.scope, currentState.selectedDate);
+			const computed = computeStatistics(currentState.scope, currentState.selectedDate);
+
+			// Save to server cache for quick loading on other devices
+			if (computed) {
+				const dateKey = getDateKey(currentState.scope, currentState.selectedDate);
+				const validUntil = new Date();
+				validUntil.setHours(validUntil.getHours() + 1); // Cache for 1 hour
+				api.setServerCache(currentState.scope, dateKey, computed, validUntil).catch(() => {
+					// Ignore server cache errors - not critical
+				});
+			}
 
 			update((s) => ({
 				...s,
@@ -326,16 +276,13 @@ export function createStatisticsPresenter({
 		}
 	}
 
-	/**
-	 * Initialize the presenter
-	 */
 	async function initialize(): Promise<void> {
 		if (!browser) return;
 
 		update((s) => ({ ...s, isLoading: true }));
 
 		// Initialize cache
-		cache = createStatsCache();
+		cache = cacheFactory();
 		await cache.open();
 
 		// Listen for online/offline events
@@ -354,36 +301,22 @@ export function createStatisticsPresenter({
 		await sync();
 	}
 
-	/**
-	 * Change scope (daily/weekly/monthly)
-	 */
 	function setScope(scope: Scope): void {
 		update((s) => ({ ...s, scope, isLoading: true }));
-		// Recompute with existing data
 		const currentState = getState();
 		computeStatistics(scope, currentState.selectedDate);
 	}
 
-	/**
-	 * Change selected date
-	 */
 	function setSelectedDate(date: Date): void {
 		update((s) => ({ ...s, selectedDate: date, isLoading: true }));
-		// Recompute with existing data
 		const currentState = getState();
 		computeStatistics(currentState.scope, date);
 	}
 
-	/**
-	 * Force a full refresh
-	 */
 	async function refresh(): Promise<void> {
 		await sync();
 	}
 
-	/**
-	 * Clear all cached data
-	 */
 	async function clearCache(): Promise<void> {
 		if (cache) {
 			await cache.clearAll();

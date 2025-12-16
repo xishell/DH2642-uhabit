@@ -1,6 +1,5 @@
 /**
  * Completion rate computation for habits
- * Calculates completion percentages for date ranges
  */
 
 import type { Habit, HabitCompletion } from '$lib/types/habit';
@@ -8,84 +7,68 @@ import type { DateRange, CompletionRateResult } from './types';
 import { shouldShowHabitOnDate } from '$lib/utils/habit';
 import { formatDate, startOfDay } from '$lib/utils/date';
 
-/**
- * Compute completion rate for a date range
- * Handles both boolean and numeric habits correctly
- *
- * @param habits - Habits to compute rate for
- * @param completions - All completions in the date range
- * @param range - Date range to compute rate for
- */
+type CompletionIndex = Map<string, Map<string, HabitCompletion[]>>;
+
+/** Index completions by date and habit for O(1) lookup */
+function indexCompletions(completions: HabitCompletion[]): CompletionIndex {
+	const index: CompletionIndex = new Map();
+	for (const completion of completions) {
+		const dateKey = formatDate(new Date(completion.completedAt));
+		if (!index.has(dateKey)) index.set(dateKey, new Map());
+		const dateMap = index.get(dateKey)!;
+		if (!dateMap.has(completion.habitId)) dateMap.set(completion.habitId, []);
+		dateMap.get(completion.habitId)!.push(completion);
+	}
+	return index;
+}
+
+/** Check if habit was completed based on its type */
+function isHabitCompleted(habit: Habit, habitCompletions: HabitCompletion[]): boolean {
+	if (habit.measurement === 'boolean') {
+		return habitCompletions.length > 0;
+	}
+	const sum = habitCompletions.reduce((acc, c) => acc + (c.measurement ?? 0), 0);
+	const target = habit.targetAmount ?? 0;
+	return target > 0 && sum >= target;
+}
+
 export function computeCompletionRate(
 	habits: Habit[],
 	completions: HabitCompletion[],
 	range: DateRange
 ): CompletionRateResult {
-	// Index completions by date and habit for O(1) lookup
-	const completionsByDateAndHabit = new Map<string, Map<string, HabitCompletion[]>>();
-
-	for (const completion of completions) {
-		const dateKey = formatDate(new Date(completion.completedAt));
-		if (!completionsByDateAndHabit.has(dateKey)) {
-			completionsByDateAndHabit.set(dateKey, new Map());
-		}
-		const dateMap = completionsByDateAndHabit.get(dateKey)!;
-		if (!dateMap.has(completion.habitId)) {
-			dateMap.set(completion.habitId, []);
-		}
-		dateMap.get(completion.habitId)!.push(completion);
-	}
-
+	const completionIndex = indexCompletions(completions);
 	let totalScheduled = 0;
 	let totalCompleted = 0;
 	const byHabit = new Map<string, { rate: number; completed: number; total: number }>();
 
-	// Initialize per-habit counters
 	for (const habit of habits) {
 		byHabit.set(habit.id, { rate: 0, completed: 0, total: 0 });
 	}
 
-	// Iterate through each day in range
 	const current = startOfDay(range.from);
 	const end = startOfDay(range.to);
 
 	while (current <= end) {
 		const dateKey = formatDate(current);
-		const dayCompletions = completionsByDateAndHabit.get(dateKey) || new Map();
+		const dayCompletions = completionIndex.get(dateKey) || new Map();
 
 		for (const habit of habits) {
-			if (shouldShowHabitOnDate(habit, current)) {
-				const habitStats = byHabit.get(habit.id)!;
-				habitStats.total++;
-				totalScheduled++;
+			if (!shouldShowHabitOnDate(habit, current)) continue;
 
-				const habitCompletions = dayCompletions.get(habit.id) || [];
+			const habitStats = byHabit.get(habit.id)!;
+			habitStats.total++;
+			totalScheduled++;
 
-				if (habit.measurement === 'boolean') {
-					// Boolean: completed if any completion exists for that day
-					if (habitCompletions.length > 0) {
-						habitStats.completed++;
-						totalCompleted++;
-					}
-				} else {
-					// Numeric: sum measurements and compare to target
-					const sum = habitCompletions.reduce(
-						(acc: number, c: HabitCompletion) => acc + (c.measurement ?? 0),
-						0
-					);
-					const target = habit.targetAmount ?? 0;
-					if (target > 0 && sum >= target) {
-						habitStats.completed++;
-						totalCompleted++;
-					}
-				}
+			const habitCompletions = dayCompletions.get(habit.id) || [];
+			if (isHabitCompleted(habit, habitCompletions)) {
+				habitStats.completed++;
+				totalCompleted++;
 			}
 		}
-
 		current.setDate(current.getDate() + 1);
 	}
 
-	// Calculate rates
 	for (const [, stats] of byHabit) {
 		stats.rate = stats.total > 0 ? stats.completed / stats.total : 0;
 	}
@@ -141,9 +124,6 @@ export function findBestDayOfWeek(
 ): string {
 	const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 	const dayStats = Array.from({ length: 7 }, () => ({ completed: 0, total: 0 }));
-
-	// Index completions
-	const completionDates = new Set(completions.map((c) => formatDate(new Date(c.completedAt))));
 
 	const current = startOfDay(range.from);
 	const end = startOfDay(range.to);

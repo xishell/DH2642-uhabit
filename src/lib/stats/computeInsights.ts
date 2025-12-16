@@ -7,7 +7,6 @@ import type { Habit, HabitCompletion } from '$lib/types/habit';
 import type { DateRange, Insights, InsightCard } from './types';
 import { computeDailyRates } from './computeCompletionRate';
 import { computeOverallStreak } from './computeStreaks';
-import { formatDate, startOfDay } from '$lib/utils/date';
 
 /**
  * Compute standard deviation of an array of numbers

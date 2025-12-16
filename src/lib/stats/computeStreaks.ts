@@ -1,6 +1,5 @@
 /**
  * Streak computation for habits
- * Calculates current and longest streaks based on completion history
  */
 
 import type { Habit, HabitCompletion } from '$lib/types/habit';
@@ -8,90 +7,86 @@ import type { StreakResult } from './types';
 import { shouldShowHabitOnDate } from '$lib/utils/habit';
 import { formatDate, startOfDay } from '$lib/utils/date';
 
-/**
- * Compute streak for a single habit
- * A streak is consecutive scheduled days with completions
- *
- * @param habit - The habit to compute streak for
- * @param completions - All completions (will be filtered to this habit)
- * @param asOfDate - Calculate streak as of this date (defaults to today)
- */
+type StreakState = {
+	current: number;
+	longest: number;
+	temp: number;
+	startDate: Date | null;
+	tempStart: Date | null;
+	isActive: boolean;
+};
+
+function createStreakState(): StreakState {
+	return { current: 0, longest: 0, temp: 0, startDate: null, tempStart: null, isActive: true };
+}
+
+function handleStreakHit(state: StreakState, date: Date): void {
+	state.temp++;
+	if (!state.tempStart) state.tempStart = new Date(date);
+}
+
+function handleStreakMiss(state: StreakState): void {
+	if (state.temp > state.longest) state.longest = state.temp;
+	if (state.isActive) {
+		state.current = state.temp;
+		state.startDate = state.tempStart;
+		state.isActive = false;
+	}
+	state.temp = 0;
+	state.tempStart = null;
+}
+
+function finalizeStreak(state: StreakState): StreakResult {
+	if (state.temp > state.longest) state.longest = state.temp;
+	if (state.isActive && state.temp > 0) {
+		state.current = state.temp;
+		state.startDate = state.tempStart;
+	}
+	return {
+		currentStreak: state.current,
+		longestStreak: state.longest,
+		streakStartDate: state.startDate
+	};
+}
+
 export function computeHabitStreak(
 	habit: Habit,
 	completions: HabitCompletion[],
 	asOfDate: Date = new Date()
 ): StreakResult {
-	// Filter completions for this habit
 	const habitCompletions = completions.filter((c) => c.habitId === habit.id);
-
 	if (habitCompletions.length === 0) {
 		return { currentStreak: 0, longestStreak: 0, streakStartDate: null };
 	}
 
-	// Build set of completion dates for O(1) lookup
 	const completionDates = new Set(habitCompletions.map((c) => formatDate(new Date(c.completedAt))));
-
-	const today = startOfDay(asOfDate);
-	let currentStreak = 0;
-	let longestStreak = 0;
-	let tempStreak = 0;
-	let streakStartDate: Date | null = null;
-	let tempStreakStart: Date | null = null;
-	let isCurrentStreakActive = true;
-
-	// Walk backwards from today, up to 365 days
-	const checkDate = new Date(today);
+	const state = createStreakState();
+	const checkDate = startOfDay(asOfDate);
 
 	for (let i = 0; i < 365; i++) {
-		const dateStr = formatDate(checkDate);
-		const isScheduled = shouldShowHabitOnDate(habit, checkDate);
-
-		if (isScheduled) {
-			const hasCompletion = completionDates.has(dateStr);
-
-			if (hasCompletion) {
-				tempStreak++;
-				if (!tempStreakStart) {
-					tempStreakStart = new Date(checkDate);
-				}
+		if (shouldShowHabitOnDate(habit, checkDate)) {
+			if (completionDates.has(formatDate(checkDate))) {
+				handleStreakHit(state, checkDate);
 			} else {
-				// Missed a scheduled day - streak broken
-				if (tempStreak > longestStreak) {
-					longestStreak = tempStreak;
-				}
-				if (isCurrentStreakActive) {
-					currentStreak = tempStreak;
-					streakStartDate = tempStreakStart;
-					isCurrentStreakActive = false;
-				}
-				tempStreak = 0;
-				tempStreakStart = null;
+				handleStreakMiss(state);
 			}
 		}
-
 		checkDate.setDate(checkDate.getDate() - 1);
 	}
 
-	// Handle streak that extends to the beginning of our search window
-	if (tempStreak > longestStreak) {
-		longestStreak = tempStreak;
-	}
-	if (isCurrentStreakActive && tempStreak > 0) {
-		currentStreak = tempStreak;
-		streakStartDate = tempStreakStart;
-	}
-
-	return { currentStreak, longestStreak, streakStartDate };
+	return finalizeStreak(state);
 }
 
-/**
- * Compute overall streak across all habits
- * A day counts as completed if the user completed ANY scheduled habit that day
- *
- * @param habits - All habits to consider
- * @param completions - All completions
- * @param asOfDate - Calculate streak as of this date
- */
+function indexCompletionsByDate(completions: HabitCompletion[]): Map<string, Set<string>> {
+	const index = new Map<string, Set<string>>();
+	for (const completion of completions) {
+		const dateStr = formatDate(new Date(completion.completedAt));
+		if (!index.has(dateStr)) index.set(dateStr, new Set());
+		index.get(dateStr)!.add(completion.habitId);
+	}
+	return index;
+}
+
 export function computeOverallStreak(
 	habits: Habit[],
 	completions: HabitCompletion[],
@@ -101,72 +96,28 @@ export function computeOverallStreak(
 		return { currentStreak: 0, longestStreak: 0, streakStartDate: null };
 	}
 
-	// Build map of date -> set of completed habit IDs
-	const completionsByDate = new Map<string, Set<string>>();
-	for (const completion of completions) {
-		const dateStr = formatDate(new Date(completion.completedAt));
-		if (!completionsByDate.has(dateStr)) {
-			completionsByDate.set(dateStr, new Set());
-		}
-		completionsByDate.get(dateStr)!.add(completion.habitId);
-	}
-
-	const today = startOfDay(asOfDate);
-	let currentStreak = 0;
-	let longestStreak = 0;
-	let tempStreak = 0;
-	let streakStartDate: Date | null = null;
-	let tempStreakStart: Date | null = null;
-	let isCurrentStreakActive = true;
-
-	const checkDate = new Date(today);
+	const completionsByDate = indexCompletionsByDate(completions);
+	const state = createStreakState();
+	const checkDate = startOfDay(asOfDate);
 
 	for (let i = 0; i < 365; i++) {
 		const dateStr = formatDate(checkDate);
-
-		// Find habits scheduled for this day
 		const scheduledHabits = habits.filter((h) => shouldShowHabitOnDate(h, checkDate));
 
 		if (scheduledHabits.length > 0) {
 			const completedIds = completionsByDate.get(dateStr) || new Set();
-
-			// Check if at least one scheduled habit was completed
 			const hasAnyCompletion = scheduledHabits.some((h) => completedIds.has(h.id));
 
 			if (hasAnyCompletion) {
-				tempStreak++;
-				if (!tempStreakStart) {
-					tempStreakStart = new Date(checkDate);
-				}
+				handleStreakHit(state, checkDate);
 			} else {
-				// No completions on a day with scheduled habits
-				if (tempStreak > longestStreak) {
-					longestStreak = tempStreak;
-				}
-				if (isCurrentStreakActive) {
-					currentStreak = tempStreak;
-					streakStartDate = tempStreakStart;
-					isCurrentStreakActive = false;
-				}
-				tempStreak = 0;
-				tempStreakStart = null;
+				handleStreakMiss(state);
 			}
 		}
-		// Days with no scheduled habits don't break streaks
-
 		checkDate.setDate(checkDate.getDate() - 1);
 	}
 
-	// Handle streak at the end of search window
-	if (tempStreak > longestStreak) {
-		longestStreak = tempStreak;
-	}
-	if (isCurrentStreakActive && tempStreak > 0) {
-		currentStreak = tempStreak;
-		streakStartDate = tempStreakStart;
-	}
-
-	return { currentStreak, longestStreak, streakStartDate };
+	return finalizeStreak(state);
 }
 
 /**

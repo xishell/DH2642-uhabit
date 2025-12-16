@@ -1,176 +1,63 @@
 <script lang="ts">
-	import StatPanel from './components/StatPanel.svelte';
-	import type { DateValue } from '@skeletonlabs/skeleton-svelte';
-	import type { HabitStat, HabitType } from './types';
+	import { browser } from '$app/environment';
+	import { createStatisticsPresenter } from '$lib/presenters/statisticsPresenter';
+	import type { Scope } from '$lib/stats/types';
 
-	// Helper function to format DateValue to string (YYYY-MM-DD)
-	function formatDateValue(dateValue: DateValue): string {
-		const year = dateValue.year;
-		const month = String(dateValue.month).padStart(2, '0');
-		const day = String(dateValue.day).padStart(2, '0');
-		return `${year}-${month}-${day}`;
-	}
-
-	// Mock data
-	const HABITS = {
-		read: 'read books',
-		drink: 'drink water',
-		workout: 'work out',
-		meditation: 'meditation',
-		journaling: 'journaling',
-		news: 'reading news',
-		language: 'language study',
-		coding: 'coding',
-		walking: 'walking',
-		stretching: 'stretching',
-		water: 'drink water',
-		run: 'run'
-	} as const;
-
-	const DATES = {
-		first: '2025-11-20',
-		second: '2025-11-21'
-	} as const;
-
-	const dailyHabitStats: HabitStat[] = [
-		{
-			date: DATES.first,
-			data: [
-				{ habitTitle: HABITS.read, completionRate: 0.8 },
-				{ habitTitle: HABITS.drink, completionRate: 0.9 },
-				{ habitTitle: HABITS.workout, completionRate: 0.4 },
-				{ habitTitle: HABITS.meditation, completionRate: 0.1 },
-				{ habitTitle: HABITS.journaling, completionRate: 0.4 },
-				{ habitTitle: HABITS.coding, completionRate: 0.34 },
-				{ habitTitle: HABITS.walking, completionRate: 0.4 },
-				{ habitTitle: HABITS.stretching, completionRate: 0.52 },
-				{ habitTitle: HABITS.news, completionRate: 0.14 },
-				{ habitTitle: HABITS.language, completionRate: 0.04 }
-			]
-		},
-		{
-			date: DATES.second,
-			data: [
-				{ habitTitle: HABITS.read, completionRate: 0.6 },
-				{ habitTitle: HABITS.drink, completionRate: 0.95 },
-				{ habitTitle: HABITS.workout, completionRate: 0.7 },
-				{ habitTitle: HABITS.meditation, completionRate: 0.3 }
-			]
-		}
-	];
-
-	const weeklyHabitStats: HabitStat[] = [
-		{
-			date: DATES.first,
-			data: [
-				{ habitTitle: HABITS.read, completionRate: 0.75 },
-				{ habitTitle: HABITS.drink, completionRate: 0.85 },
-				{ habitTitle: HABITS.workout, completionRate: 0.5 },
-				{ habitTitle: HABITS.meditation, completionRate: 0.25 },
-				{ habitTitle: HABITS.journaling, completionRate: 0.6 }
-			]
-		},
-		{
-			date: DATES.second,
-			data: [
-				{ habitTitle: HABITS.read, completionRate: 0.7 },
-				{ habitTitle: HABITS.drink, completionRate: 0.88 },
-				{ habitTitle: HABITS.workout, completionRate: 0.45 }
-			]
-		}
-	];
-
-	const monthlyHabitStats: HabitStat[] = [
-		{
-			date: DATES.first,
-			data: [
-				{ habitTitle: HABITS.read, completionRate: 0.65 },
-				{ habitTitle: HABITS.drink, completionRate: 0.82 },
-				{ habitTitle: HABITS.workout, completionRate: 0.38 },
-				{ habitTitle: HABITS.meditation, completionRate: 0.2 }
-			]
-		},
-		{
-			date: DATES.second,
-			data: [
-				{ habitTitle: HABITS.read, completionRate: 0.72 },
-				{ habitTitle: HABITS.drink, completionRate: 0.9 },
-				{ habitTitle: HABITS.workout, completionRate: 0.55 },
-				{ habitTitle: HABITS.meditation, completionRate: 0.35 },
-				{ habitTitle: HABITS.journaling, completionRate: 0.48 }
-			]
-		}
-	];
-
-	// DatePicker selected dates (using $state for Svelte 5 reactivity)
-	let selectedDateForDaily: string = $state(DATES.first);
-	let selectedDateForWeekly: string = $state(DATES.first);
-	let selectedDateForMonthly: string = $state(DATES.first);
-
-	// Date change handlers
-	function handleDailyDateChange(value: DateValue[]) {
-		if (value.length > 0) {
-			selectedDateForDaily = formatDateValue(value[0]);
-		}
-	}
-
-	function handleWeeklyDateChange(value: DateValue[]) {
-		if (value.length > 0) {
-			selectedDateForWeekly = formatDateValue(value[0]);
-		}
-	}
-
-	function handleMonthlyDateChange(value: DateValue[]) {
-		if (value.length > 0) {
-			selectedDateForMonthly = formatDateValue(value[0]);
-		}
-	}
-
-	let viewHeight = $state<Record<HabitType, number>>({ daily: 180, weekly: 180, monthly: 180 });
-	let isDragging = $state<Record<HabitType, boolean>>({
-		daily: false,
-		weekly: false,
-		monthly: false
+	const presenter = createStatisticsPresenter({
+		fetcher: fetch,
+		browser
 	});
 
-	const panels: {
-		key: HabitType;
-		title: string;
-		stats: HabitStat[];
-		onChange: (v: DateValue[]) => void;
-	}[] = [
-		{ key: 'daily', title: 'Daily', stats: dailyHabitStats, onChange: handleDailyDateChange },
-		{ key: 'weekly', title: 'Weekly', stats: weeklyHabitStats, onChange: handleWeeklyDateChange },
-		{
-			key: 'monthly',
-			title: 'Monthly',
-			stats: monthlyHabitStats,
-			onChange: handleMonthlyDateChange
-		}
-	];
+	const state = presenter.state;
+
+	$effect(() => {
+		presenter.initialize();
+	});
+
+	const scopes: Scope[] = ['daily', 'weekly', 'monthly'];
 </script>
 
-<div class="statistic-view flex flex-col items-center p-7 max-w-[1000px] m-auto">
-	<!-- page title -->
-	<h3 class="text-2xl self-start mb-6 sm:mb-10">Habit Stats</h3>
-	<!-- statistics -->
-	<div class="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:max-w-[1000px] w-full m-auto">
-		{#each panels as panel (panel.key)}
-			<StatPanel
-				title={panel.title}
-				stats={panel.stats}
-				selectedDate={panel.key === 'daily'
-					? selectedDateForDaily
-					: panel.key === 'weekly'
-						? selectedDateForWeekly
-						: selectedDateForMonthly}
-				onDateChange={panel.onChange}
-				viewHeight={viewHeight[panel.key]}
-				onHeightChange={(height) => (viewHeight[panel.key] = height)}
-				isDragging={isDragging[panel.key]}
-				onDragStateChange={(dragging) => (isDragging[panel.key] = dragging)}
-				target={panel.key}
-			/>
+<div class="p-8 max-w-2xl mx-auto">
+	<h1 class="text-2xl mb-6">Statistics</h1>
+
+	<!-- Scope selector -->
+	<div class="flex gap-2 mb-6">
+		{#each scopes as scope}
+			<button
+				class="px-4 py-2 rounded {$state.scope === scope ? 'bg-primary-500' : 'bg-primary-900'}"
+				onclick={() => presenter.setScope(scope)}
+			>
+				{scope}
+			</button>
 		{/each}
 	</div>
+
+	<!-- Loading -->
+	{#if $state.isLoading}
+		<p>Loading...</p>
+	{:else if $state.error}
+		<p class="text-red-500">{$state.error}</p>
+	{:else}
+		<!-- Period stats -->
+		{#if $state.periodStats}
+			<div class="mb-6 p-4 bg-primary-900 rounded">
+				<p>Completion: {Math.round($state.periodStats.completionRate * 100)}%</p>
+				<p>Streak: {$state.periodStats.streak} days</p>
+			</div>
+		{/if}
+
+		<!-- Trends -->
+		{#if $state.trends.length > 0}
+			<div class="space-y-2">
+				{#each $state.trends as trend}
+					<div class="p-3 bg-primary-900 rounded flex justify-between">
+						<span>{trend.title}</span>
+						<span>{Math.round(trend.completion * 100)}%</span>
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<p class="text-primary-400">No habits found</p>
+		{/if}
+	{/if}
 </div>

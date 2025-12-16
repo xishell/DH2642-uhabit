@@ -101,21 +101,28 @@ export function createStatsCache() {
 		});
 	}
 
-	/**
-	 * Update sync metadata (merges with existing)
-	 */
+	function pickValue<T>(newVal: T | undefined, existingVal: T | undefined, fallback: T): T {
+		return newVal ?? existingVal ?? fallback;
+	}
+
+	function mergeMetadata(
+		meta: Partial<CacheMetadata>,
+		existing: CacheMetadata | null
+	): CacheMetadata & { id: string } {
+		return {
+			id: METADATA_ID,
+			lastHabitsSync: pickValue(meta.lastHabitsSync, existing?.lastHabitsSync, null),
+			lastCompletionsSync: pickValue(meta.lastCompletionsSync, existing?.lastCompletionsSync, null),
+			lastStatsCompute: pickValue(meta.lastStatsCompute, existing?.lastStatsCompute, null),
+			habitsETag: pickValue(meta.habitsETag, existing?.habitsETag, null),
+			version: pickValue(meta.version, existing?.version, 1)
+		};
+	}
+
 	async function setMetadata(meta: Partial<CacheMetadata>): Promise<void> {
 		const database = await open();
 		const existing = await getMetadata();
-
-		const updated: CacheMetadata & { id: string } = {
-			id: METADATA_ID,
-			lastHabitsSync: meta.lastHabitsSync ?? existing?.lastHabitsSync ?? null,
-			lastCompletionsSync: meta.lastCompletionsSync ?? existing?.lastCompletionsSync ?? null,
-			lastStatsCompute: meta.lastStatsCompute ?? existing?.lastStatsCompute ?? null,
-			habitsETag: meta.habitsETag ?? existing?.habitsETag ?? null,
-			version: meta.version ?? existing?.version ?? 1
-		};
+		const updated = mergeMetadata(meta, existing);
 
 		return new Promise((resolve, reject) => {
 			const tx = database.transaction(STORES.METADATA, 'readwrite');

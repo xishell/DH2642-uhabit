@@ -151,120 +151,126 @@ export function createStatisticsPresenter({
 		update((s) => ({ ...s, isLoading: false, ...stats }));
 	}
 
+	function getFetchFromDate(heatmapRange: { from: Date; to: Date }): Date {
+		const historyStart = new Date();
+		historyStart.setDate(historyStart.getDate() - STATS_CACHE.HISTORY_DAYS);
+		return heatmapRange.from < historyStart ? heatmapRange.from : historyStart;
+	}
+
+	async function syncFromCache(fetchFrom: Date): Promise<void> {
+		if (!cache) return;
+		habits = await cache.getHabits();
+		completions = await cache.getCompletions();
+
+		const metadata = await cache.getMetadata();
+		const lastSync = metadata?.lastCompletionsSync || fetchFrom;
+
+		try {
+			const newCompletions = await api.fetchCompletions(lastSync);
+			if (newCompletions.length > 0) {
+				const existingIds = new Set(completions.map((c) => c.id));
+				const uniqueNew = newCompletions.filter((c) => !existingIds.has(c.id));
+				completions = [...completions, ...uniqueNew];
+				await cache.addCompletions(uniqueNew);
+			}
+
+			habits = await api.fetchHabits();
+			await cache.setHabits(habits);
+			await cache.setMetadata({ lastHabitsSync: new Date(), lastCompletionsSync: new Date() });
+			update((s) => ({ ...s, isOffline: false }));
+		} catch (error) {
+			console.warn('Sync failed, using cached data:', error);
+			update((s) => ({ ...s, isOffline: true }));
+		}
+	}
+
+	async function tryColdStartFromServerCache(
+		scope: Scope,
+		date: Date,
+		fetchFrom: Date
+	): Promise<boolean> {
+		const dateKey = getDateKey(scope, date);
+		try {
+			const serverCache = await api.getServerCache(scope, dateKey);
+			if (serverCache) {
+				applyStats(serverCache.data);
+				update((s) => ({ ...s, isSyncing: false, lastSync: new Date() }));
+				api.fetchHabits().then((h) => (habits = h));
+				api.fetchCompletions(fetchFrom).then((c) => (completions = c));
+				return true;
+			}
+		} catch {
+			// Server cache miss - continue with full fetch
+		}
+		return false;
+	}
+
+	async function syncColdStart(fetchFrom: Date): Promise<boolean> {
+		try {
+			habits = await api.fetchHabits();
+			completions = await api.fetchCompletions(fetchFrom);
+
+			if (cache) {
+				await cache.setHabits(habits);
+				await cache.addCompletions(completions);
+				await cache.setMetadata({
+					lastHabitsSync: new Date(),
+					lastCompletionsSync: new Date(),
+					version: 1
+				});
+			}
+			update((s) => ({ ...s, isOffline: false }));
+			return true;
+		} catch (error) {
+			console.error('Initial fetch failed:', error);
+			update((s) => ({
+				...s,
+				isLoading: false,
+				isSyncing: false,
+				isOffline: true,
+				error: 'Failed to load data. Please check your connection.'
+			}));
+			return false;
+		}
+	}
+
+	function saveToServerCache(scope: Scope, date: Date, computed: ComputedStatistics): void {
+		const dateKey = getDateKey(scope, date);
+		const validUntil = new Date();
+		validUntil.setHours(validUntil.getHours() + 1);
+		api.setServerCache(scope, dateKey, computed, validUntil).catch(() => {
+			// Ignore server cache errors - not critical
+		});
+	}
+
 	async function sync(): Promise<void> {
 		update((s) => ({ ...s, isSyncing: true, error: null }));
 
 		try {
 			const currentState = getState();
 			const heatmapRange = getHeatmapRange(currentState.scope, currentState.selectedDate);
-
-			// Calculate how far back we need data
-			const historyDays = STATS_CACHE.HISTORY_DAYS;
-			const historyStart = new Date();
-			historyStart.setDate(historyStart.getDate() - historyDays);
-			const fetchFrom = heatmapRange.from < historyStart ? heatmapRange.from : historyStart;
-
-			let metadata = cache ? await cache.getMetadata() : null;
+			const fetchFrom = getFetchFromDate(heatmapRange);
+			const metadata = cache ? await cache.getMetadata() : null;
 
 			if (cache && metadata?.lastHabitsSync) {
-				// Load from cache first
-				habits = await cache.getHabits();
-				completions = await cache.getCompletions();
-
-				// Fetch incremental completions
-				const lastSync = metadata.lastCompletionsSync || fetchFrom;
-				try {
-					const newCompletions = await api.fetchCompletions(lastSync);
-					if (newCompletions.length > 0) {
-						// Merge new completions (dedupe by id)
-						const existingIds = new Set(completions.map((c) => c.id));
-						const uniqueNew = newCompletions.filter((c) => !existingIds.has(c.id));
-						completions = [...completions, ...uniqueNew];
-						await cache.addCompletions(uniqueNew);
-					}
-
-					// Refresh habits if needed
-					const newHabits = await api.fetchHabits();
-					habits = newHabits;
-					await cache.setHabits(habits);
-
-					await cache.setMetadata({
-						lastHabitsSync: new Date(),
-						lastCompletionsSync: new Date()
-					});
-
-					update((s) => ({ ...s, isOffline: false }));
-				} catch (error) {
-					// Network error - use cached data
-					console.warn('Sync failed, using cached data:', error);
-					update((s) => ({ ...s, isOffline: true }));
-				}
+				await syncFromCache(fetchFrom);
 			} else {
-				// Cold start - try server cache first for quick loading on new devices
-				const dateKey = getDateKey(currentState.scope, currentState.selectedDate);
-				try {
-					const serverCache = await api.getServerCache(currentState.scope, dateKey);
-					if (serverCache) {
-						// Server cache hit - use it immediately
-						applyStats(serverCache.data);
-						update((s) => ({ ...s, isSyncing: false, lastSync: new Date() }));
-
-						// Fetch fresh data in background for next time
-						api.fetchHabits().then((h) => (habits = h));
-						api.fetchCompletions(fetchFrom).then((c) => (completions = c));
-						return;
-					}
-				} catch {
-					// Server cache miss or error - continue with full fetch
-				}
-
-				// No server cache - fetch everything
-				try {
-					habits = await api.fetchHabits();
-					completions = await api.fetchCompletions(fetchFrom);
-
-					if (cache) {
-						await cache.setHabits(habits);
-						await cache.addCompletions(completions);
-						await cache.setMetadata({
-							lastHabitsSync: new Date(),
-							lastCompletionsSync: new Date(),
-							version: 1
-						});
-					}
-
-					update((s) => ({ ...s, isOffline: false }));
-				} catch (error) {
-					console.error('Initial fetch failed:', error);
-					update((s) => ({
-						...s,
-						isLoading: false,
-						isSyncing: false,
-						isOffline: true,
-						error: 'Failed to load data. Please check your connection.'
-					}));
-					return;
-				}
+				const usedServerCache = await tryColdStartFromServerCache(
+					currentState.scope,
+					currentState.selectedDate,
+					fetchFrom
+				);
+				if (usedServerCache) return;
+				const success = await syncColdStart(fetchFrom);
+				if (!success) return;
 			}
 
-			// Compute statistics
 			const computed = computeStatistics(currentState.scope, currentState.selectedDate);
-
-			// Save to server cache for quick loading on other devices
 			if (computed) {
-				const dateKey = getDateKey(currentState.scope, currentState.selectedDate);
-				const validUntil = new Date();
-				validUntil.setHours(validUntil.getHours() + 1); // Cache for 1 hour
-				api.setServerCache(currentState.scope, dateKey, computed, validUntil).catch(() => {
-					// Ignore server cache errors - not critical
-				});
+				saveToServerCache(currentState.scope, currentState.selectedDate, computed);
 			}
 
-			update((s) => ({
-				...s,
-				isSyncing: false,
-				lastSync: new Date()
-			}));
+			update((s) => ({ ...s, isSyncing: false, lastSync: new Date() }));
 		} catch (error) {
 			console.error('Statistics sync error:', error);
 			update((s) => ({

@@ -28,7 +28,7 @@
 	let desktopNotifications = true;
 </script>
 
-<div  class="flex min-h-screen bg-surface-50 dark:bg-surface-900 justify-center items-start">
+<div class="flex min-h-screen bg-surface-50 dark:bg-surface-900 justify-center items-start">
 	<!-- LEFT NAV -->
 	<aside class="w-72 border-r border-surface-200 dark:border-surface-700 p-6 sticky top-0 h-screen">
 		<h2 class="text-xl font-semibold mb-6">Settings</h2>

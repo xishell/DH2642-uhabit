@@ -5,11 +5,7 @@
 	export let bio: string;
 	export let pronouns: string;
 
-	export let onSave: (payload: {
-		displayName: string;
-		bio: string;
-		pronouns: string;
-	}) => void;
+	export let onSave: (payload: { displayName: string; bio: string; pronouns: string }) => void;
 
 	// Draft state (editable)
 	let draftName = displayName;
@@ -35,17 +31,14 @@
 				<label for="displayName" class="label">Display name</label>
 				<input
 					id="displayName"
-					class="input w-full border border-indigo-600	"
+					class="input w-full border border-indigo-600"
 					bind:value={draftName}
 				/>
 			</div>
 
 			<div>
 				<label for="bio" class="label">Bio</label>
-				<textarea
-					id="bio"
-					class="textarea w-full border border-indigo-600"
-					bind:value={draftBio}
+				<textarea id="bio" class="textarea w-full border border-indigo-600" bind:value={draftBio}
 				></textarea>
 			</div>
 
@@ -71,10 +64,6 @@
 		</div>
 
 		<!-- PREVIEW (saved state only) -->
-		<ProfileCard
-			displayName={displayName}
-			bio={bio}
-			pronouns={pronouns}
-		/>
+		<ProfileCard {displayName} {bio} {pronouns} />
 	</div>
 </section>

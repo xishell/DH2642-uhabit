@@ -6,14 +6,14 @@
 	export let pronouns: string;
 
 	// Reactive initials calculation
-	$: initials = displayName
-		?.split(' ')
-		.map((n) => n[0])
-		.join('')
-		.slice(0, 2)
-		.toUpperCase() || '👤';
+	$: initials =
+		displayName
+			?.split(' ')
+			.map((n) => n[0])
+			.join('')
+			.slice(0, 2)
+			.toUpperCase() || '👤';
 </script>
-
 
 <div class="flex justify-center">
 	<div class="card p-8 flex gap-6 items-center max-w-lg mt-[-20px] relative">

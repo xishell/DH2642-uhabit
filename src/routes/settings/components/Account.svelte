@@ -7,11 +7,9 @@
 
 	export let onSave: (payload: { username: string; email: string }) => void;
 
-	// Only allow editing of username or email
 	let openField: null | 'username' | 'email' = null;
 	let value = '';
 
-	// Explicitly type the array to satisfy TypeScript
 	const fields: ('username' | 'email')[] = ['username', 'email'];
 
 	function open(field: typeof openField) {
@@ -20,6 +18,7 @@
 	}
 
 	function save() {
+		if (value.length > 20) value = value.slice(0, 20);
 		onSave({
 			username: openField === 'username' ? value : username,
 			email: openField === 'email' ? value : email
@@ -67,7 +66,12 @@
 							Warning: Making these changes could have negative effects.
 						</p>
 
-						<input class="input w-full" bind:value />
+						<input
+							class="input w-full"
+							bind:value
+							maxlength={20}
+							placeholder={openField === 'username' ? 'Enter username (max 20)' : 'Enter email (max 50)'}
+						/>
 
 						<footer class="flex justify-end gap-2">
 							<button class="border px-4 py-2 rounded" on:click={() => (openField = null)}>

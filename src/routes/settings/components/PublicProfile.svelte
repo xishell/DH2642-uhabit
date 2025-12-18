@@ -7,12 +7,15 @@
 
 	export let onSave: (payload: { displayName: string; bio: string; pronouns: string }) => void;
 
-	// Draft state (editable)
+	// Drafts (editable)
 	let draftName = displayName;
 	let draftBio = bio;
 	let draftPronouns = pronouns;
 
 	function save() {
+		if (draftName.length > 20) draftName = draftName.slice(0, 20);
+		if (draftBio.length > 100) draftBio = draftBio.slice(0, 100);
+
 		onSave({
 			displayName: draftName,
 			bio: draftBio,
@@ -33,12 +36,17 @@
 					id="displayName"
 					class="input w-full border border-indigo-600"
 					bind:value={draftName}
+					maxlength={20}
 				/>
 			</div>
 
 			<div>
 				<label for="bio" class="label">Bio</label>
-				<textarea id="bio" class="textarea w-full border border-indigo-600" bind:value={draftBio}
+				<textarea
+					id="bio"
+					class="textarea w-full border border-indigo-600"
+					bind:value={draftBio}
+					maxlength={100}
 				></textarea>
 			</div>
 
@@ -63,7 +71,7 @@
 			</button>
 		</div>
 
-		<!-- PREVIEW (saved state only) -->
+		<!-- PROFILE CARD (shows saved values only) -->
 		<ProfileCard {displayName} {bio} {pronouns} />
 	</div>
 </section>

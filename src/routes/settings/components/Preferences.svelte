@@ -23,10 +23,11 @@
 		<!-- Appearance / Theme -->
 		<div>
 			<label for="theme-mode" class="label">Appearance (theme)</label>
-			<select 
-				id="theme-mode" 
-				class="select w-full px-3 py-2 rounded border border-indigo-600 text-sm" 
-				bind:value={themeMode}>
+			<select
+				id="theme-mode"
+				class="select w-full px-3 py-2 rounded border border-indigo-600 text-sm"
+				bind:value={themeMode}
+			>
 				<option value="light">Light</option>
 				<option value="dark">Dark</option>
 			</select>
@@ -35,10 +36,11 @@
 		<!-- Accent color -->
 		<div>
 			<label for="accent-color" class="label">Accent color</label>
-			<select 
-				id="accent-color" 
-				class="select w-full px-3 py-2 rounded border border-indigo-600 text-sm" 
-				bind:value={accentColor}>
+			<select
+				id="accent-color"
+				class="select w-full px-3 py-2 rounded border border-indigo-600 text-sm"
+				bind:value={accentColor}
+			>
 				<option value="indigo">Indigo</option>
 				<option value="emerald">Emerald</option>
 				<option value="rose">Rose</option>
@@ -48,10 +50,11 @@
 		<!-- Typography -->
 		<div>
 			<label for="typography" class="label">Typography</label>
-			<select 
-				id="typography" 
+			<select
+				id="typography"
 				class="select w-full px-3 py-2 rounded border border-indigo-600 text-sm"
-				bind:value={typography}>
+				bind:value={typography}
+			>
 				<option value="sans">Sans</option>
 				<option value="serif">Serif</option>
 				<option value="mono">Mono</option>

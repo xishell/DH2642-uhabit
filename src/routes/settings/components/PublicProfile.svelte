@@ -26,7 +26,7 @@
 </script>
 
 <section class="space-y-6">
-	<h1 class="text-2xl font-bold">Public profile</h1>
+	<h1 class="text-2xl font-bold">Profile</h1>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 		<!-- FORM -->
@@ -35,7 +35,7 @@
 				<label for="displayName" class="label">Display name</label>
 				<input
 					id="displayName"
-					class="input w-full"
+					class="input w-full border border-indigo-600	"
 					bind:value={draftName}
 				/>
 			</div>
@@ -44,7 +44,7 @@
 				<label for="bio" class="label">Bio</label>
 				<textarea
 					id="bio"
-					class="textarea w-full"
+					class="textarea w-full border border-indigo-600"
 					bind:value={draftBio}
 				></textarea>
 			</div>
@@ -53,7 +53,7 @@
 				<label for="pronouns" class="label">Pronouns</label>
 				<select
 					id="pronouns"
-					class="select w-full px-3 py-2 rounded border border-surface-300 text-sm"
+					class="select w-full px-2 py-2 rounded border border-indigo-600 text-sm"
 					bind:value={draftPronouns}
 				>
 					<option value="she/her">she/her</option>
@@ -63,7 +63,7 @@
 			</div>
 
 			<button
-				class="px-4 py-2 bg-indigo-600 text-white rounded-md"
+				class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
 				on:click={save}
 			>
 				Save

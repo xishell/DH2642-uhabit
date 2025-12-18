@@ -3,30 +3,25 @@
 	import { XIcon } from '@lucide/svelte';
 
 	export let username: string;
-	export let firstName: string;
-	export let lastName: string;
 	export let email: string;
 
-	export let onSave: (payload: {
-		username: string;
-		firstName: string;
-		lastName: string;
-		email: string;
-	}) => void;
+	export let onSave: (payload: { username: string; email: string }) => void;
 
-	let openField: null | 'username' | 'firstName' | 'lastName' | 'email' = null;
+	// Only allow editing of username or email
+	let openField: null | 'username' | 'email' = null;
 	let value = '';
+
+	// Explicitly type the array to satisfy TypeScript
+	const fields: ('username' | 'email')[] = ['username', 'email'];
 
 	function open(field: typeof openField) {
 		openField = field;
-		value = { username, firstName, lastName, email }[field!];
+		value = { username, email }[field!];
 	}
 
 	function save() {
 		onSave({
 			username: openField === 'username' ? value : username,
-			firstName: openField === 'firstName' ? value : firstName,
-			lastName: openField === 'lastName' ? value : lastName,
 			email: openField === 'email' ? value : email
 		});
 		openField = null;
@@ -36,11 +31,19 @@
 <section class="space-y-6">
 	<h1 class="text-2xl font-bold">Account</h1>
 
-	<div class="card p-6 space-y-4">
-		{#each [['username', username], ['firstName', firstName], ['lastName', lastName], ['email', email]] as [field, val]}
+	<div class="card p-6 space-y-6">
+		{#each fields as field}
 			<div class="flex justify-between items-center">
-				<span>{field}: <strong>{val}</strong></span>
-				<button class="border px-3 py-1 rounded" on:click={() => open(field)}> Change </button>
+				<div class="flex flex-col">
+					<span class="font-semibold capitalize">{field}</span>
+					<span class="text-gray-500">{field === 'username' ? username : email}</span>
+				</div>
+				<button
+					class="px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+					on:click={() => open(field)}
+				>
+					Edit
+				</button>
 			</div>
 		{/each}
 	</div>
@@ -54,7 +57,7 @@
 						class="card bg-surface-100 dark:bg-surface-900 p-6 w-full max-w-md space-y-4 shadow-lg rounded-md"
 					>
 						<header class="flex justify-between items-center">
-							<h2 class="font-bold text-lg">Change {openField}</h2>
+							<h2 class="font-bold text-lg">Edit {openField}</h2>
 							<button on:click={() => (openField = null)}>
 								<XIcon class="size-4" />
 							</button>

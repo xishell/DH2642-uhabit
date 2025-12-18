@@ -5,9 +5,7 @@ export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
 	// Keep 'name' for Better Auth compatibility (required by the library)
 	name: text('name').notNull(),
-	// New user profile fields
-	firstName: text('firstName'),
-	lastName: text('lastName'),
+	// User profile fields
 	username: text('username').unique(),
 	email: text('email').notNull().unique(),
 	emailVerified: integer('emailVerified', { mode: 'boolean' }).notNull().default(false),
@@ -16,6 +14,7 @@ export const user = sqliteTable('user', {
 	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
 	// Custom fields for user preferences
 	displayName: text('displayName'),
+	pronouns: text('pronouns'),
 	theme: text('theme').default('system'), // 'light', 'dark', or 'system'
 	country: text('country'),
 	preferences: text('preferences') // JSON string for flexibility

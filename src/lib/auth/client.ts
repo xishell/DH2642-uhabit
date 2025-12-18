@@ -7,27 +7,21 @@ export const authClient = createAuthClient({
 export interface SignUpData {
 	email: string;
 	password: string;
-	firstName: string;
-	lastName: string;
 	username: string;
 }
 
 export async function signUp(data: SignUpData) {
-	// Construct name from firstName and lastName for Better Auth compatibility
-	const name =
-		[data.firstName, data.lastName].filter(Boolean).join(' ') || data.email.split('@')[0];
-
+	// Use username as the Better Auth 'name' field
 	const result = await authClient.signUp.email(
 		{
 			email: data.email,
 			password: data.password,
-			name
+			name: data.username
 		},
 		{
 			body: {
-				firstName: data.firstName,
-				lastName: data.lastName,
-				username: data.username
+				username: data.username,
+				displayName: data.username // Default displayName to username on registration
 			}
 		}
 	);
@@ -81,10 +75,9 @@ export async function getPreferences() {
 }
 
 export async function updatePreferences(preferences: {
-	firstName?: string;
-	lastName?: string;
 	username?: string;
 	displayName?: string;
+	pronouns?: string;
 	theme?: 'light' | 'dark' | 'system';
 	country?: string;
 	preferences?: {

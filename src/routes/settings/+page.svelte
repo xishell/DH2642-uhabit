@@ -1,24 +1,28 @@
 <script lang="ts">
+	// Main page wrapper. Keeps the Tabs state and toast instance.
+	import TabNav from 'src/routes/settings/components/TabNav.svelte';
+	import PublicProfile from 'src/routes/settings/components/PublicProfile.svelte';
+	import Account from 'src/routes/settings/components/Account.svelte';
+	import Preferences from 'src/routes/settings/components/Preferences.svelte';
+	import Notifications from 'src/routes/settings/components/Notifications.svelte';
+
+	import { Toast, createToaster, Tabs } from '@skeletonlabs/skeleton-svelte';
 	import { onMount } from 'svelte';
-	import { Toast, createToaster, Collapsible } from '@skeletonlabs/skeleton-svelte';
-	import { ArrowUpDownIcon } from '@lucide/svelte';
 
-	import PublicProfile from './components/PublicProfile.svelte';
-	import Account from './components/Account.svelte';
-	import Preferences from './components/Preferences.svelte';
-	import Notifications from './components/Notifications.svelte';
-	import TabNav from './components/TabNav.svelte';
+	// Tabs value (simple string, matches the example you provided)
+	let value = 'profile';
 
+	// Toaster (use this to show messages from main or pass to children)
 	const toaster = createToaster();
 
-	// ------------------
-	// Mock state
-	// ------------------
+	// ---- Example app state (replace these with API-loaded data) ----
 	let displayName = 'John Doe';
 	let bio = 'Tell the world about yourself';
 	let pronouns = 'they/them';
 
 	let username = 'johndoe';
+	let firstName = 'John';
+	let lastName = 'Doe';
 	let email = 'john@example.com';
 
 	let themeMode: 'light' | 'dark' = 'light';
@@ -27,147 +31,105 @@
 
 	let desktopNotifications = true;
 
-	// ------------------
-	// Mobile detection (page-only)
-	// ------------------
-	let isMobile = false;
-
 	onMount(() => {
-		const update = () => (isMobile = window.innerWidth < 768);
-		update();
-		window.addEventListener('resize', update);
-		return () => window.removeEventListener('resize', update);
+		// TODO: load real data from API and set the states above
 	});
 
-	function go(id: string) {
-		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+	// Handlers triggered by children via custom events
+	function handleSavePublicProfile(event: CustomEvent) {
+		const { displayName: dn, bio: b, pronouns: p } = event.detail;
+		// TODO: call API to save profile -> await api.saveProfile({dn, b, p})
+		displayName = dn;
+		bio = b;
+		pronouns = p;
+		toaster.success({
+			title: 'Profile saved',
+			description: 'Your public profile has been updated.'
+		});
+	}
+
+	function handleSaveAccount(event: CustomEvent) {
+		// event.detail will tell which field changed if implemented that way
+		toaster.info({ title: 'Account', description: 'Account change flow initiated.' });
+	}
+
+	function handleSavePreferences(event: CustomEvent) {
+		const { themeMode: tm, accentColor: ac, typography: ty } = event.detail;
+		// TODO: persist preferences and apply dynamic theming
+		themeMode = tm;
+		accentColor = ac;
+		typography = ty;
+		toaster.success({ title: 'Preferences saved', description: 'Theme and typography updated.' });
+	}
+
+	function handleSaveNotifications(event: CustomEvent) {
+		const { desktop } = event.detail;
+		// TODO: persist notification preference
+		desktopNotifications = desktop;
+		toaster.success({ title: 'Notifications', description: 'Notification settings updated.' });
 	}
 </script>
 
-<div class="flex min-h-screen bg-surface-50 dark:bg-surface-900 justify-center items-start">
-	<!-- LEFT NAV (DESKTOP ONLY – UNCHANGED) -->
-	{#if !isMobile}
-		<aside
-			class="w-72 border-r border-surface-200 dark:border-surface-700 p-6 sticky top-0 h-screen"
-		>
-			<h2 class="text-xl font-semibold mb-6">Settings</h2>
-			<TabNav />
-		</aside>
-	{/if}
+<div class="flex min-h-screen bg-surface-50 dark:bg-surface-900">
+	<!-- Left navigation column -->
+	<aside class="w-72 border-r border-surface-200 dark:border-surface-700 p-6">
+		<h2 class="text-2xl font-semibold mb-4">Settings</h2>
+		<TabNav bind:value />
+	</aside>
 
-	<!-- MAIN CONTENT -->
-	<main class="flex-1 p-6 max-w-4xl space-y-16" class:pb-24={isMobile}>
-		<section id="profile">
-			<PublicProfile
-				{displayName}
-				{bio}
-				{pronouns}
-				onSave={(payload) => {
-					displayName = payload.displayName;
-					bio = payload.bio;
-					pronouns = payload.pronouns;
+	<!-- Main content area -->
+	<main class="flex-1 p-6 max-w-5xl">
+		<!-- Tabs: list + content. We keep tabs state in this file and pass it down. -->
+		<Tabs {value} onValueChange={(details) => (value = details.value)}>
+			<Tabs.List>
+				<Tabs.Trigger value="profile">Public profile</Tabs.Trigger>
+				<Tabs.Trigger value="account">Account</Tabs.Trigger>
+				<Tabs.Trigger value="preferences">Preferences</Tabs.Trigger>
+				<Tabs.Trigger value="notifications">Notifications</Tabs.Trigger>
+				<Tabs.Indicator />
+			</Tabs.List>
 
-					toaster.success({
-						title: 'Profile saved',
-						description: 'Your public profile has been updated.'
-					});
-				}}
-			/>
-		</section>
+			<Tabs.Content value="profile">
+				<PublicProfile {displayName} {bio} {pronouns} on:save={handleSavePublicProfile} {toaster} />
+			</Tabs.Content>
 
-		<hr class="border-surface-200 dark:border-surface-700" />
+			<Tabs.Content value="account">
+				<Account
+					{username}
+					{firstName}
+					{lastName}
+					{email}
+					on:change={handleSaveAccount}
+					{toaster}
+				/>
+			</Tabs.Content>
 
-		<section id="account">
-			<Account
-				{username}
-				{email}
-				onSave={(payload) => {
-					username = payload.username;
-					email = payload.email;
+			<Tabs.Content value="preferences">
+				<Preferences
+					{themeMode}
+					{accentColor}
+					{typography}
+					on:save={handleSavePreferences}
+					{toaster}
+				/>
+			</Tabs.Content>
 
-					toaster.success({
-						title: 'Account updated',
-						description: 'Your account details were updated.'
-					});
-				}}
-			/>
-		</section>
+			<Tabs.Content value="notifications">
+				<Notifications {desktopNotifications} on:save={handleSaveNotifications} {toaster} />
+			</Tabs.Content>
+		</Tabs>
 
-		<hr class="border-surface-200 dark:border-surface-700" />
-
-		<section id="preferences">
-			<Preferences
-				{themeMode}
-				{accentColor}
-				{typography}
-				onSave={(payload) => {
-					themeMode = payload.themeMode;
-					accentColor = payload.accentColor;
-					typography = payload.typography;
-
-					toaster.success({
-						title: 'Preferences saved',
-						description: 'Your preferences have been updated.'
-					});
-				}}
-			/>
-		</section>
-
-		<hr class="border-surface-200 dark:border-surface-700" />
-
-		<section id="notifications">
-			<Notifications
-				{desktopNotifications}
-				onSave={(payload) => {
-					desktopNotifications = payload.desktop;
-
-					toaster.success({
-						title: 'Notifications updated',
-						description: 'Notification settings saved.'
-					});
-				}}
-			/>
-		</section>
+		<!-- Toast group: place near the top-level to render toasts -->
+		<Toast.Group {toaster}>
+			{#snippet children(toast)}
+				<Toast {toast}>
+					<Toast.Message>
+						<Toast.Title>{toast.title}</Toast.Title>
+						<Toast.Description>{toast.description}</Toast.Description>
+					</Toast.Message>
+					<Toast.CloseTrigger />
+				</Toast>
+			{/snippet}
+		</Toast.Group>
 	</main>
-
-	<!-- MOBILE FLOATING NAV -->
-	{#if isMobile}
-		<div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-			<Collapsible class="card preset-filled-surface-100-900 px-4 py-3 w-64 shadow-xl">
-				<div class="flex justify-between items-center">
-					<p class="font-semibold text-sm">Settings</p>
-
-					<Collapsible.Trigger class="btn-icon hover:preset-tonal scale-90">
-						<ArrowUpDownIcon class="size-4" />
-					</Collapsible.Trigger>
-				</div>
-
-				<Collapsible.Content class="mt-3 flex flex-col gap-2">
-					<button class="anchor text-left text-sm" on:click={() => go('profile')}>
-						Public profile
-					</button>
-					<button class="anchor text-left text-sm" on:click={() => go('account')}> Account </button>
-					<button class="anchor text-left text-sm" on:click={() => go('preferences')}>
-						Preferences
-					</button>
-					<button class="anchor text-left text-sm" on:click={() => go('notifications')}>
-						Notifications
-					</button>
-				</Collapsible.Content>
-			</Collapsible>
-		</div>
-	{/if}
-
-	<!-- TOASTS -->
-	<Toast.Group {toaster}>
-		{#snippet children(toast)}
-			<Toast {toast}>
-				<Toast.Message>
-					<Toast.Title>{toast.title}</Toast.Title>
-					<Toast.Description>{toast.description}</Toast.Description>
-				</Toast.Message>
-				<Toast.CloseTrigger />
-			</Toast>
-		{/snippet}
-	</Toast.Group>
 </div>

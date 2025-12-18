@@ -1,9 +1,9 @@
 <script lang="ts">
 	import ProfileCard from './ProfileCard.svelte';
 
-	export let displayName = '';
-	export let bio = '';
-	export let pronouns = 'they/them';
+	export let displayName: string;
+	export let bio: string;
+	export let pronouns: string;
 
 	export let onSave: (payload: {
 		displayName: string;
@@ -11,12 +11,21 @@
 		pronouns: string;
 	}) => void;
 
+	// Draft state (editable)
+	let draftName = displayName;
+	let draftBio = bio;
+	let draftPronouns = pronouns;
+
 	function save() {
-		onSave({ displayName, bio, pronouns });
+		onSave({
+			displayName: draftName,
+			bio: draftBio,
+			pronouns: draftPronouns
+		});
 	}
 </script>
 
-<section class="space-y-8">
+<section class="space-y-6">
 	<h1 class="text-2xl font-bold">Public profile</h1>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -24,29 +33,48 @@
 		<div class="card p-6 space-y-4">
 			<div>
 				<label for="displayName" class="label">Display name</label>
-				<input id="displayName" class="input w-full" bind:value={displayName} />
+				<input
+					id="displayName"
+					class="input w-full"
+					bind:value={draftName}
+				/>
 			</div>
 
 			<div>
 				<label for="bio" class="label">Bio</label>
-				<textarea id="bio" class="textarea w-full" bind:value={bio}></textarea>
+				<textarea
+					id="bio"
+					class="textarea w-full"
+					bind:value={draftBio}
+				></textarea>
 			</div>
 
 			<div>
 				<label for="pronouns" class="label">Pronouns</label>
-				<select id="pronouns" class="select w-full" bind:value={pronouns}>
+				<select
+					id="pronouns"
+					class="select w-full"
+					bind:value={draftPronouns}
+				>
 					<option value="she/her">she/her</option>
 					<option value="he/him">he/him</option>
 					<option value="they/them">they/them</option>
 				</select>
 			</div>
 
-			<button class="px-4 py-2 bg-indigo-600 text-white rounded-md" on:click={save}>
+			<button
+				class="px-4 py-2 bg-indigo-600 text-white rounded-md"
+				on:click={save}
+			>
 				Save
 			</button>
 		</div>
 
-		<!-- PREVIEW -->
-		<ProfileCard {displayName} {bio} {pronouns} />
+		<!-- PREVIEW (saved state only) -->
+		<ProfileCard
+			displayName={displayName}
+			bio={bio}
+			pronouns={pronouns}
+		/>
 	</div>
 </section>

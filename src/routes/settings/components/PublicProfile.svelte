@@ -53,7 +53,7 @@
 				<label for="pronouns" class="label">Pronouns</label>
 				<select
 					id="pronouns"
-					class="select w-full"
+					class="select w-full px-3 py-2 rounded border border-surface-300 text-sm"
 					bind:value={draftPronouns}
 				>
 					<option value="she/her">she/her</option>

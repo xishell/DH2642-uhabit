@@ -37,17 +37,10 @@
 	<h1 class="text-2xl font-bold">Account</h1>
 
 	<div class="card p-6 space-y-4">
-		{#each [
-			['username', username],
-			['firstName', firstName],
-			['lastName', lastName],
-			['email', email]
-		] as [field, val]}
+		{#each [['username', username], ['firstName', firstName], ['lastName', lastName], ['email', email]] as [field, val]}
 			<div class="flex justify-between items-center">
 				<span>{field}: <strong>{val}</strong></span>
-				<button class="border px-3 py-1 rounded" on:click={() => open(field)}>
-					Change
-				</button>
+				<button class="border px-3 py-1 rounded" on:click={() => open(field)}> Change </button>
 			</div>
 		{/each}
 	</div>
@@ -57,15 +50,21 @@
 			<Portal>
 				<Dialog.Backdrop class="fixed inset-0 bg-black/40" />
 				<Dialog.Positioner class="fixed inset-0 flex items-center justify-center p-4">
-					<Dialog.Content class="card p-6 w-full max-w-md space-y-4">
-						<header class="flex justify-between">
-							<h2 class="font-bold">Change {openField}</h2>
+					<Dialog.Content
+						class="card bg-surface-100 dark:bg-surface-900 p-6 w-full max-w-md space-y-4 shadow-lg rounded-md"
+					>
+						<header class="flex justify-between items-center">
+							<h2 class="font-bold text-lg">Change {openField}</h2>
 							<button on:click={() => (openField = null)}>
 								<XIcon class="size-4" />
 							</button>
 						</header>
 
-						<input class="input w-full" bind:value={value} />
+						<p class="text-sm text-red-500">
+							Warning: Making these changes could have negative effects.
+						</p>
+
+						<input class="input w-full" bind:value />
 
 						<footer class="flex justify-end gap-2">
 							<button class="border px-4 py-2 rounded" on:click={() => (openField = null)}>

@@ -28,7 +28,7 @@
 	let desktopNotifications = true;
 </script>
 
-<div class="flex min-h-screen bg-surface-50 dark:bg-surface-900">
+<div  class="flex min-h-screen bg-surface-50 dark:bg-surface-900 justify-center items-start">
 	<!-- LEFT NAV -->
 	<aside class="w-72 border-r border-surface-200 dark:border-surface-700 p-6 sticky top-0 h-screen">
 		<h2 class="text-xl font-semibold mb-6">Settings</h2>
@@ -60,13 +60,9 @@
 		<section id="account">
 			<Account
 				{username}
-				{firstName}
-				{lastName}
 				{email}
 				onSave={(payload) => {
 					username = payload.username;
-					firstName = payload.firstName;
-					lastName = payload.lastName;
 					email = payload.email;
 
 					toaster.success({
@@ -77,7 +73,7 @@
 			/>
 		</section>
 
-		<hr />
+		<hr class="border-surface-200 dark:border-surface-700" />
 
 		<section id="preferences">
 			<Preferences
@@ -97,7 +93,7 @@
 			/>
 		</section>
 
-		<hr />
+		<hr class="border-surface-200 dark:border-surface-700" />
 
 		<section id="notifications">
 			<Notifications

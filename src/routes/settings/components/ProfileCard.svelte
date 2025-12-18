@@ -26,9 +26,7 @@
 </script>
 
 <div class="flex justify-center w-full">
-	<div
-		class="card p-6 flex flex-col md:flex-row items-center gap-4 w-full max-w-md"
-	>
+	<div class="card p-6 flex flex-col md:flex-row items-center gap-4 w-full max-w-md">
 		<!-- Avatar with badge -->
 		<div class="relative flex-shrink-0">
 			<Avatar class="h-20 w-20">
@@ -49,10 +47,7 @@
 		<!-- Info -->
 		<div class="flex-1 min-w-0 mt-4 md:mt-0">
 			<h3 class="font-semibold text-2xl">{displayName || 'Your name'}</h3>
-			<p
-				class="text-sm opacity-80 mt-1 break-words"
-				title={bio} 
-			>
+			<p class="text-sm opacity-80 mt-1 break-words" title={bio}>
 				{displayBio}
 			</p>
 			{#if pronouns}

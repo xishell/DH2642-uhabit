@@ -70,7 +70,9 @@
 							class="input w-full"
 							bind:value
 							maxlength={20}
-							placeholder={openField === 'username' ? 'Enter username (max 20)' : 'Enter email (max 50)'}
+							placeholder={openField === 'username'
+								? 'Enter username (max 20)'
+								: 'Enter email (max 50)'}
 						/>
 
 						<footer class="flex justify-end gap-2">

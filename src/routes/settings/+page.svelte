@@ -47,17 +47,16 @@
 <div class="flex min-h-screen bg-surface-50 dark:bg-surface-900 justify-center items-start">
 	<!-- LEFT NAV (DESKTOP ONLY – UNCHANGED) -->
 	{#if !isMobile}
-		<aside class="w-72 border-r border-surface-200 dark:border-surface-700 p-6 sticky top-0 h-screen">
+		<aside
+			class="w-72 border-r border-surface-200 dark:border-surface-700 p-6 sticky top-0 h-screen"
+		>
 			<h2 class="text-xl font-semibold mb-6">Settings</h2>
 			<TabNav />
 		</aside>
 	{/if}
 
 	<!-- MAIN CONTENT -->
-	<main
-		class="flex-1 p-6 max-w-4xl space-y-16"
-		class:pb-24={isMobile}
-	>
+	<main class="flex-1 p-6 max-w-4xl space-y-16" class:pb-24={isMobile}>
 		<section id="profile">
 			<PublicProfile
 				{displayName}
@@ -147,9 +146,7 @@
 					<button class="anchor text-left text-sm" on:click={() => go('profile')}>
 						Public profile
 					</button>
-					<button class="anchor text-left text-sm" on:click={() => go('account')}>
-						Account
-					</button>
+					<button class="anchor text-left text-sm" on:click={() => go('account')}> Account </button>
 					<button class="anchor text-left text-sm" on:click={() => go('preferences')}>
 						Preferences
 					</button>

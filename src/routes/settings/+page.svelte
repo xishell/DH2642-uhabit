@@ -9,9 +9,6 @@
 
 	const toaster = createToaster();
 
-	// -----------------------------
-	// Mock application state
-	// -----------------------------
 	let displayName = 'John Doe';
 	let bio = 'Tell the world about yourself';
 	let pronouns = 'they/them';

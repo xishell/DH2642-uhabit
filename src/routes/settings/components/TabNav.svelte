@@ -1,27 +1,15 @@
 <script lang="ts">
-	const sections = [
-		{ id: 'profile', label: 'Public profile' },
-		{ id: 'account', label: 'Account' },
-		{ id: 'preferences', label: 'Preferences' },
-		{ id: 'notifications', label: 'Notifications' }
-	];
-
-	function scrollTo(id: string) {
-		document.getElementById(id)?.scrollIntoView({
-			behavior: 'smooth',
-			block: 'start'
-		});
-	}
+	import { Tabs } from '@skeletonlabs/skeleton-svelte';
+	export let value: string;
 </script>
 
-<nav class="space-y-1">
-	{#each sections as section}
-		<button
-			type="button"
-			class="w-full text-left px-3 py-2 rounded-md hover:bg-primary-100 dark:hover:bg-primary-500 transition"
-			on:click={() => scrollTo(section.id)}
-		>
-			{section.label}
-		</button>
-	{/each}
-</nav>
+<!-- This component only renders the tab triggers list for the left nav. -->
+<Tabs {value} onValueChange={(details) => (value = details.value)}>
+	<Tabs.List class="flex flex-col space-y-1">
+		<Tabs.Trigger value="profile" class="text-left">Public profile</Tabs.Trigger>
+		<Tabs.Trigger value="account" class="text-left">Account</Tabs.Trigger>
+		<Tabs.Trigger value="preferences" class="text-left">Preferences</Tabs.Trigger>
+		<Tabs.Trigger value="notifications" class="text-left">Notifications</Tabs.Trigger>
+		<Tabs.Indicator />
+	</Tabs.List>
+</Tabs>

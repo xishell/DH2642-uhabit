@@ -11,9 +11,6 @@
 
 	const toaster = createToaster();
 
-	// ------------------
-	// Mock state
-	// ------------------
 	let displayName = 'John Doe';
 	let bio = 'Tell the world about yourself';
 	let pronouns = 'they/them';
@@ -27,9 +24,6 @@
 
 	let desktopNotifications = true;
 
-	// ------------------
-	// Mobile detection (page-only)
-	// ------------------
 	let isMobile = false;
 
 	onMount(() => {

@@ -1,29 +1,38 @@
 <script lang="ts">
+	import { Avatar } from '@skeletonlabs/skeleton-svelte';
+
 	export let displayName: string;
 	export let bio: string;
 	export let pronouns: string;
 
-	const imgSrc =
-		'https://images.unsplash.com/photo-1463171515643-952cee54d42a?q=80&w=450&h=190&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+	const initials = displayName
+		?.split(' ')
+		.map((n) => n[0])
+		.join('')
+		.slice(0, 2)
+		.toUpperCase() || '👤';
 </script>
 
-<div
-	class="card preset-filled-surface-100-900 border-[1px] border-surface-200-800 card-hover divide-surface-200-800 block max-w-md divide-y overflow-hidden"
->
-	<header>
-		<img src={imgSrc} class="aspect-[21/9] w-full grayscale hue-rotate-90" alt="banner" />
-	</header>
+<div class="card p-6 flex gap-4 items-center max-w-md">
+	<!-- Avatar -->
+	<Avatar class="h-14 w-14">
+		<Avatar.Fallback class="bg-primary-500 text-white font-semibold">
+			{initials}
+		</Avatar.Fallback>
+	</Avatar>
 
-	<article class="space-y-4 p-4">
-		<div>
-			<h2 class="h6">Profile</h2>
-			<p class="h3">{displayName || 'Your Name'}</p>
-		</div>
-		<p class="opacity-60">{bio || 'Your bio will appear here.'}</p>
-	</article>
+	<!-- Info -->
+	<div class="flex-1">
+		<h3 class="font-semibold text-lg">
+			{displayName || 'Your name'}
+		</h3>
 
-	<footer class="flex items-center justify-between gap-4 p-4">
-		<small class="opacity-60">{pronouns}</small>
-		<small class="opacity-60">Updated {new Date().toLocaleDateString()}</small>
-	</footer>
+		<p class="text-sm opacity-70">
+			{bio || 'Your bio will appear here.'}
+		</p>
+
+		{#if pronouns}
+			<p class="text-xs opacity-50 mt-1">{pronouns}</p>
+		{/if}
+	</div>
 </div>

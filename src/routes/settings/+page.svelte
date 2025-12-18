@@ -1,21 +1,20 @@
 <script lang="ts">
-	// Main page wrapper. Keeps the Tabs state and toast instance.
-	import TabNav from 'src/routes/settings/components/TabNav.svelte';
-	import PublicProfile from 'src/routes/settings/components/PublicProfile.svelte';
-	import Account from 'src/routes/settings/components/Account.svelte';
-	import Preferences from 'src/routes/settings/components/Preferences.svelte';
-	import Notifications from 'src/routes/settings/components/Notifications.svelte';
+	import TabNav from './components/TabNav.svelte';
+	import PublicProfile from './components/PublicProfile.svelte';
+	import Account from './components/Account.svelte';
+	import Preferences from './components/Preferences.svelte';
+	import Notifications from './components/Notifications.svelte';
 
 	import { Toast, createToaster, Tabs } from '@skeletonlabs/skeleton-svelte';
 	import { onMount } from 'svelte';
 
-	// Tabs value (simple string, matches the example you provided)
+	// Tabs value
 	let value = 'profile';
 
-	// Toaster (use this to show messages from main or pass to children)
+	// Toaster instance (used in parent)
 	const toaster = createToaster();
 
-	// ---- Example app state (replace these with API-loaded data) ----
+	// ---- Example app state (replace with API-loaded data) ----
 	let displayName = 'John Doe';
 	let bio = 'Tell the world about yourself';
 	let pronouns = 'they/them';
@@ -35,51 +34,63 @@
 		// TODO: load real data from API and set the states above
 	});
 
-	// Handlers triggered by children via custom events
-	function handleSavePublicProfile(event: CustomEvent) {
-		const { displayName: dn, bio: b, pronouns: p } = event.detail;
-		// TODO: call API to save profile -> await api.saveProfile({dn, b, p})
-		displayName = dn;
-		bio = b;
-		pronouns = p;
+	// ---- Callback handlers for child components ----
+	function handleSavePublicProfile(payload: {
+		displayName: string;
+		bio: string;
+		pronouns: string;
+	}) {
+		displayName = payload.displayName;
+		bio = payload.bio;
+		pronouns = payload.pronouns;
+
 		toaster.success({
 			title: 'Profile saved',
 			description: 'Your public profile has been updated.'
 		});
 	}
 
-	function handleSaveAccount(event: CustomEvent) {
-		// event.detail will tell which field changed if implemented that way
-		toaster.info({ title: 'Account', description: 'Account change flow initiated.' });
+	function handleSaveAccount(payload: { field: 'username' | 'firstName' | 'lastName' | 'email' }) {
+		toaster.info({
+			title: 'Account',
+			description: `You clicked to change ${payload.field}.`
+		});
 	}
 
-	function handleSavePreferences(event: CustomEvent) {
-		const { themeMode: tm, accentColor: ac, typography: ty } = event.detail;
-		// TODO: persist preferences and apply dynamic theming
-		themeMode = tm;
-		accentColor = ac;
-		typography = ty;
-		toaster.success({ title: 'Preferences saved', description: 'Theme and typography updated.' });
+	function handleSavePreferences(payload: {
+		themeMode: 'light' | 'dark';
+		accentColor: string;
+		typography: string;
+	}) {
+		themeMode = payload.themeMode;
+		accentColor = payload.accentColor;
+		typography = payload.typography;
+
+		toaster.success({
+			title: 'Preferences saved',
+			description: 'Theme and typography updated.'
+		});
 	}
 
-	function handleSaveNotifications(event: CustomEvent) {
-		const { desktop } = event.detail;
-		// TODO: persist notification preference
-		desktopNotifications = desktop;
-		toaster.success({ title: 'Notifications', description: 'Notification settings updated.' });
+	function handleSaveNotifications(payload: { desktop: boolean }) {
+		desktopNotifications = payload.desktop;
+
+		toaster.success({
+			title: 'Notifications',
+			description: 'Notification settings updated.'
+		});
 	}
 </script>
 
 <div class="flex min-h-screen bg-surface-50 dark:bg-surface-900">
-	<!-- Left navigation column -->
+	<!-- Left navigation -->
 	<aside class="w-72 border-r border-surface-200 dark:border-surface-700 p-6">
 		<h2 class="text-2xl font-semibold mb-4">Settings</h2>
 		<TabNav bind:value />
 	</aside>
 
-	<!-- Main content area -->
+	<!-- Main content -->
 	<main class="flex-1 p-6 max-w-5xl">
-		<!-- Tabs: list + content. We keep tabs state in this file and pass it down. -->
 		<Tabs {value} onValueChange={(details) => (value = details.value)}>
 			<Tabs.List>
 				<Tabs.Trigger value="profile">Public profile</Tabs.Trigger>
@@ -90,36 +101,23 @@
 			</Tabs.List>
 
 			<Tabs.Content value="profile">
-				<PublicProfile {displayName} {bio} {pronouns} on:save={handleSavePublicProfile} {toaster} />
+				<PublicProfile {displayName} {bio} {pronouns} onSave={handleSavePublicProfile} />
 			</Tabs.Content>
 
 			<Tabs.Content value="account">
-				<Account
-					{username}
-					{firstName}
-					{lastName}
-					{email}
-					on:change={handleSaveAccount}
-					{toaster}
-				/>
+				<Account {username} {firstName} {lastName} {email} onChange={handleSaveAccount} />
 			</Tabs.Content>
 
 			<Tabs.Content value="preferences">
-				<Preferences
-					{themeMode}
-					{accentColor}
-					{typography}
-					on:save={handleSavePreferences}
-					{toaster}
-				/>
+				<Preferences {themeMode} {accentColor} {typography} onSave={handleSavePreferences} />
 			</Tabs.Content>
 
 			<Tabs.Content value="notifications">
-				<Notifications {desktopNotifications} on:save={handleSaveNotifications} {toaster} />
+				<Notifications {desktopNotifications} onSave={handleSaveNotifications} />
 			</Tabs.Content>
 		</Tabs>
 
-		<!-- Toast group: place near the top-level to render toasts -->
+		<!-- Toasts -->
 		<Toast.Group {toaster}>
 			{#snippet children(toast)}
 				<Toast {toast}>

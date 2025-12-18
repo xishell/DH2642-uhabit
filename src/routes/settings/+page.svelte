@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Toast, createToaster } from '@skeletonlabs/skeleton-svelte';
+	import { onMount } from 'svelte';
+	import { Toast, createToaster, Collapsible } from '@skeletonlabs/skeleton-svelte';
+	import { ArrowUpDownIcon } from '@lucide/svelte';
 
 	import PublicProfile from './components/PublicProfile.svelte';
 	import Account from './components/Account.svelte';
@@ -9,13 +11,14 @@
 
 	const toaster = createToaster();
 
+	// ------------------
+	// Mock state
+	// ------------------
 	let displayName = 'John Doe';
 	let bio = 'Tell the world about yourself';
 	let pronouns = 'they/them';
 
 	let username = 'johndoe';
-	let firstName = 'John';
-	let lastName = 'Doe';
 	let email = 'john@example.com';
 
 	let themeMode: 'light' | 'dark' = 'light';
@@ -23,17 +26,38 @@
 	let typography = 'sans';
 
 	let desktopNotifications = true;
+
+	// ------------------
+	// Mobile detection (page-only)
+	// ------------------
+	let isMobile = false;
+
+	onMount(() => {
+		const update = () => (isMobile = window.innerWidth < 768);
+		update();
+		window.addEventListener('resize', update);
+		return () => window.removeEventListener('resize', update);
+	});
+
+	function go(id: string) {
+		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+	}
 </script>
 
 <div class="flex min-h-screen bg-surface-50 dark:bg-surface-900 justify-center items-start">
-	<!-- LEFT NAV -->
-	<aside class="w-72 border-r border-surface-200 dark:border-surface-700 p-6 sticky top-0 h-screen">
-		<h2 class="text-xl font-semibold mb-6">Settings</h2>
-		<TabNav />
-	</aside>
+	<!-- LEFT NAV (DESKTOP ONLY – UNCHANGED) -->
+	{#if !isMobile}
+		<aside class="w-72 border-r border-surface-200 dark:border-surface-700 p-6 sticky top-0 h-screen">
+			<h2 class="text-xl font-semibold mb-6">Settings</h2>
+			<TabNav />
+		</aside>
+	{/if}
 
 	<!-- MAIN CONTENT -->
-	<main class="flex-1 p-6 max-w-4xl space-y-16">
+	<main
+		class="flex-1 p-6 max-w-4xl space-y-16"
+		class:pb-24={isMobile}
+	>
 		<section id="profile">
 			<PublicProfile
 				{displayName}
@@ -106,6 +130,36 @@
 			/>
 		</section>
 	</main>
+
+	<!-- MOBILE FLOATING NAV -->
+	{#if isMobile}
+		<div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+			<Collapsible class="card preset-filled-surface-100-900 px-4 py-3 w-64 shadow-xl">
+				<div class="flex justify-between items-center">
+					<p class="font-semibold text-sm">Settings</p>
+
+					<Collapsible.Trigger class="btn-icon hover:preset-tonal scale-90">
+						<ArrowUpDownIcon class="size-4" />
+					</Collapsible.Trigger>
+				</div>
+
+				<Collapsible.Content class="mt-3 flex flex-col gap-2">
+					<button class="anchor text-left text-sm" on:click={() => go('profile')}>
+						Public profile
+					</button>
+					<button class="anchor text-left text-sm" on:click={() => go('account')}>
+						Account
+					</button>
+					<button class="anchor text-left text-sm" on:click={() => go('preferences')}>
+						Preferences
+					</button>
+					<button class="anchor text-left text-sm" on:click={() => go('notifications')}>
+						Notifications
+					</button>
+				</Collapsible.Content>
+			</Collapsible>
+		</div>
+	{/if}
 
 	<!-- TOASTS -->
 	<Toast.Group {toaster}>

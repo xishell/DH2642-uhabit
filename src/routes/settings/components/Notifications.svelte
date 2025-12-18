@@ -1,8 +1,6 @@
 <script lang="ts">
-	// Props
 	export let desktopNotifications: boolean = false;
 
-	// Callback to parent when saving
 	export let onSave: (payload: { desktop: boolean }) => void;
 
 	function save() {
@@ -14,7 +12,6 @@
 	<h1 class="text-2xl font-bold">Notifications</h1>
 
 	<div class="card p-6">
-		<!-- Wrapping input in label is accessible for checkboxes -->
 		<label class="flex items-center gap-3">
 			<input type="checkbox" class="checkbox" bind:checked={desktopNotifications} />
 			<span>Enable desktop push notifications</span>

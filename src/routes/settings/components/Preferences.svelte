@@ -1,10 +1,8 @@
 <script lang="ts">
-	// Props for current preferences
 	export let themeMode: 'light' | 'dark' = 'light';
 	export let accentColor: string = 'indigo';
 	export let typography: string = 'sans';
 
-	// Callback to parent when preferences are saved
 	export let onSave: (payload: {
 		themeMode: 'light' | 'dark';
 		accentColor: string;
@@ -20,7 +18,6 @@
 	<h1 class="text-2xl font-bold">Preferences</h1>
 
 	<div class="card p-6 space-y-4">
-		<!-- Appearance / Theme -->
 		<div>
 			<label for="theme-mode" class="label">Appearance (theme)</label>
 			<select
@@ -33,7 +30,6 @@
 			</select>
 		</div>
 
-		<!-- Accent color -->
 		<div>
 			<label for="accent-color" class="label">Accent color</label>
 			<select
@@ -47,7 +43,6 @@
 			</select>
 		</div>
 
-		<!-- Typography -->
 		<div>
 			<label for="typography" class="label">Typography</label>
 			<select
@@ -61,7 +56,6 @@
 			</select>
 		</div>
 
-		<!-- Save button -->
 		<button
 			class="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
 			on:click={save}

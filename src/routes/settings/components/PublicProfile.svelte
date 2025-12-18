@@ -7,7 +7,6 @@
 
 	export let onSave: (payload: { displayName: string; bio: string; pronouns: string }) => void;
 
-	// Drafts (editable)
 	let draftName = displayName;
 	let draftBio = bio;
 	let draftPronouns = pronouns;
@@ -28,7 +27,6 @@
 	<h1 class="text-2xl font-bold">Profile</h1>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-		<!-- FORM -->
 		<div class="card p-6 space-y-4">
 			<div>
 				<label for="displayName" class="label">Display name</label>
@@ -71,7 +69,6 @@
 			</button>
 		</div>
 
-		<!-- PROFILE CARD (shows saved values only) -->
 		<ProfileCard {displayName} {bio} {pronouns} />
 	</div>
 </section>

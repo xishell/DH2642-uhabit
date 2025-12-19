@@ -22,7 +22,16 @@
 	const isEditMode = $derived(!!habit);
 	const modalTitle = $derived(isEditMode ? 'Edit Habit' : 'New Habit');
 
-	const colors = ['#E0E0E0', '#CCCCCC', '#B8B8B8', '#A4A4A4', '#909090', '#7C7C7C', '#686868'];
+	const colors = [
+		'#BFD7EA', // pastel blue
+		'#FFF1B6', // pastel yellow
+		'#CDEAC0', // pastel green
+		'#FFD6A5', // pastel orange
+		'#FFADAD', // pastel red
+		'#FBC4E2', // pastel pink
+		'#DCC6E0' // pastel purple
+	];
+
 	const frequencyArr = [
 		{ value: 'daily', label: 'Daily (every day)' },
 		{ value: 'weekly', label: 'Weekly (choose days)' },

@@ -60,7 +60,34 @@ export async function getSession() {
 	return result.data;
 }
 
-export async function getPreferences() {
+export interface UserPreferences {
+	notifications?: boolean;
+	emailNotifications?: boolean;
+	weekStartsOn?: number;
+	bio?: string;
+	accentColor?: string;
+	typography?: string;
+}
+
+export interface UserSettings {
+	username?: string;
+	displayName?: string;
+	pronouns?: string;
+	theme?: 'light' | 'dark' | 'system';
+	country?: string;
+	preferences?: UserPreferences;
+}
+
+export interface UserSettingsResponse {
+	username: string | null;
+	displayName: string | null;
+	pronouns: string | null;
+	theme: 'light' | 'dark' | 'system';
+	country: string | null;
+	preferences: UserPreferences;
+}
+
+export async function getPreferences(): Promise<UserSettingsResponse> {
 	const response = await fetch('/api/user/preferences', {
 		credentials: 'include'
 	});
@@ -74,18 +101,7 @@ export async function getPreferences() {
 	return await response.json();
 }
 
-export async function updatePreferences(preferences: {
-	username?: string;
-	displayName?: string;
-	pronouns?: string;
-	theme?: 'light' | 'dark' | 'system';
-	country?: string;
-	preferences?: {
-		notifications?: boolean;
-		emailNotifications?: boolean;
-		weekStartsOn?: number;
-	};
-}) {
+export async function updatePreferences(preferences: UserSettings): Promise<UserSettingsResponse> {
 	const response = await fetch('/api/user/preferences', {
 		method: 'PATCH',
 		headers: {

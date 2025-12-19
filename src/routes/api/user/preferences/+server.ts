@@ -8,8 +8,6 @@ import { requireAuth } from '$lib/server/api-helpers';
 
 // Validation schema for user preferences
 const preferencesSchema = z.object({
-	firstName: z.string().min(1).max(50).optional(),
-	lastName: z.string().min(1).max(50).optional(),
 	username: z
 		.string()
 		.min(3)
@@ -17,6 +15,7 @@ const preferencesSchema = z.object({
 		.regex(/^[a-zA-Z0-9_]+$/)
 		.optional(),
 	displayName: z.string().min(1).max(100).optional(),
+	pronouns: z.string().max(50).optional(),
 	theme: z.enum(['light', 'dark', 'system']).optional(),
 	country: z.string().length(2).optional(), // ISO 3166-1 alpha-2 code
 	preferences: z
@@ -40,10 +39,9 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 
 	const [userData] = await drizzle
 		.select({
-			firstName: user.firstName,
-			lastName: user.lastName,
 			username: user.username,
 			displayName: user.displayName,
+			pronouns: user.pronouns,
 			theme: user.theme,
 			country: user.country,
 			preferences: user.preferences
@@ -70,10 +68,9 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 	}
 
 	return json({
-		firstName: userData.firstName,
-		lastName: userData.lastName,
 		username: userData.username,
 		displayName: userData.displayName,
+		pronouns: userData.pronouns,
 		theme: userData.theme || 'system',
 		country: userData.country,
 		preferences
@@ -91,7 +88,7 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	const drizzle = getDB(db);
 
 	const body = await parsePreferencesBody(request);
-	const updates = await buildPreferenceUpdates(drizzle, userId, body);
+	const updates = buildPreferenceUpdates(body);
 	const nextPreferences = body.preferences
 		? await computeNextPreferences(drizzle, userId, body.preferences)
 		: null;
@@ -103,10 +100,9 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 
 	const [updatedUser] = await drizzle
 		.select({
-			firstName: user.firstName,
-			lastName: user.lastName,
 			username: user.username,
 			displayName: user.displayName,
+			pronouns: user.pronouns,
 			theme: user.theme,
 			country: user.country,
 			preferences: user.preferences
@@ -118,10 +114,9 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	preferences = nextPreferences ? JSON.parse(nextPreferences) : {};
 
 	return json({
-		firstName: updatedUser.firstName,
-		lastName: updatedUser.lastName,
 		username: updatedUser.username,
 		displayName: updatedUser.displayName,
+		pronouns: updatedUser.pronouns,
 		theme: updatedUser.theme || 'system',
 		country: updatedUser.country,
 		preferences
@@ -140,23 +135,16 @@ const parsePreferencesBody = async (request: Request) => {
 	}
 };
 
-const buildPreferenceUpdates = async (
-	drizzle: ReturnType<typeof getDB>,
-	userId: string,
-	body: z.infer<typeof preferencesSchema>
-) => {
-	const updates = buildSimpleUpdates(body);
-	await syncNameIfNeeded(drizzle, userId, body, updates);
-	return updates;
+const buildPreferenceUpdates = (body: z.infer<typeof preferencesSchema>) => {
+	return buildSimpleUpdates(body);
 };
 
 const buildSimpleUpdates = (body: z.infer<typeof preferencesSchema>) => {
 	const updates: Partial<typeof user.$inferInsert> = { updatedAt: new Date() };
 	const simpleFields: Partial<typeof user.$inferInsert> = {
-		firstName: body.firstName,
-		lastName: body.lastName,
 		username: body.username ? body.username.toLowerCase().trim() : undefined,
 		displayName: body.displayName,
+		pronouns: body.pronouns,
 		theme: body.theme,
 		country: body.country
 	};
@@ -168,25 +156,12 @@ const buildSimpleUpdates = (body: z.infer<typeof preferencesSchema>) => {
 		}
 	}
 
+	// Sync name field with displayName if updated
+	if (body.displayName !== undefined) {
+		updates.name = body.displayName || 'User';
+	}
+
 	return updates;
-};
-
-const syncNameIfNeeded = async (
-	drizzle: ReturnType<typeof getDB>,
-	userId: string,
-	body: z.infer<typeof preferencesSchema>,
-	updates: Partial<typeof user.$inferInsert>
-) => {
-	if (body.firstName === undefined && body.lastName === undefined) return;
-
-	const [currentUser] = await drizzle
-		.select({ firstName: user.firstName, lastName: user.lastName })
-		.from(user)
-		.where(eq(user.id, userId));
-
-	const newFirstName = body.firstName ?? currentUser?.firstName ?? '';
-	const newLastName = body.lastName ?? currentUser?.lastName ?? '';
-	updates.name = [newFirstName, newLastName].filter(Boolean).join(' ') || 'User';
 };
 
 const loadCurrentPreferences = async (drizzle: ReturnType<typeof getDB>, userId: string) => {

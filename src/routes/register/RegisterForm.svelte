@@ -10,8 +10,6 @@
 		validateUsernameValue
 	} from './validation';
 
-	let firstName = $state('');
-	let lastName = $state('');
 	let username = $state('');
 	let email = $state('');
 	let password = $state('');
@@ -125,7 +123,7 @@
 		username = usernameSchema.parse(username);
 
 		try {
-			await signUp({ email, password, firstName, lastName, username });
+			await signUp({ email, password, username });
 			window.location.href = '/overview';
 		} catch (err) {
 			const feedback = getErrorFeedback(err);
@@ -144,33 +142,6 @@
 	{#if errorMessage}
 		<RegisterErrorAlert {errorMessage} {errorHint} />
 	{/if}
-
-	<div class="grid grid-cols-2 gap-4">
-		<div class="flex flex-col space-y-1">
-			<label for="firstName" class="text-sm font-medium text-surface-700-200">First Name</label>
-			<input
-				id="firstName"
-				type="text"
-				bind:value={firstName}
-				placeholder="John"
-				required
-				class="input px-4 py-2 border border-surface-300-600 rounded-md
-                      bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
-			/>
-		</div>
-		<div class="flex flex-col space-y-1">
-			<label for="lastName" class="text-sm font-medium text-surface-700-200">Last Name</label>
-			<input
-				id="lastName"
-				type="text"
-				bind:value={lastName}
-				placeholder="Doe"
-				required
-				class="input px-4 py-2 border border-surface-300-600 rounded-md
-                      bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
-			/>
-		</div>
-	</div>
 
 	<div class="flex flex-col space-y-1">
 		<label for="username" class="text-sm font-medium text-surface-700-200">Username</label>

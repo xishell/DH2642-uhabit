@@ -34,7 +34,9 @@ export async function getHolidaysWithCache(
 	const cached = await db
 		.select()
 		.from(holidayCache)
-		.where(and(eq(holidayCache.id, cacheId), eq(holidayCache.countryCode, countryCode.toUpperCase())))
+		.where(
+			and(eq(holidayCache.id, cacheId), eq(holidayCache.countryCode, countryCode.toUpperCase()))
+		)
 		.limit(1);
 
 	if (cached.length > 0) {

@@ -43,7 +43,9 @@ export const GET: RequestHandler = async (event) => {
 	// Parse date range
 	const today = new Date();
 	const defaultFrom = today.toISOString().split('T')[0];
-	const defaultTo = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+	const defaultTo = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+		.toISOString()
+		.split('T')[0];
 
 	const from = url.searchParams.get('from') || defaultFrom;
 	const to = url.searchParams.get('to') || defaultTo;

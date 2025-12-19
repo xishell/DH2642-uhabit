@@ -33,15 +33,15 @@ DELETE /api/notifications/[id]
 
 ```typescript
 // Get VAPID public key (needed for push subscription)
-GET /api/push/vapid-public-key
+GET / api / push / vapid - public - key;
 // Response: { publicKey: string }
 
 // Subscribe to push notifications
-POST /api/push/subscribe
+POST / api / push / subscribe;
 // Body: { endpoint: string, keys: { p256dh: string, auth: string } }
 
 // Unsubscribe
-DELETE /api/push/subscribe
+DELETE / api / push / subscribe;
 // Body: { endpoint: string }
 ```
 
@@ -66,11 +66,11 @@ Import from `$lib/types/notification`:
 
 ```typescript
 import type {
-  Notification,
-  NotificationType,       // 'habit_reminder' | 'streak_milestone' | 'goal_progress' | 'holiday_reschedule'
-  NotificationMetadata,
-  NotificationPreferences,
-  PushSubscriptionKeys
+	Notification,
+	NotificationType, // 'habit_reminder' | 'streak_milestone' | 'goal_progress' | 'holiday_reschedule'
+	NotificationMetadata,
+	NotificationPreferences,
+	PushSubscriptionKeys
 } from '$lib/types/notification';
 ```
 

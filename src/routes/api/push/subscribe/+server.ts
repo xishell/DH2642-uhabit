@@ -2,7 +2,12 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth, requireDB, enforceApiRateLimit, parseAndValidate } from '$lib/server/api-helpers';
+import {
+	requireAuth,
+	requireDB,
+	enforceApiRateLimit,
+	parseAndValidate
+} from '$lib/server/api-helpers';
 import { pushSubscription } from '$lib/server/db/schema';
 
 const subscribeSchema = z.object({
@@ -85,12 +90,7 @@ export const DELETE: RequestHandler = async (event) => {
 	// Delete subscription (only if it belongs to this user)
 	const result = await db
 		.delete(pushSubscription)
-		.where(
-			and(
-				eq(pushSubscription.endpoint, data.endpoint),
-				eq(pushSubscription.userId, userId)
-			)
-		);
+		.where(and(eq(pushSubscription.endpoint, data.endpoint), eq(pushSubscription.userId, userId)));
 
 	return json({ success: true });
 };

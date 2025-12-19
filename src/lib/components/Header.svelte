@@ -59,7 +59,6 @@
 					</a>
 				{/each}
 
-				
 				<button
 					type="button"
 					onclick={handleLogout}

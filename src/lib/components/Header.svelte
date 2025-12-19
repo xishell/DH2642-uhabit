@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { routes } from '$lib/routes';
+	import { signOut } from '$lib/auth/client';
 
 	let {
 		user = null
@@ -12,12 +13,14 @@
 
 	const navItems = [
 		{ href: routes.overview, label: 'Overview' },
-		{ href: routes.habits.list, label: 'Habits' }
+		{ href: routes.habits.list, label: 'Habits' },
+		{ href: routes.statistics, label: 'Statistics' },
+		{ href: routes.settings, label: 'Settings' }
 	];
 
 	async function handleLogout() {
 		try {
-			await fetch('/api/auth/logout', { method: 'POST' });
+			await signOut();
 			location.href = routes.login;
 		} catch (e) {
 			console.error('Logout failed:', e);
@@ -56,15 +59,14 @@
 					</a>
 				{/each}
 
-				{#if user}
-					<button
-						type="button"
-						onclick={handleLogout}
-						class="text-sm text-surface-400 hover:text-primary-400 transition-colors duration-200"
-					>
-						Logout
-					</button>
-				{/if}
+				
+				<button
+					type="button"
+					onclick={handleLogout}
+					class="text-sm text-surface-400 hover:text-primary-400 transition-colors duration-200"
+				>
+					Logout
+				</button>
 			</nav>
 		{/if}
 	</div>

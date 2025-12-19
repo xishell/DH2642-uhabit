@@ -8,7 +8,7 @@ Habit tracking app built with SvelteKit and Cloudflare Workers/D1, featuring Bet
 | ----------------- | --------------- | ------ | ------------------------------------------------------ |
 | Elliot Steffensen | ellste@kth.se   | 142612 | Project Admin/DBA, Head Dev, Back-End Dev, QA Tester   |
 | Geoanna Dahore    | dahore@kth.se   | 187167 | Project Manager, Frontend dev, UI+UX Dev, Web Designer |
-| Jintong Jiang     | jintongj@kth.se | 200160 | UI Designer/Dev, Figma, User testing                   |
+| Jintong Jiang     | jintongj@kth.se | 200160 | UI/UX Designer, Frontend dev, Research, User testing   |
 
 ## Features
 

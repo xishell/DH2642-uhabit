@@ -38,7 +38,7 @@
 					<span class="text-gray-500">{field === 'username' ? username : email}</span>
 				</div>
 				<button
-					class="px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+					class="px-3 py-1 rounded bg-indigo-500 text-white hover:bg-indigo-600"
 					on:click={() => open(field)}
 				>
 					Edit
@@ -79,7 +79,7 @@
 							<button class="border px-4 py-2 rounded" on:click={() => (openField = null)}>
 								Cancel
 							</button>
-							<button class="bg-indigo-600 text-white px-4 py-2 rounded" on:click={save}>
+							<button class="bg-indigo-500 text-white px-4 py-2 rounded" on:click={save}>
 								Save
 							</button>
 						</footer>

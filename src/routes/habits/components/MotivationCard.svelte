@@ -3,7 +3,7 @@
 </script>
 
 <div
-	class="motivation-card w-full h-40 text-[20px] text-center flex justify-center items-center px-[30px] mt-[45px] mb-[30px] bg-primary-300-700 text-white opacity-80 rounded-[10px]"
+	class="motivation-card w-full h-40 text-[20px] text-center flex justify-center items-center px-[30px] mt-[45px] mb-[30px] bg-primary-500 text-white opacity-80 rounded-[10px]"
 >
 	{#if loading}
 		<div class="w-full max-w-[560px] space-y-3 animate-pulse">

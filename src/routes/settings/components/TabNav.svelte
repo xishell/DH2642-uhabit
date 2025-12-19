@@ -18,7 +18,7 @@
 	{#each sections as section}
 		<button
 			type="button"
-			class="w-full text-left px-3 py-2 rounded-md hover:bg-indigo-200 dark:hover:bg-indigo-800 transition"
+			class="w-full text-left px-3 py-2 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500 transition"
 			on:click={() => scrollTo(section.id)}
 		>
 			{section.label}

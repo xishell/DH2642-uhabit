@@ -9,7 +9,13 @@ export type SettingsField =
 	| 'theme'
 	| 'accentColor'
 	| 'typography'
-	| 'notifications';
+	| 'notifications'
+	| 'pushEnabled'
+	| 'habitReminders'
+	| 'streakMilestones'
+	| 'goalProgress'
+	| 'holidaySuggestions'
+	| 'reminderTime';
 
 interface FieldChange {
 	original: unknown;

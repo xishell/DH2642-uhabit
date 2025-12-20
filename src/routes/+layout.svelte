@@ -19,6 +19,13 @@
 
 	onMount(() => {
 		themeMode.initialize();
+
+		// Register service worker for push notifications (authenticated users only)
+		if ('serviceWorker' in navigator && data.user) {
+			navigator.serviceWorker.register('/sw.js').catch((err) => {
+				console.warn('Service worker registration failed:', err);
+			});
+		}
 	});
 </script>
 

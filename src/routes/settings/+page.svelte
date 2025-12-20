@@ -27,7 +27,14 @@
 	let currentTheme = $state<ThemeMode>('system');
 	let accentColor = $state('');
 	let typography = $state('');
-	let desktopNotifications = $state(false);
+
+	// Notification preferences
+	let pushEnabled = $state(false);
+	let habitReminders = $state(true);
+	let streakMilestones = $state(true);
+	let goalProgress = $state(true);
+	let holidaySuggestions = $state(true);
+	let reminderTime = $state('08:00');
 
 	// Original values (for tracking changes)
 	let originalValues = $state<Record<string, unknown>>({});
@@ -49,7 +56,15 @@
 		bio = settings.preferences?.bio ?? '';
 		accentColor = settings.preferences?.accentColor ?? '';
 		typography = settings.preferences?.typography ?? '';
-		desktopNotifications = settings.preferences?.notifications ?? false;
+
+		// Apply notification preferences
+		const notifPrefs = settings.preferences?.notificationPrefs;
+		pushEnabled = notifPrefs?.pushEnabled ?? false;
+		habitReminders = notifPrefs?.habitReminders ?? true;
+		streakMilestones = notifPrefs?.streakMilestones ?? true;
+		goalProgress = notifPrefs?.goalProgress ?? true;
+		holidaySuggestions = notifPrefs?.holidaySuggestions ?? true;
+		reminderTime = notifPrefs?.reminderTime ?? '08:00';
 
 		if (setAsOriginal) {
 			originalValues = {
@@ -61,7 +76,12 @@
 				theme: currentTheme,
 				accentColor,
 				typography,
-				notifications: desktopNotifications
+				pushEnabled,
+				habitReminders,
+				streakMilestones,
+				goalProgress,
+				holidaySuggestions,
+				reminderTime
 			};
 			settingsChanges.clearAll();
 		}
@@ -176,7 +196,14 @@
 					bio,
 					accentColor,
 					typography,
-					notifications: desktopNotifications
+					notificationPrefs: {
+						pushEnabled,
+						habitReminders,
+						streakMilestones,
+						goalProgress,
+						holidaySuggestions,
+						reminderTime
+					}
 				}
 			});
 
@@ -224,8 +251,23 @@
 				case 'typography':
 					typography = value as string;
 					break;
-				case 'notifications':
-					desktopNotifications = value as boolean;
+				case 'pushEnabled':
+					pushEnabled = value as boolean;
+					break;
+				case 'habitReminders':
+					habitReminders = value as boolean;
+					break;
+				case 'streakMilestones':
+					streakMilestones = value as boolean;
+					break;
+				case 'goalProgress':
+					goalProgress = value as boolean;
+					break;
+				case 'holidaySuggestions':
+					holidaySuggestions = value as boolean;
+					break;
+				case 'reminderTime':
+					reminderTime = value as string;
 					break;
 			}
 		});
@@ -350,9 +392,33 @@
 
 			<section id="notifications">
 				<Notifications
-					{desktopNotifications}
+					{pushEnabled}
+					{habitReminders}
+					{streakMilestones}
+					{goalProgress}
+					{holidaySuggestions}
+					{reminderTime}
 					onFieldChange={(field, value) => {
-						if (field === 'notifications') desktopNotifications = value as boolean;
+						switch (field) {
+							case 'pushEnabled':
+								pushEnabled = value as boolean;
+								break;
+							case 'habitReminders':
+								habitReminders = value as boolean;
+								break;
+							case 'streakMilestones':
+								streakMilestones = value as boolean;
+								break;
+							case 'goalProgress':
+								goalProgress = value as boolean;
+								break;
+							case 'holidaySuggestions':
+								holidaySuggestions = value as boolean;
+								break;
+							case 'reminderTime':
+								reminderTime = value as string;
+								break;
+						}
 					}}
 				/>
 			</section>

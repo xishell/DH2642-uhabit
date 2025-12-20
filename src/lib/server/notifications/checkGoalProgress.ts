@@ -2,6 +2,8 @@ import { eq } from 'drizzle-orm';
 import type { DB } from '$lib/server/api-helpers';
 import { goal, notification } from '$lib/server/db/schema';
 import type { Notification, GoalProgressMetadata } from '$lib/types/notification';
+import { sendWakeUpPush, getPushConfig } from '$lib/server/push';
+import type { NotificationOptions } from './checkStreakMilestone';
 
 /** Progress thresholds that trigger notifications (percentages) */
 const PROGRESS_THRESHOLDS = [25, 50, 75, 100] as const;
@@ -14,6 +16,7 @@ const PROGRESS_THRESHOLDS = [25, 50, 75, 100] as const;
  * @param goalId - Goal ID
  * @param previousProgress - Progress percentage before this update (0-100)
  * @param newProgress - Progress percentage after this update (0-100)
+ * @param options - Optional push notification config
  * @returns Created notification if threshold crossed, null otherwise
  */
 export async function checkGoalProgress(
@@ -21,7 +24,8 @@ export async function checkGoalProgress(
 	userId: string,
 	goalId: string,
 	previousProgress: number,
-	newProgress: number
+	newProgress: number,
+	options?: NotificationOptions
 ): Promise<Notification | null> {
 	// Find if we crossed a threshold
 	const crossedThreshold = PROGRESS_THRESHOLDS.find(
@@ -69,6 +73,22 @@ export async function checkGoalProgress(
 
 	// Insert notification
 	await db.insert(notification).values(notificationData);
+
+	// Send push notification if configured
+	if (options?.env) {
+		const pushConfig = getPushConfig(options.env);
+		if (pushConfig) {
+			const pushPromise = sendWakeUpPush(db, userId, pushConfig).catch((err) => {
+				console.error('[Push] Failed to send goal progress push:', err);
+			});
+
+			if (options.waitUntil) {
+				options.waitUntil(pushPromise);
+			} else {
+				await pushPromise;
+			}
+		}
+	}
 
 	return {
 		...notificationData,

@@ -6,6 +6,17 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAuth } from '$lib/server/api-helpers';
 
+// Notification preferences schema
+const notificationPrefsSchema = z.object({
+	enabled: z.boolean().optional(),
+	pushEnabled: z.boolean().optional(),
+	habitReminders: z.boolean().optional(),
+	reminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+	streakMilestones: z.boolean().optional(),
+	goalProgress: z.boolean().optional(),
+	holidaySuggestions: z.boolean().optional()
+});
+
 // Validation schema for user preferences
 const preferencesSchema = z.object({
 	username: z
@@ -26,7 +37,8 @@ const preferencesSchema = z.object({
 			bio: z.string().max(100).optional(),
 			pronouns: z.string().max(20).optional(),
 			accentColor: z.string().max(20).optional(),
-			typography: z.string().max(20).optional()
+			typography: z.string().max(20).optional(),
+			notificationPrefs: notificationPrefsSchema.optional()
 		})
 		.optional()
 });

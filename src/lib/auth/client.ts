@@ -60,6 +60,16 @@ export async function getSession() {
 	return result.data;
 }
 
+export interface NotificationPrefs {
+	enabled?: boolean;
+	pushEnabled?: boolean;
+	habitReminders?: boolean;
+	reminderTime?: string;
+	streakMilestones?: boolean;
+	goalProgress?: boolean;
+	holidaySuggestions?: boolean;
+}
+
 export interface UserPreferences {
 	notifications?: boolean;
 	emailNotifications?: boolean;
@@ -67,6 +77,7 @@ export interface UserPreferences {
 	bio?: string;
 	accentColor?: string;
 	typography?: string;
+	notificationPrefs?: NotificationPrefs;
 }
 
 export interface UserSettings {

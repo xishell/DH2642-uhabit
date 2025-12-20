@@ -122,7 +122,7 @@
 
 <div class="mb-6 flex justify-center">
 	<div
-		class="bg-surface-900 pt-4 px-6 rounded-xl flex items-end justify-center shadow w-full max-w-2xl"
+		class="bg-surface-100 dark:bg-surface-800 pt-4 px-6 rounded-xl flex items-end justify-center shadow w-full max-w-2xl"
 	>
 		<!-- Multi-Ring Progress Visualization -->
 		<div class="mx-auto" style="width: {size}px; height: {svgHeight}px;">
@@ -137,7 +137,7 @@
 				<path
 					d={outerArcPath}
 					fill="none"
-					class="stroke-surface-700"
+					class="stroke-surface-300 dark:stroke-surface-700"
 					stroke-width={outerStrokeWidth}
 					stroke-linecap="round"
 				/>
@@ -181,7 +181,7 @@
 					<path
 						d={ringPath}
 						fill="none"
-						class="stroke-surface-700/50"
+						class="stroke-surface-300/50 dark:stroke-surface-700/50"
 						stroke-width={innerStrokeWidth}
 						stroke-linecap="round"
 						style="opacity: {animatedOpacity};"

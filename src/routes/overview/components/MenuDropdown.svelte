@@ -10,7 +10,7 @@
 		aria-expanded={open}><Menu class="w-6 h-6" /></button
 	>
 	{#if open}
-		<ul class="absolute right-0 mt-2 bg-white shadow rounded-md w-44 z-40">
+		<ul class="absolute right-0 mt-2 bg-surface-50 dark:bg-surface-800 shadow rounded-md w-44 z-40">
 			<li>
 				<a
 					href="/overview"

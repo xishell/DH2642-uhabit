@@ -103,7 +103,7 @@
 			<Progress value={pct} max={100} class="w-full h-full">
 				<Progress.Circle class="[--size:--spacing(32)]">
 					<Progress.CircleTrack class="stroke-surface-700" />
-					<Progress.CircleRange class={isCompleted ? 'stroke-violet-500' : 'stroke-primary-500'} />
+					<Progress.CircleRange class={isCompleted ? 'stroke-success-500' : 'stroke-primary-500'} />
 				</Progress.Circle>
 			</Progress>
 			<div
@@ -145,7 +145,7 @@
 		<!-- Save Button -->
 		<button
 			onclick={save}
-			class="w-full py-3 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 transition"
+			class="w-full py-3 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition"
 		>
 			{isCompleted ? 'Save' : 'Update Progress'}
 		</button>

@@ -28,13 +28,15 @@
 	const showNav = $derived(!(currentPath === routes.login || currentPath === routes.register));
 </script>
 
-<header class="w-full bg-surface-900 border-b border-surface-700 shadow-sm">
+<header
+	class="w-full bg-surface-100 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 shadow-sm"
+>
 	<div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
 		<!-- UHabit title left -->
 		<a
 			href={routes.overview}
 			data-sveltekit-preload-data="hover"
-			class="text-lg font-semibold tracking-tight text-surface-50 flex-shrink-0"
+			class="text-lg font-semibold tracking-tight text-surface-900 dark:text-surface-50 flex-shrink-0"
 		>
 			UHabit
 		</a>

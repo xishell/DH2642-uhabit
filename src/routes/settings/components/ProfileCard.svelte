@@ -38,7 +38,7 @@
 			</Avatar>
 
 			<span
-				class="absolute left-1/2 bottom-0 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-800 text-white cursor-pointer hover:bg-green-900 -translate-x-1/2 translate-y-1/2 whitespace-nowrap"
+				class="absolute left-1/2 bottom-0 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-success-800 text-white cursor-pointer hover:bg-success-900 -translate-x-1/2 translate-y-1/2 whitespace-nowrap"
 			>
 				Upload
 			</span>

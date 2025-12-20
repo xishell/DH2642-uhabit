@@ -7,7 +7,7 @@
 
 <button
 	type="submit"
-	class="bg-surface rounded-xl p-4 flex items-center justify-between shadow-sm hover:shadow-md transition w-full text-left"
+	class="bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-4 flex items-center justify-between shadow-sm hover:shadow-md transition w-full text-left"
 >
 	<div class="flex items-center gap-4 flex-1 min-w-0">
 		<div
@@ -16,8 +16,8 @@
                 transition
                 border-surface-500
             "
-			class:border-violet-600={s.isCompleted}
-			class:bg-violet-600={s.isCompleted}
+			class:border-success-600={s.isCompleted}
+			class:bg-success-600={s.isCompleted}
 		>
 			{#if s.isCompleted}
 				<Check class="w-3 h-3 text-white" />

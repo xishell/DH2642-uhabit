@@ -23,14 +23,16 @@
 	<div class="add-habit-view w-full flex flex-col gap-12 p-7 max-w-[800px] m-auto">
 		<h1 class="hidden sm:block text-center text-xl">New Habit</h1>
 		{#if form?.error}
-			<p class="text-red-600 text-sm text-center">{form.error}</p>
+			<p class="text-error-600 text-sm text-center">{form.error}</p>
 		{/if}
 		<!-- form body -->
 		<div
-			class="form-info grid grid-cols-1 gap-3 sm:gap-0 sm:grid-cols-2 sm:border sm:border-gray-300 sm:rounded-[10px] sm:py-[50px] sm:px-[50px]"
+			class="form-info grid grid-cols-1 gap-3 sm:gap-0 sm:grid-cols-2 sm:border sm:border-surface-300 dark:sm:border-surface-600 sm:rounded-xl sm:py-[50px] sm:px-[50px]"
 		>
-			<div class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-gray-300 sm:border-r">
-				<span>Title <span class="text-red-500">*</span></span>
+			<div
+				class="basic-info flex flex-col gap-3 sm:pr-[40px] sm:border-r-surface-300 dark:sm:border-r-surface-600 sm:border-r"
+			>
+				<span>Title <span class="text-error-500">*</span></span>
 				<input
 					type="text"
 					class="border border-surface-300-600 rounded-md px-2 py-2 text-sm bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -114,13 +116,13 @@
 			<a
 				href={routes.habits.list}
 				data-sveltekit-preload-data="hover"
-				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm text-center"
+				class="text-sm w-24 bg-secondary-200 dark:bg-secondary-800 text-secondary-800 dark:text-secondary-200 rounded-full py-3 px-6 hover:bg-secondary-300 dark:hover:bg-secondary-700 transition-colors duration-200 cursor-pointer shadow-sm text-center"
 			>
 				Cancel
 			</a>
 			<button
 				type="submit"
-				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-[50px] py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm"
+				class="text-sm w-24 bg-primary-200-800 text-primary-800-200 rounded-full py-3 px-6 hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer shadow-sm"
 			>
 				Create
 			</button>

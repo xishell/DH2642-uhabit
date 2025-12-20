@@ -90,7 +90,7 @@
 				<h3 class="font-semibold truncate">{goal.title}</h3>
 				{#if goal.isCompleted}
 					<span
-						class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+						class="text-xs px-2 py-0.5 rounded-full bg-success-100 text-success-700 dark:bg-success-900 dark:text-success-300"
 					>
 						Complete
 					</span>
@@ -189,8 +189,8 @@
 								{#if habit.measurement === 'boolean'}
 									<div
 										class="w-6 h-6 rounded-full border-2 flex items-center justify-center"
-										class:border-green-500={status.isCompleted}
-										class:bg-green-500={status.isCompleted}
+										class:border-success-500={status.isCompleted}
+										class:bg-success-500={status.isCompleted}
 										class:border-surface-300-600={!status.isCompleted}
 									>
 										{#if status.isCompleted}

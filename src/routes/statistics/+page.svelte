@@ -36,7 +36,7 @@
 	{#if $state.isLoading}
 		<p>Loading...</p>
 	{:else if $state.error}
-		<p class="text-red-500">{$state.error}</p>
+		<p class="text-error-500">{$state.error}</p>
 	{:else}
 		<!-- Period stats -->
 		{#if $state.periodStats}

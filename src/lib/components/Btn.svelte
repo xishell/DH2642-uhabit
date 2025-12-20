@@ -13,6 +13,6 @@
 </script>
 
 <button
-	class="bg-gray-300 rounded-[50px] py-2 px-6 hover:bg-gray-200 transition-colors duration-300 cursor-pointer"
+	class="bg-surface-300 dark:bg-surface-600 rounded-full py-2 px-6 hover:bg-surface-200 dark:hover:bg-surface-500 transition-colors duration-300 cursor-pointer"
 	>{content}</button
 >

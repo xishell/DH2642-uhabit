@@ -35,10 +35,10 @@
 			<div class="flex justify-between items-center">
 				<div class="flex flex-col">
 					<span class="font-semibold capitalize">{field}</span>
-					<span class="text-gray-500">{field === 'username' ? username : email}</span>
+					<span class="text-surface-500">{field === 'username' ? username : email}</span>
 				</div>
 				<button
-					class="px-3 py-1 rounded bg-indigo-500 text-white hover:bg-indigo-600"
+					class="px-3 py-1 rounded bg-primary-500 text-white hover:bg-primary-600"
 					on:click={() => open(field)}
 				>
 					Edit
@@ -62,7 +62,7 @@
 							</button>
 						</header>
 
-						<p class="text-sm text-red-500">
+						<p class="text-sm text-error-500">
 							Warning: Making these changes could have negative effects.
 						</p>
 
@@ -76,10 +76,13 @@
 						/>
 
 						<footer class="flex justify-end gap-2">
-							<button class="border px-4 py-2 rounded" on:click={() => (openField = null)}>
+							<button
+								class="border border-secondary-500 text-secondary-600 dark:text-secondary-400 px-4 py-2 rounded hover:bg-secondary-100 dark:hover:bg-secondary-900/50 transition-colors"
+								on:click={() => (openField = null)}
+							>
 								Cancel
 							</button>
-							<button class="bg-indigo-500 text-white px-4 py-2 rounded" on:click={save}>
+							<button class="bg-primary-500 text-white px-4 py-2 rounded" on:click={save}>
 								Save
 							</button>
 						</footer>

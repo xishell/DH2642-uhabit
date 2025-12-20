@@ -21,7 +21,7 @@
 		</label>
 
 		<button
-			class="px-4 py-2 rounded-md text-white bg-indigo-500 hover:bg-indigo-600 mt-4"
+			class="px-4 py-2 rounded-md text-white bg-primary-500 hover:bg-primary-600 mt-4"
 			on:click={save}
 		>
 			Save

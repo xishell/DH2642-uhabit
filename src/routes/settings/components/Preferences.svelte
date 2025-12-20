@@ -25,7 +25,7 @@
 			<label for="theme-mode" class="label">Appearance (theme)</label>
 			<select
 				id="theme-mode"
-				class="select w-full px-3 py-2 rounded border border-indigo-500 text-sm"
+				class="select w-full px-3 py-2 rounded border border-primary-500 text-sm"
 				bind:value={themeMode}
 			>
 				<option value="light">Light</option>
@@ -38,7 +38,7 @@
 			<label for="accent-color" class="label">Accent color</label>
 			<select
 				id="accent-color"
-				class="select w-full px-3 py-2 rounded border border-indigo-500 text-sm"
+				class="select w-full px-3 py-2 rounded border border-primary-500 text-sm"
 				bind:value={accentColor}
 			>
 				<option value="indigo">Indigo</option>
@@ -52,7 +52,7 @@
 			<label for="typography" class="label">Typography</label>
 			<select
 				id="typography"
-				class="select w-full px-3 py-2 rounded border border-indigo-500 text-sm"
+				class="select w-full px-3 py-2 rounded border border-primary-500 text-sm"
 				bind:value={typography}
 			>
 				<option value="sans">Sans</option>
@@ -63,7 +63,7 @@
 
 		<!-- Save button -->
 		<button
-			class="px-4 py-2 rounded-md text-white bg-indigo-500 hover:bg-indigo-600"
+			class="px-4 py-2 rounded-md text-white bg-primary-500 hover:bg-primary-600"
 			on:click={save}
 		>
 			Save

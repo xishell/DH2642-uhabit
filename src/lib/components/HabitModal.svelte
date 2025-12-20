@@ -118,7 +118,7 @@
 <Modal {open} title={modalTitle} {onclose}>
 	<form onsubmit={handleSubmit} class="flex flex-col gap-6">
 		{#if error}
-			<p class="text-red-600 text-sm text-center">{error}</p>
+			<p class="text-error-600 text-sm text-center">{error}</p>
 		{/if}
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -126,7 +126,7 @@
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-col gap-1">
 					<label for="habit-title" class="text-sm font-medium"
-						>Title <span class="text-red-500">*</span></label
+						>Title <span class="text-error-500">*</span></label
 					>
 					<input
 						id="habit-title"
@@ -238,14 +238,6 @@
 					Delete
 				</button>
 			{/if}
-			<button
-				type="button"
-				class="px-4 py-2 text-sm rounded-md border border-surface-400-600 hover:bg-surface-200-800 transition-colors"
-				onclick={onclose}
-				disabled={isSubmitting}
-			>
-				Cancel
-			</button>
 			<button
 				type="submit"
 				class="px-4 py-2 text-sm rounded-md bg-primary-500 text-white hover:bg-primary-600 transition-colors disabled:opacity-50"

@@ -4,3 +4,31 @@
 @import '@skeletonlabs/skeleton/themes/cerberus';
 
 @import '../midnight.css';
+
+/* Global focus states for accessibility */
+@layer base {
+	/* Visible focus ring for all interactive elements */
+	button:focus-visible,
+	a:focus-visible,
+	input:focus-visible,
+	select:focus-visible,
+	textarea:focus-visible,
+	[role='button']:focus-visible,
+	[tabindex]:focus-visible {
+		outline: 2px solid oklch(65% 0.19 282deg); /* primary-400 */
+		outline-offset: 2px;
+	}
+
+	/* Remove default outline since we're using custom focus ring */
+	button:focus,
+	a:focus,
+	[role='button']:focus {
+		outline: none;
+	}
+
+	/* Ensure focus is visible for keyboard navigation */
+	:focus-visible {
+		outline: 2px solid oklch(65% 0.19 282deg);
+		outline-offset: 2px;
+	}
+}

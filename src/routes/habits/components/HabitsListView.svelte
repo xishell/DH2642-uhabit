@@ -26,7 +26,7 @@
 		{/each}
 	</div>
 {:else if state.habitsError}
-	<p class="text-center text-sm text-red-600">{state.habitsError}</p>
+	<p class="text-center text-sm text-error-600">{state.habitsError}</p>
 {:else if state.activeTab === 0}
 	{#if !hasHabits}
 		<p class="text-center text-surface-500 py-8">

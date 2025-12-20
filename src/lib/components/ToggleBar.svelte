@@ -25,7 +25,7 @@
 	<button
 		type="button"
 		class="py-1 px-3 rounded-full transition"
-		class:bg-indigo-500={activeTab === 0}
+		class:bg-primary-500={activeTab === 0}
 		class:text-white={activeTab === 0}
 		class:text-surface-300={activeTab !== 0}
 		onclick={activateHabits}
@@ -37,7 +37,7 @@
 	<button
 		type="button"
 		class="py-1 px-3 rounded-full transition"
-		class:bg-indigo-500={activeTab === 1}
+		class:bg-primary-500={activeTab === 1}
 		class:text-white={activeTab === 1}
 		class:text-surface-300={activeTab !== 1}
 		onclick={activateGoals}

@@ -49,7 +49,7 @@
 <!-- Error Toast -->
 {#if $state.error}
 	<div
-		class="fixed top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50"
+		class="fixed top-4 left-1/2 -translate-x-1/2 bg-error-600 text-white px-4 py-2 rounded-lg shadow-lg z-50"
 	>
 		{$state.error}
 	</div>

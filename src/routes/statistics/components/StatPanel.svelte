@@ -47,7 +47,7 @@
 		<div
 			id={`resizable-${target}`}
 			style={`height:${viewHeight}px`}
-			class="max-h-130 min-h-4 scrollbar-ctn rounded-[10px] border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto"
+			class="max-h-130 min-h-4 scrollbar-ctn rounded-xl border border-primary-500 bg-primary-900 pl-6 pr-8 overflow-x-hidden overflow-y-auto"
 		>
 			<div class="absolute left-6 top-0 w-1 h-full bg-primary-500"></div>
 
@@ -65,7 +65,7 @@
 		<div
 			use:dragResize={resizeOptions}
 			class="absolute bottom-0 left-1 right-1 h-3 cursor-row-resize rounded-2xl
-					bg-white/10 backdrop-blur-md shadow-[0_-5px_20px_rgba(255,200,255,0.2)] transition-opacity duration-200
+					bg-surface-50/10 dark:bg-surface-900/10 backdrop-blur-md shadow-lg transition-opacity duration-200
 					{isDragging ? 'opacity-100' : 'opacity-50'} hover:opacity-100"
 		></div>
 	</div>
@@ -82,7 +82,7 @@
 
 	:global(.scrollbar-ctn::-webkit-scrollbar-thumb) {
 		width: 0px;
-		background-color: #f4f4f4a8;
+		background-color: rgb(var(--color-surface-400) / 0.66);
 		background-clip: content-box;
 		border-radius: 99px;
 		border: 10px solid transparent;

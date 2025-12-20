@@ -198,7 +198,7 @@
 
 	<button
 		type="submit"
-		class="w-full py-3 px-6 bg-primary-200-800 text-primary-800-200 rounded-[50px] hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+		class="w-full py-3 px-6 bg-primary-200-800 text-primary-800-200 rounded-full hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 		disabled={loading}
 	>
 		{#if loading}

@@ -22,7 +22,7 @@
 	type="button"
 	aria-label={`Open ${p.habit.title}`}
 	onclick={onOpen}
-	class="bg-surface rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col gap-3 w-full text-left"
+	class="bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col gap-3 w-full text-left"
 >
 	<div class="flex items-center justify-between gap-3">
 		<div class="flex items-center gap-3 flex-1 min-w-0">
@@ -30,8 +30,8 @@
 				role="button"
 				tabindex="0"
 				class="w-5 h-5 rounded-full flex items-center justify-center border-2 transition border-surface-500"
-				class:border-violet-600={isCompleted}
-				class:bg-violet-600={isCompleted}
+				class:border-success-600={isCompleted}
+				class:bg-success-600={isCompleted}
 				onclick={(e) => {
 					e.stopPropagation();
 					onToggleComplete();
@@ -65,8 +65,8 @@
 	</div>
 
 	<Progress value={pct} max={100} class="h-2 rounded-full">
-		<Progress.Track class="bg-surface-200">
-			<Progress.Range class={isCompleted ? 'bg-violet-600' : 'bg-primary-500'} />
+		<Progress.Track class="bg-surface-300 dark:bg-surface-700">
+			<Progress.Range class={isCompleted ? 'bg-success-600' : 'bg-primary-500'} />
 		</Progress.Track>
 	</Progress>
 </button>

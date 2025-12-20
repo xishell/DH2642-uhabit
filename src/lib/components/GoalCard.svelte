@@ -79,9 +79,13 @@
 	const habitCount = $derived(habits.length);
 </script>
 
-<div class="rounded-xl border-[1.5px] border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 overflow-hidden">
+<div
+	class="rounded-xl border-[1.5px] border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 overflow-hidden"
+>
 	<!-- Header -->
-	<div class="flex items-center gap-4 p-4 min-h-[68px] hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors">
+	<div
+		class="flex items-center gap-4 p-4 min-h-[68px] hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+	>
 		<!-- Color indicator -->
 		{#if goal.color}
 			<div class="w-3 h-8 rounded-full shrink-0" style="background-color: {goal.color}"></div>

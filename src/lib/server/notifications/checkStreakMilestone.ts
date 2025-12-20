@@ -2,9 +2,17 @@ import { eq } from 'drizzle-orm';
 import type { DB } from '$lib/server/api-helpers';
 import { habit, notification } from '$lib/server/db/schema';
 import type { Notification, StreakMilestoneMetadata } from '$lib/types/notification';
+import { sendWakeUpPush, getPushConfig, type PushConfig } from '$lib/server/push';
 
 /** Milestone streak values that trigger notifications */
 const STREAK_MILESTONES = [7, 30, 100, 365] as const;
+
+export interface NotificationOptions {
+	/** Environment variables for push config */
+	env?: { VAPID_PUBLIC_KEY?: string; VAPID_PRIVATE_KEY?: string };
+	/** Context for non-blocking operations */
+	waitUntil?: (promise: Promise<unknown>) => void;
+}
 
 /**
  * Check if a new streak value has reached a milestone
@@ -13,13 +21,15 @@ const STREAK_MILESTONES = [7, 30, 100, 365] as const;
  * @param userId - User ID
  * @param habitId - Habit ID
  * @param newStreak - The new streak count after completion
+ * @param options - Optional push notification config
  * @returns Created notification if milestone reached, null otherwise
  */
 export async function checkStreakMilestone(
 	db: DB,
 	userId: string,
 	habitId: string,
-	newStreak: number
+	newStreak: number,
+	options?: NotificationOptions
 ): Promise<Notification | null> {
 	// Check if we hit a milestone
 	if (!STREAK_MILESTONES.includes(newStreak as (typeof STREAK_MILESTONES)[number])) {
@@ -59,6 +69,23 @@ export async function checkStreakMilestone(
 
 	// Insert notification
 	await db.insert(notification).values(notificationData);
+
+	// Send push notification if configured
+	if (options?.env) {
+		const pushConfig = getPushConfig(options.env);
+		if (pushConfig) {
+			const pushPromise = sendWakeUpPush(db, userId, pushConfig).catch((err) => {
+				console.error('[Push] Failed to send streak milestone push:', err);
+			});
+
+			// Use waitUntil for non-blocking send, otherwise await
+			if (options.waitUntil) {
+				options.waitUntil(pushPromise);
+			} else {
+				await pushPromise;
+			}
+		}
+	}
 
 	return {
 		...notificationData,

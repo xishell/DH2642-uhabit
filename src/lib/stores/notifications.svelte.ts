@@ -1,4 +1,5 @@
 import type { Notification } from '$lib/types/notification';
+import { savePendingNotifications, isIDBAvailable } from '$lib/notifications/idb';
 
 class NotificationStore {
 	notifications = $state<Notification[]>([]);
@@ -49,6 +50,16 @@ class NotificationStore {
 				}
 				this.hasMore = data.pagination.hasMore;
 				this.initialized = true;
+
+				// Save unread notifications to IndexedDB for service worker access
+				if (isIDBAvailable()) {
+					const unread = parsed.filter((n) => !n.read);
+					if (unread.length > 0) {
+						savePendingNotifications(unread).catch(() => {
+							// Silently ignore IDB errors
+						});
+					}
+				}
 			}
 		} catch (error) {
 			console.error('Failed to fetch notifications:', error);

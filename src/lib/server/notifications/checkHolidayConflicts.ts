@@ -5,6 +5,8 @@ import { getHolidaysForCurrentPeriod } from '$lib/server/holidays/holidayCache';
 import { filterHolidaysByDateRange, findHolidayOnDate } from '$lib/server/holidays/nagerDateClient';
 import type { Holiday, HolidayConflict } from '$lib/types/holiday';
 import type { Notification, HolidayRescheduleMetadata } from '$lib/types/notification';
+import { sendWakeUpPush, getPushConfig } from '$lib/server/push';
+import type { NotificationOptions } from './checkStreakMilestone';
 
 /**
  * Get dates for the next N days
@@ -80,12 +82,14 @@ function getSuggestedDate(holidayDate: string): string {
  * @param db - Database instance
  * @param userId - User ID to check
  * @param daysAhead - How many days ahead to check (default: 7)
+ * @param options - Optional push notification config
  * @returns Array of created notifications for conflicts found
  */
 export async function checkHolidayConflictsForUser(
 	db: DB,
 	userId: string,
-	daysAhead = 7
+	daysAhead = 7,
+	options?: NotificationOptions
 ): Promise<Notification[]> {
 	// Get user's country
 	const users = await db.select().from(user).where(eq(user.id, userId)).limit(1);
@@ -183,14 +187,37 @@ export async function checkHolidayConflictsForUser(
 		});
 	}
 
+	// Send push notification if configured and we created notifications
+	if (notifications.length > 0 && options?.env) {
+		const pushConfig = getPushConfig(options.env);
+		if (pushConfig) {
+			const pushPromise = sendWakeUpPush(db, userId, pushConfig).catch((err) => {
+				console.error('[Push] Failed to send holiday conflict push:', err);
+			});
+
+			if (options.waitUntil) {
+				options.waitUntil(pushPromise);
+			} else {
+				await pushPromise;
+			}
+		}
+	}
+
 	return notifications;
 }
 
 /**
  * Check holiday conflicts for all users with a country set
  * Meant to be called by a cron job
+ *
+ * @param db - Database instance
+ * @param options - Optional push notification config
+ * @returns Number of notifications created
  */
-export async function checkHolidayConflictsForAllUsers(db: DB): Promise<number> {
+export async function checkHolidayConflictsForAllUsers(
+	db: DB,
+	options?: NotificationOptions
+): Promise<number> {
 	// Get all users with a country set
 	const usersWithCountry = await db
 		.select({ id: user.id })
@@ -200,7 +227,7 @@ export async function checkHolidayConflictsForAllUsers(db: DB): Promise<number> 
 	let notificationCount = 0;
 
 	for (const u of usersWithCountry) {
-		const notifications = await checkHolidayConflictsForUser(db, u.id);
+		const notifications = await checkHolidayConflictsForUser(db, u.id, 7, options);
 		notificationCount += notifications.length;
 	}
 

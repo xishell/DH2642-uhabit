@@ -14,10 +14,10 @@
 	} = $props();
 
 	const currentPath = $derived($page.url.pathname);
-	const initials = $derived.by(() => (user?.name?.trim().slice(0, 2).toUpperCase() || 'U'));
+	const initials = $derived.by(() => user?.name?.trim().slice(0, 2).toUpperCase() || 'U');
 
 	let menuOpen = $state(false);
-	let menuRoot: HTMLDivElement | null = null;
+	let menuRoot = $state<HTMLDivElement | null>(null);
 
 	onMount(() => {
 		const handleClick = (event: MouseEvent) => {

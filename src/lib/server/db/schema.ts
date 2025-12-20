@@ -208,3 +208,80 @@ export const habitCompletion = sqliteTable(
 		uniqueHabitDate: unique('habit_completion_unique').on(table.habitId, table.completedAt)
 	})
 );
+
+// Notification table for in-app notifications
+export const notification = sqliteTable(
+	'notification',
+	{
+		id: text('id').primaryKey(),
+		userId: text('userId')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		// Notification type: habit_reminder, streak_milestone, goal_progress, holiday_reschedule
+		type: text('type').notNull(),
+		// Optional reference to related habit
+		habitId: text('habitId').references(() => habit.id, { onDelete: 'cascade' }),
+		// Optional reference to related goal
+		goalId: text('goalId').references(() => goal.id, { onDelete: 'cascade' }),
+		// Notification content
+		title: text('title').notNull(),
+		body: text('body').notNull(),
+		// Additional metadata as JSON (milestone value, progress %, holiday info, etc.)
+		metadata: text('metadata'),
+		// Status tracking
+		read: integer('read', { mode: 'boolean' }).notNull().default(false),
+		dismissed: integer('dismissed', { mode: 'boolean' }).notNull().default(false),
+		// Timestamps
+		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+		expiresAt: integer('expiresAt', { mode: 'timestamp' })
+	},
+	(table) => ({
+		userIdx: index('notification_user_idx').on(table.userId),
+		userUnreadIdx: index('notification_user_unread_idx').on(table.userId, table.read),
+		typeIdx: index('notification_type_idx').on(table.type),
+		createdAtIdx: index('notification_created_at_idx').on(table.createdAt)
+	})
+);
+
+// Push subscription table for Web Push API
+export const pushSubscription = sqliteTable(
+	'push_subscription',
+	{
+		id: text('id').primaryKey(),
+		userId: text('userId')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		// Web Push subscription endpoint (unique per device)
+		endpoint: text('endpoint').notNull().unique(),
+		// Keys for encryption: { p256dh, auth } stored as JSON
+		keys: text('keys').notNull(),
+		// User agent for debugging/device identification
+		userAgent: text('userAgent'),
+		// Timestamps
+		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+		lastUsedAt: integer('lastUsedAt', { mode: 'timestamp' })
+	},
+	(table) => ({
+		userIdx: index('push_subscription_user_idx').on(table.userId),
+		endpointIdx: index('push_subscription_endpoint_idx').on(table.endpoint)
+	})
+);
+
+// Holiday cache table for storing Nager.Date API responses
+export const holidayCache = sqliteTable(
+	'holiday_cache',
+	{
+		// Composite key: countryCode-year (e.g., "US-2025")
+		id: text('id').primaryKey(),
+		countryCode: text('countryCode').notNull(),
+		year: integer('year').notNull(),
+		// Holidays stored as JSON array
+		holidays: text('holidays').notNull(),
+		// Cache timestamps
+		fetchedAt: integer('fetchedAt', { mode: 'timestamp' }).notNull(),
+		expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull()
+	},
+	(table) => ({
+		countryYearIdx: index('holiday_cache_country_year_idx').on(table.countryCode, table.year)
+	})
+);

@@ -1,33 +1,53 @@
 <script lang="ts">
 	import ProfileCard from './ProfileCard.svelte';
+	import FieldWrapper from './FieldWrapper.svelte';
+	import { settingsChanges } from '$lib/stores/settingsChanges';
 
-	export let displayName: string;
-	export let bio: string;
-	export let pronouns: string;
-
-	export let onSave: (payload: { displayName: string; bio: string; pronouns: string }) => void;
-
-	let draftName = displayName;
-	let draftBio = bio;
-	let draftPronouns = pronouns;
-	let hasEdited = false;
-
-	$: if (!hasEdited) {
-		draftName = displayName;
-		draftBio = bio;
-		draftPronouns = pronouns;
+	interface Props {
+		displayName: string;
+		bio: string;
+		pronouns: string;
+		onFieldChange?: (field: string, value: unknown) => void;
 	}
 
-	function save() {
-		if (draftName.length > 20) draftName = draftName.slice(0, 20);
-		if (draftBio.length > 100) draftBio = draftBio.slice(0, 100);
+	let { displayName, bio, pronouns, onFieldChange }: Props = $props();
 
-		onSave({
-			displayName: draftName,
-			bio: draftBio,
-			pronouns: draftPronouns
-		});
-		hasEdited = false;
+	let draftName = $state(displayName);
+	let draftBio = $state(bio);
+	let draftPronouns = $state(pronouns);
+
+	// Sync draft values when props change (e.g., on discard)
+	$effect(() => {
+		draftName = displayName;
+	});
+
+	$effect(() => {
+		draftBio = bio;
+	});
+
+	$effect(() => {
+		draftPronouns = pronouns;
+	});
+
+	function handleNameChange(e: Event) {
+		const value = (e.target as HTMLInputElement).value;
+		draftName = value;
+		settingsChanges.setField('displayName', displayName, value);
+		onFieldChange?.('displayName', value);
+	}
+
+	function handleBioChange(e: Event) {
+		const value = (e.target as HTMLTextAreaElement).value;
+		draftBio = value;
+		settingsChanges.setField('bio', bio, value);
+		onFieldChange?.('bio', value);
+	}
+
+	function handlePronounsChange(e: Event) {
+		const value = (e.target as HTMLSelectElement).value;
+		draftPronouns = value;
+		settingsChanges.setField('pronouns', pronouns, value);
+		onFieldChange?.('pronouns', value);
 	}
 </script>
 
@@ -36,50 +56,40 @@
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 		<div class="card p-6 space-y-4">
-			<div>
-				<label for="displayName" class="label">Display name</label>
+			<FieldWrapper field="displayName" label="Display name">
 				<input
 					id="displayName"
-					class="input w-full border border-indigo-600"
-					bind:value={draftName}
-					on:input={() => (hasEdited = true)}
+					class="input w-full border border-surface-300 dark:border-surface-600"
+					value={draftName}
+					oninput={handleNameChange}
 					maxlength={20}
 				/>
-			</div>
+			</FieldWrapper>
 
-			<div>
-				<label for="bio" class="label">Bio</label>
+			<FieldWrapper field="bio" label="Bio">
 				<textarea
 					id="bio"
-					class="textarea w-full border border-indigo-600"
-					bind:value={draftBio}
-					on:input={() => (hasEdited = true)}
+					class="textarea w-full border border-surface-300 dark:border-surface-600"
+					value={draftBio}
+					oninput={handleBioChange}
 					maxlength={100}
 				></textarea>
-			</div>
+			</FieldWrapper>
 
-			<div>
-				<label for="pronouns" class="label">Pronouns</label>
+			<FieldWrapper field="pronouns" label="Pronouns">
 				<select
 					id="pronouns"
-					class="select w-full px-2 py-2 rounded border border-indigo-600 text-sm"
-					bind:value={draftPronouns}
-					on:change={() => (hasEdited = true)}
+					class="select w-full px-2 py-2 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-sm"
+					value={draftPronouns}
+					onchange={handlePronounsChange}
 				>
 					<option value="she/her">she/her</option>
 					<option value="he/him">he/him</option>
 					<option value="they/them">they/them</option>
 				</select>
-			</div>
-
-			<button
-				class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-				on:click={save}
-			>
-				Save
-			</button>
+			</FieldWrapper>
 		</div>
 
-		<ProfileCard {displayName} {bio} {pronouns} />
+		<ProfileCard displayName={draftName} bio={draftBio} pronouns={draftPronouns} />
 	</div>
 </section>

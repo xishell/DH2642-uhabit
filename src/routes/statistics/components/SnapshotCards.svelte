@@ -24,7 +24,7 @@
 		<p class="text-xs uppercase tracking-wide text-surface-400">Overall completion</p>
 		<p class="text-3xl font-semibold flex items-baseline gap-2">
 			{formatPercent(snapshot.overallCompletion)}
-			<span class={`text-xs ${snapshot.weeklyDelta >= 0 ? 'text-primary-600' : 'text-rose-500'}`}>
+			<span class={`text-xs ${snapshot.weeklyDelta >= 0 ? 'text-success-500' : 'text-error-500'}`}>
 				{snapshot.weeklyDelta >= 0 ? '▲' : '▼'}
 				{formatPercent(Math.abs(snapshot.weeklyDelta))}
 			</span>
@@ -37,7 +37,7 @@
 	</div>
 	<div class={`${cardBase} p-4`}>
 		<p class="text-xs uppercase tracking-wide text-surface-400">Needs attention</p>
-		<p class="text-lg font-semibold text-rose-500">{snapshot.needsAttention || 'N/A'}</p>
+		<p class="text-lg font-semibold text-warning-500">{snapshot.needsAttention || 'N/A'}</p>
 		<p class="text-xs text-surface-400">Focus here this week</p>
 	</div>
 </div>

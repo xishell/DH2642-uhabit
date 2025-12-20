@@ -1,50 +1,78 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { beforeNavigate } from '$app/navigation';
 	import { Toast, createToaster, Collapsible } from '@skeletonlabs/skeleton-svelte';
 	import { ArrowUpDownIcon } from '@lucide/svelte';
 
 	import { getPreferences, updatePreferences, getSession } from '$lib/auth/client';
 	import type { UserSettingsResponse } from '$lib/auth/client';
 	import { STORAGE_KEYS } from '$lib/constants';
+	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
+	import { settingsChanges, hasUnsavedChanges } from '$lib/stores/settingsChanges';
 	import PublicProfile from './components/PublicProfile.svelte';
 	import Account from './components/Account.svelte';
 	import Preferences from './components/Preferences.svelte';
 	import Notifications from './components/Notifications.svelte';
 	import TabNav from './components/TabNav.svelte';
+	import SaveBar from './components/SaveBar.svelte';
 
 	const toaster = createToaster();
 
-	let displayName = '';
-	let bio = '';
-	let pronouns = '';
+	// Current values (editable)
+	let displayName = $state('');
+	let bio = $state('');
+	let pronouns = $state('');
+	let username = $state('');
+	let email = $state('');
+	let currentTheme = $state<ThemeMode>('system');
+	let accentColor = $state('');
+	let typography = $state('');
+	let desktopNotifications = $state(false);
 
-	let username = '';
-	let email = '';
-
-	let themeMode: 'light' | 'dark' = 'light';
-	let accentColor = '';
-	let typography = '';
-
-	let desktopNotifications = false;
+	// Original values (for tracking changes)
+	let originalValues = $state<Record<string, unknown>>({});
 
 	let sessionEmail = '';
-	let isMobile = false;
-	let isLoading = true;
+	let isMobile = $state(false);
+	let isLoading = $state(true);
+	let isSaving = $state(false);
 
 	const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000;
 
-	const applySettings = (settings: UserSettingsResponse) => {
+	const applySettings = (settings: UserSettingsResponse, setAsOriginal = false) => {
 		displayName = settings.displayName ?? '';
 		pronouns = settings.pronouns ?? '';
 		username = settings.username ?? '';
-		themeMode = settings.theme === 'dark' ? 'dark' : 'light';
+		currentTheme = (settings.theme as ThemeMode) || 'system';
+		themeStore.set(currentTheme);
 
 		bio = settings.preferences?.bio ?? '';
 		accentColor = settings.preferences?.accentColor ?? '';
 		typography = settings.preferences?.typography ?? '';
 		desktopNotifications = settings.preferences?.notifications ?? false;
+
+		if (setAsOriginal) {
+			originalValues = {
+				displayName,
+				bio,
+				pronouns,
+				username,
+				email,
+				theme: currentTheme,
+				accentColor,
+				typography,
+				notifications: desktopNotifications
+			};
+			settingsChanges.clearAll();
+		}
 	};
+
+	// Track field changes
+	function trackChange(field: string, value: unknown) {
+		const original = originalValues[field];
+		settingsChanges.setField(field as any, original, value);
+	}
 
 	const readSettingsCache = () => {
 		if (!browser) return null;
@@ -70,7 +98,7 @@
 	if (browser) {
 		const cached = readSettingsCache();
 		if (cached) {
-			applySettings(cached);
+			applySettings(cached, true);
 			isLoading = false;
 		}
 	}
@@ -86,7 +114,7 @@
 		try {
 			const cached = readSettingsCache();
 			if (cached) {
-				applySettings(cached);
+				applySettings(cached, true);
 				isLoading = false;
 			}
 
@@ -96,7 +124,7 @@
 				email = sessionEmail;
 			}
 
-			applySettings(settings);
+			applySettings(settings, true);
 			writeSettingsCache(settings);
 		} catch (error) {
 			toaster.error({
@@ -110,6 +138,99 @@
 
 	function go(id: string) {
 		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+	}
+
+	// Warn before navigation if there are unsaved changes
+	beforeNavigate(({ cancel }) => {
+		if ($hasUnsavedChanges) {
+			if (!confirm('You have unsaved changes. Are you sure you want to leave?')) {
+				cancel();
+			}
+		}
+	});
+
+	// Warn before closing tab/window
+	$effect(() => {
+		if (!browser) return;
+
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			if ($hasUnsavedChanges) {
+				e.preventDefault();
+				e.returnValue = '';
+			}
+		};
+
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+	});
+
+	// Unified save handler
+	async function handleSaveAll() {
+		isSaving = true;
+		try {
+			const updated = await updatePreferences({
+				displayName,
+				pronouns,
+				username,
+				theme: currentTheme,
+				preferences: {
+					bio,
+					accentColor,
+					typography,
+					notifications: desktopNotifications
+				}
+			});
+
+			applySettings(updated, true);
+			writeSettingsCache(updated);
+
+			toaster.success({
+				title: 'Settings saved',
+				description: 'All your changes have been saved.'
+			});
+		} catch (error) {
+			toaster.error({
+				title: 'Save failed',
+				description: error instanceof Error ? error.message : 'Failed to save settings.'
+			});
+		} finally {
+			isSaving = false;
+		}
+	}
+
+	// Discard all changes
+	function handleDiscardAll() {
+		const originals = settingsChanges.getOriginalValues();
+		originals.forEach((value, field) => {
+			switch (field) {
+				case 'displayName':
+					displayName = value as string;
+					break;
+				case 'bio':
+					bio = value as string;
+					break;
+				case 'pronouns':
+					pronouns = value as string;
+					break;
+				case 'username':
+					username = value as string;
+					break;
+				case 'theme':
+					currentTheme = value as ThemeMode;
+					themeStore.set(currentTheme);
+					break;
+				case 'accentColor':
+					accentColor = value as string;
+					break;
+				case 'typography':
+					typography = value as string;
+					break;
+				case 'notifications':
+					desktopNotifications = value as boolean;
+					break;
+			}
+		});
+		settingsChanges.clearAll();
 	}
 </script>
 
@@ -190,27 +311,10 @@
 					{displayName}
 					{bio}
 					{pronouns}
-					onSave={async (payload) => {
-						try {
-							const updated = await updatePreferences({
-								displayName: payload.displayName,
-								pronouns: payload.pronouns,
-								preferences: { bio: payload.bio }
-							});
-
-							applySettings(updated);
-							writeSettingsCache(updated);
-
-							toaster.success({
-								title: 'Profile saved',
-								description: 'Your public profile has been updated.'
-							});
-						} catch (error) {
-							toaster.error({
-								title: 'Profile error',
-								description: error instanceof Error ? error.message : 'Failed to save profile.'
-							});
-						}
+					onFieldChange={(field, value) => {
+						if (field === 'displayName') displayName = value as string;
+						else if (field === 'bio') bio = value as string;
+						else if (field === 'pronouns') pronouns = value as string;
 					}}
 				/>
 			</section>
@@ -221,30 +325,9 @@
 				<Account
 					{username}
 					{email}
-					onSave={async (payload) => {
-						try {
-							const updated = await updatePreferences({ username: payload.username });
-							applySettings(updated);
-							writeSettingsCache(updated);
-
-							if (payload.email !== email) {
-								toaster.info({
-									title: 'Email unchanged',
-									description: 'Email updates are not available yet.'
-								});
-								email = sessionEmail || email;
-							}
-
-							toaster.success({
-								title: 'Account updated',
-								description: 'Your account details were updated.'
-							});
-						} catch (error) {
-							toaster.error({
-								title: 'Account error',
-								description: error instanceof Error ? error.message : 'Failed to update account.'
-							});
-						}
+					onFieldChange={(field, value) => {
+						if (field === 'username') username = value as string;
+						else if (field === 'email') email = value as string;
 					}}
 				/>
 			</section>
@@ -253,32 +336,13 @@
 
 			<section id="preferences">
 				<Preferences
-					{themeMode}
+					{currentTheme}
 					{accentColor}
 					{typography}
-					onSave={async (payload) => {
-						try {
-							const updated = await updatePreferences({
-								theme: payload.themeMode,
-								preferences: {
-									accentColor: payload.accentColor,
-									typography: payload.typography
-								}
-							});
-
-							applySettings(updated);
-							writeSettingsCache(updated);
-
-							toaster.success({
-								title: 'Preferences saved',
-								description: 'Your preferences have been updated.'
-							});
-						} catch (error) {
-							toaster.error({
-								title: 'Preferences error',
-								description: error instanceof Error ? error.message : 'Failed to save preferences.'
-							});
-						}
+					onFieldChange={(field, value) => {
+						if (field === 'theme') currentTheme = value as ThemeMode;
+						else if (field === 'accentColor') accentColor = value as string;
+						else if (field === 'typography') typography = value as string;
 					}}
 				/>
 			</section>
@@ -288,25 +352,8 @@
 			<section id="notifications">
 				<Notifications
 					{desktopNotifications}
-					onSave={async (payload) => {
-						try {
-							const updated = await updatePreferences({
-								preferences: { notifications: payload.desktop }
-							});
-							applySettings(updated);
-							writeSettingsCache(updated);
-
-							toaster.success({
-								title: 'Notifications updated',
-								description: 'Notification settings saved.'
-							});
-						} catch (error) {
-							toaster.error({
-								title: 'Notifications error',
-								description:
-									error instanceof Error ? error.message : 'Failed to update notifications.'
-							});
-						}
+					onFieldChange={(field, value) => {
+						if (field === 'notifications') desktopNotifications = value as boolean;
 					}}
 				/>
 			</section>
@@ -326,20 +373,23 @@
 				</div>
 
 				<Collapsible.Content class="mt-3 flex flex-col gap-2">
-					<button class="anchor text-left text-sm" on:click={() => go('profile')}>
+					<button class="anchor text-left text-sm" onclick={() => go('profile')}>
 						Public profile
 					</button>
-					<button class="anchor text-left text-sm" on:click={() => go('account')}> Account </button>
-					<button class="anchor text-left text-sm" on:click={() => go('preferences')}>
+					<button class="anchor text-left text-sm" onclick={() => go('account')}> Account </button>
+					<button class="anchor text-left text-sm" onclick={() => go('preferences')}>
 						Preferences
 					</button>
-					<button class="anchor text-left text-sm" on:click={() => go('notifications')}>
+					<button class="anchor text-left text-sm" onclick={() => go('notifications')}>
 						Notifications
 					</button>
 				</Collapsible.Content>
 			</Collapsible>
 		</div>
 	{/if}
+
+	<!-- FLOATING SAVE BAR -->
+	<SaveBar onSave={handleSaveAll} onDiscard={handleDiscardAll} {isSaving} />
 
 	<!-- TOASTS -->
 	<Toast.Group {toaster}>

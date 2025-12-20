@@ -7,14 +7,13 @@
 	import PeriodSummary from './components/PeriodSummary.svelte';
 	import TopHabits from './components/TopHabits.svelte';
 	import ActivityPulse from './components/ActivityPulse.svelte';
-	import InsightsSection from './components/InsightsSection.svelte';
 	import type { DateValue } from '@skeletonlabs/skeleton-svelte';
 	import { createStatisticsPresenter } from '$lib/presenters/statisticsPresenter';
 	import type { Scope } from '$lib/stats/types';
 	import { formatDate } from '$lib/utils/date';
 
 	const scopes: Scope[] = ['daily', 'weekly', 'monthly'];
-	const cardBase = 'rounded-2xl border border-surface-700 bg-surface-900 text-surface-50 shadow-sm';
+	const cardBase = 'rounded-2xl border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-900 text-surface-900 dark:text-surface-50 shadow-sm';
 
 	const presenter = createStatisticsPresenter({
 		fetcher: fetch,
@@ -35,7 +34,6 @@
 	const currentTrends = $derived($statsStore.trends);
 	const currentHeatmap = $derived($statsStore.heatmap);
 	const snapshot = $derived($statsStore.snapshot);
-	const insights = $derived($statsStore.insights);
 	const activity = $derived($statsStore.activity);
 
 	const lastSyncLabel = $derived(() => {
@@ -65,14 +63,14 @@
 	};
 </script>
 
-<div class="max-w-5xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8 rounded-3xl text-surface-50">
+<div class="max-w-5xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8 rounded-3xl text-surface-900 dark:text-surface-50">
 	<!-- Header -->
 	<div class="flex items-center justify-between gap-4 flex-wrap">
 		<div>
 			<h1 class="text-3xl font-semibold">Statistics</h1>
 			<p class="text-sm text-surface-400">
 				{#if isOffline}
-					<span class="text-amber-400">Offline mode</span> ·
+					<span class="text-warning-500">Offline mode</span> ·
 				{/if}
 				Snapshot of how your habits are trending.
 			</p>
@@ -104,7 +102,7 @@
 
 	<!-- Error state -->
 	{#if error}
-		<div class="rounded-xl border border-rose-500/50 bg-rose-900/20 p-4 text-rose-200">
+		<div class="rounded-xl border border-error-500/50 bg-error-900/20 p-4 text-error-200">
 			<p class="font-semibold">Error loading statistics</p>
 			<p class="text-sm">{error}</p>
 			<button class="mt-2 text-sm underline hover:no-underline" onclick={() => presenter.refresh()}>
@@ -140,10 +138,6 @@
 		</div>
 
 		<ActivityPulse periodStats={currentPeriod} {activity} {activeTab} {cardBase} />
-
-		{#if insights}
-			<InsightsSection {insights} periodStats={currentPeriod} {cardBase} />
-		{/if}
 	{:else if !isLoading && !error}
 		<!-- Empty state -->
 		<div class="flex flex-col items-center justify-center py-20 gap-4">

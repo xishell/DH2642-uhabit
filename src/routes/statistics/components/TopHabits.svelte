@@ -18,16 +18,16 @@
 		<p class="text-sm font-semibold">Top habits this {activeTab}</p>
 		<span class="text-xs text-surface-400">vs previous period</span>
 	</div>
-	<div class="flex flex-col gap-3">
+	<div class="habits-scroll flex flex-col gap-3 max-h-96 overflow-y-auto pr-1">
 		{#key activeTab}
 			{#if trends.length > 0}
 				{#each trends as habit (habit.habitId)}
 					<div
-						class="rounded-xl border border-surface-700 bg-surface-800 p-3 flex flex-col gap-2 text-surface-50"
+						class="rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-3 flex flex-col gap-2 text-surface-900 dark:text-surface-50"
 					>
 						<div class="flex items-center justify-between">
 							<p class="font-semibold">{habit.title}</p>
-							<span class={`text-xs ${habit.delta >= 0 ? 'text-primary-600' : 'text-rose-500'}`}>
+							<span class={`text-xs ${habit.delta >= 0 ? 'text-success-500' : 'text-error-500'}`}>
 								{habit.delta >= 0 ? '▲' : '▼'}
 								{formatPercent(Math.abs(habit.delta))}
 							</span>
@@ -51,3 +51,23 @@
 		{/key}
 	</div>
 </div>
+
+<style>
+	/* Custom scrollbar for dark theme */
+	.habits-scroll::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.habits-scroll::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.habits-scroll::-webkit-scrollbar-thumb {
+		background-color: rgba(255, 255, 255, 0.2);
+		border-radius: 3px;
+	}
+
+	.habits-scroll::-webkit-scrollbar-thumb:hover {
+		background-color: rgba(255, 255, 255, 0.3);
+	}
+</style>

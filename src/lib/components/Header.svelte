@@ -6,6 +6,7 @@
 	import { signOut } from '$lib/auth/client';
 	import { LogOutIcon } from '@lucide/svelte';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte';
+	import { avatarUrl } from '$lib/stores/avatar';
 	import NotificationBell from './NotificationBell.svelte';
 
 	let {
@@ -17,6 +18,7 @@
 			username?: string | null;
 			displayName?: string | null;
 			email?: string | null;
+			image?: string | null;
 		} | null;
 	} = $props();
 
@@ -113,6 +115,9 @@
 						aria-label="User menu"
 					>
 						<Avatar class="h-9 w-9">
+							{#if $avatarUrl}
+								<Avatar.Image src={$avatarUrl} alt="User avatar" />
+							{/if}
 							<Avatar.Fallback
 								class="bg-primary-500 text-white font-bold text-sm flex items-center justify-center"
 							>

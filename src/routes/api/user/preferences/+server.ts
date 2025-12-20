@@ -63,7 +63,8 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 			pronouns: user.pronouns,
 			theme: user.theme,
 			country: user.country,
-			preferences: user.preferences
+			preferences: user.preferences,
+			image: user.image
 		})
 		.from(user)
 		.where(eq(user.id, userId));
@@ -92,7 +93,8 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 		pronouns: userData.pronouns,
 		theme: userData.theme || 'system',
 		country: userData.country,
-		preferences
+		preferences,
+		imageUrl: userData.image
 	});
 };
 
@@ -124,7 +126,8 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 			pronouns: user.pronouns,
 			theme: user.theme,
 			country: user.country,
-			preferences: user.preferences
+			preferences: user.preferences,
+			image: user.image
 		})
 		.from(user)
 		.where(eq(user.id, userId));
@@ -138,7 +141,8 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 		pronouns: updatedUser.pronouns,
 		theme: updatedUser.theme || 'system',
 		country: updatedUser.country,
-		preferences
+		preferences,
+		imageUrl: updatedUser.image
 	});
 };
 

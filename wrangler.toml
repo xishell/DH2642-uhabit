@@ -25,6 +25,11 @@ binding = "QUOTES_CACHE"
 id = "2af61397263c4a3aa886234d4fb1e1cd"
 preview_id = "3efa594e3a38437f80337e9655ed707d"
 
+# R2 bucket for avatar storage
+[[r2_buckets]]
+binding = "AVATARS"
+bucket_name = "uhabit-avatars"
+
 # Environment configuration
 # Note: Secrets like BETTER_AUTH_SECRET should be set via:
 #   npx wrangler secret put BETTER_AUTH_SECRET --env preview
@@ -47,6 +52,10 @@ id = "c9e24aece36444eab3d8d708f8a90590"
 binding = "QUOTES_CACHE"
 id = "d25b20ff2d5c4523ba874e3799a9b89d"
 
+[[env.preview.r2_buckets]]
+binding = "AVATARS"
+bucket_name = "uhabit-avatars-staging"
+
 [env.preview.vars]
 DEV_MODE = "true"
 
@@ -66,6 +75,10 @@ id = "92c7011c659d4a01a759cab698729751"
 [[env.production.kv_namespaces]]
 binding = "QUOTES_CACHE"
 id = "61404831084147e1b7927aed84882e4b"
+
+[[env.production.r2_buckets]]
+binding = "AVATARS"
+bucket_name = "uhabit-avatars"
 
 [env.production.vars]
 DEV_MODE = "false"

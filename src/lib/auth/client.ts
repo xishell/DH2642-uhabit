@@ -96,6 +96,7 @@ export interface UserSettingsResponse {
 	theme: 'light' | 'dark' | 'system';
 	country: string | null;
 	preferences: UserPreferences;
+	imageUrl: string | null;
 }
 
 export async function getPreferences(): Promise<UserSettingsResponse> {

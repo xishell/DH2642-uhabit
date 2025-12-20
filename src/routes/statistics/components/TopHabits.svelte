@@ -15,7 +15,7 @@
 
 <div class={`${cardBase} p-4 flex flex-col gap-3`}>
 	<div class="flex items-center justify-between">
-		<p class="text-sm font-semibold">Top habits this {activeTab}</p>
+		<p class="text-sm font-semibold">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} top habits</p>
 		<span class="text-xs text-surface-400">vs previous period</span>
 	</div>
 	<div class="habits-scroll flex flex-col gap-3 max-h-96 overflow-y-auto pr-1">

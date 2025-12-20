@@ -30,14 +30,18 @@
 			</span>
 		</p>
 	</div>
-	<div class={`${cardBase} p-4`}>
+	<div class={`${cardBase} p-4 min-w-0`}>
 		<p class="text-xs uppercase tracking-wide text-surface-400">Most consistent</p>
-		<p class="text-lg font-semibold">{snapshot.mostConsistent || 'N/A'}</p>
+		<p class="text-lg font-semibold truncate" title={snapshot.mostConsistent || 'N/A'}>
+			{snapshot.mostConsistent || 'N/A'}
+		</p>
 		<p class="text-xs text-surface-400">Locked in — keep it rolling</p>
 	</div>
-	<div class={`${cardBase} p-4`}>
+	<div class={`${cardBase} p-4 min-w-0`}>
 		<p class="text-xs uppercase tracking-wide text-surface-400">Needs attention</p>
-		<p class="text-lg font-semibold text-warning-500">{snapshot.needsAttention || 'N/A'}</p>
+		<p class="text-lg font-semibold text-warning-500 truncate" title={snapshot.needsAttention || 'N/A'}>
+			{snapshot.needsAttention || 'N/A'}
+		</p>
 		<p class="text-xs text-surface-400">Focus here this week</p>
 	</div>
 </div>

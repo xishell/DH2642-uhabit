@@ -139,7 +139,7 @@
 				</div>
 			{/if}
 			<!-- Circular progress indicator -->
-			<div class="relative w-10 h-10 shrink-0">
+			<div class="relative w-14 h-14 shrink-0">
 				<svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
 					<!-- Background circle -->
 					<circle
@@ -163,7 +163,7 @@
 						stroke-dashoffset={94.2 - (94.2 * goal.progressPercentage) / 100}
 					/>
 				</svg>
-				<span class="absolute inset-0 flex items-center justify-center text-[10px] font-medium">
+				<span class="absolute inset-0 flex items-center justify-center text-xs font-medium">
 					{Math.round(goal.progressPercentage)}%
 				</span>
 			</div>

@@ -6,6 +6,7 @@
 	import { signOut } from '$lib/auth/client';
 	import { LogOutIcon } from '@lucide/svelte';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte';
+	import NotificationBell from './NotificationBell.svelte';
 
 	let {
 		user = null
@@ -99,6 +100,8 @@
 				{/each}
 
 				<span class="text-surface-300 dark:text-surface-700 select-none" aria-hidden="true">|</span>
+
+				<NotificationBell />
 
 				<div class="relative" bind:this={menuRoot}>
 					<button

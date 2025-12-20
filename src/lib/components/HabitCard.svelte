@@ -49,7 +49,7 @@
 >
 	<div class="flex items-center gap-3 min-w-0">
 		{#if habit.color}
-			<div class="w-3 h-8 rounded-full" style="background-color: {habit.color}"></div>
+			<div class="w-3 h-8 rounded-full shrink-0" style="background-color: {habit.color}"></div>
 		{/if}
 		<div class="flex flex-col gap-1 min-w-0">
 			<div class="flex items-center gap-2 min-w-0">

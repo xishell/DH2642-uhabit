@@ -48,9 +48,7 @@
 		>
 			<div class="flex items-center justify-between gap-4">
 				<div class="flex-1 min-w-0">
-					<p class="text-sm font-medium text-surface-900 dark:text-surface-50">
-						Unsaved changes
-					</p>
+					<p class="text-sm font-medium text-surface-900 dark:text-surface-50">Unsaved changes</p>
 					<p class="text-xs text-surface-500 truncate">
 						Modified: {changedFieldsList}
 					</p>

@@ -17,26 +17,38 @@
 		<span class="text-xs text-surface-400">Recent habit activity</span>
 	</div>
 	<div class="grid md:grid-cols-3 gap-3">
-		<div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-3">
+		<div
+			class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-3"
+		>
 			<p class="text-xs uppercase tracking-wide text-surface-400 mb-1">Total completions</p>
-			<p class="text-2xl font-semibold text-surface-900 dark:text-surface-50">{periodStats.completions}</p>
+			<p class="text-2xl font-semibold text-surface-900 dark:text-surface-50">
+				{periodStats.completions}
+			</p>
 			<p class="text-xs text-surface-400">Across all habits this {activeTab}</p>
 		</div>
-		<div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-3">
+		<div
+			class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-3"
+		>
 			<p class="text-xs uppercase tracking-wide text-surface-400 mb-1">Active days</p>
 			<p class="text-2xl font-semibold text-surface-900 dark:text-surface-50">
 				{Math.max(1, Math.round(periodStats.completionRate * 7))}/7
 			</p>
 			<p class="text-xs text-surface-400">Contribution-like cadence</p>
 		</div>
-		<div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-3">
+		<div
+			class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-3"
+		>
 			<p class="text-xs uppercase tracking-wide text-surface-400 mb-1">Top streak</p>
-			<p class="text-2xl font-semibold text-surface-900 dark:text-surface-50">{periodStats.longestStreak} days</p>
+			<p class="text-2xl font-semibold text-surface-900 dark:text-surface-50">
+				{periodStats.longestStreak} days
+			</p>
 			<p class="text-xs text-surface-400">Keep the chain going</p>
 		</div>
 	</div>
 	{#if activity.length > 0}
-		<div class="divide-y divide-surface-200 dark:divide-surface-700 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900">
+		<div
+			class="divide-y divide-surface-200 dark:divide-surface-700 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900"
+		>
 			{#each activity as item (item.habitId)}
 				<div class="p-3 flex items-center justify-between gap-3">
 					<div>

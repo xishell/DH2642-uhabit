@@ -54,7 +54,9 @@
 	<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 		{#key activeTab}
 			{#each [['Completion', formatPercent(periodStats.completionRate)], ['Completions', periodStats.completions.toString()], ['Best day', periodStats.bestDay], ['Streak', `${periodStats.streak} (best ${periodStats.longestStreak})`]] as [label, value]}
-				<div class="rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-surface-900 dark:text-surface-50">
+				<div
+					class="rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-surface-900 dark:text-surface-50"
+				>
 					<p class="text-xs text-surface-400">{label}</p>
 					<p class="text-lg font-semibold">{value}</p>
 				</div>
@@ -63,7 +65,9 @@
 	</div>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-		<div class="rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-4 text-surface-900 dark:text-surface-50">
+		<div
+			class="rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-4 text-surface-900 dark:text-surface-50"
+		>
 			<p class="text-sm font-semibold mb-3">Recent momentum</p>
 			<div class="flex items-end gap-2 h-28">
 				{#key activeTab}
@@ -87,7 +91,9 @@
 			{/if}
 		</div>
 
-		<div class="rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-4 text-surface-900 dark:text-surface-50">
+		<div
+			class="rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-4 text-surface-900 dark:text-surface-50"
+		>
 			<p class="text-sm font-semibold mb-3">Consistency heatmap</p>
 			<div class="pb-2">
 				{#key activeTab}

@@ -13,22 +13,10 @@
 	import { formatDate } from '$lib/utils/date';
 
 	const scopes: Scope[] = ['daily', 'weekly', 'monthly'];
-	const cardBase = 'rounded-2xl border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-900 text-surface-900 dark:text-surface-50 shadow-sm';
+	const cardBase =
+		'rounded-2xl border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-900 text-surface-900 dark:text-surface-50 shadow-sm';
 
-	//code section from main atm to avoid conflicts--------------------->>>>>>>>>>>>>>>>>
-	import StatPanel from './components/StatPanel.svelte';
-	import type { DateValue } from '@skeletonlabs/skeleton-svelte';
-	import type { HabitStat, HabitType } from './types';
-	//code section from main atm to avoid conflicts---------------------<<<<<<<<<<<<<<<<<<<<
-
-	//dependencies for the new UI>>>>>>>>>>>>>>>>>
-	import { DatePicker, Portal, SegmentedControl, Progress } from '@skeletonlabs/skeleton-svelte';
-	import TrendingCard from './components/TrendingCard.svelte';
-	import PeriodCard from './components/PeriodCard.svelte';
-	import MomentumCard from './components/MomentumCard.svelte';
-	import HeatmapCard from './components/HeatmapCard.svelte';
-	let value = $state<string | null>('music');
-	//  Create presenter instance
+	// Create presenter instance
 	const presenter = createStatisticsPresenter({
 		fetcher: fetch,
 		browser: typeof window !== 'undefined'
@@ -77,7 +65,9 @@
 	};
 </script>
 
-<div class="max-w-5xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8 rounded-3xl text-surface-900 dark:text-surface-50">
+<div
+	class="max-w-5xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8 rounded-3xl text-surface-900 dark:text-surface-50"
+>
 	<!-- Header -->
 	<div class="flex items-center justify-between gap-4 flex-wrap">
 		<div>

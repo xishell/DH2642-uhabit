@@ -73,7 +73,9 @@
 	<Portal>
 		<Popover.Positioner class="z-50">
 			<Popover.Content
-				class="notification-dropdown w-80 sm:w-96 max-h-[70vh] flex flex-col rounded-2xl bg-surface-50 dark:bg-surface-900 shadow-xl border border-surface-200 dark:border-surface-700 overflow-hidden {isClosing ? 'is-closing' : ''}"
+				class="notification-dropdown w-80 sm:w-96 max-h-[70vh] flex flex-col rounded-2xl bg-surface-50 dark:bg-surface-900 shadow-xl border border-surface-200 dark:border-surface-700 overflow-hidden {isClosing
+					? 'is-closing'
+					: ''}"
 			>
 				<!-- Header -->
 				<div

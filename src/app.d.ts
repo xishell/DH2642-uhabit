@@ -37,6 +37,7 @@ declare global {
 				QUOTES_CACHE?: KVNamespace; // Optional: KV namespace for quotes caching
 				VAPID_PUBLIC_KEY?: string; // Optional: VAPID public key for push notifications
 				VAPID_PRIVATE_KEY?: string; // Optional: VAPID private key for push notifications
+				AVATARS?: R2Bucket; // Optional: R2 bucket for avatar storage
 			};
 			context: {
 				waitUntil(promise: Promise<unknown>): void;

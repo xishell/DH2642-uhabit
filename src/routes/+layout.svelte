@@ -4,6 +4,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import Header from '$lib/components/Header.svelte';
 	import { themeMode } from '$lib/stores/theme';
+	import { avatarUrl } from '$lib/stores/avatar';
 	import { Toast } from '@skeletonlabs/skeleton-svelte';
 	import { toaster } from '$lib/stores/toaster';
 
@@ -14,8 +15,13 @@
 			username?: string | null;
 			displayName?: string | null;
 			email?: string | null;
+			image?: string | null;
 		} | null;
 	};
+
+	$: if (data.user?.image !== undefined) {
+		avatarUrl.set(data.user.image ?? null);
+	}
 
 	onMount(() => {
 		themeMode.initialize();

@@ -8,10 +8,12 @@
 		displayName: string;
 		bio: string;
 		pronouns: string;
+		imageUrl?: string | null;
 		onFieldChange?: (field: string, value: unknown) => void;
+		onAvatarChange?: (newUrl: string | null) => void;
 	}
 
-	let { displayName, bio, pronouns, onFieldChange }: Props = $props();
+	let { displayName, bio, pronouns, imageUrl, onFieldChange, onAvatarChange }: Props = $props();
 
 	let draftName = $state(untrack(() => displayName));
 	let draftBio = $state(untrack(() => bio));
@@ -91,6 +93,12 @@
 			</FieldWrapper>
 		</div>
 
-		<ProfileCard displayName={draftName} bio={draftBio} pronouns={draftPronouns} />
+		<ProfileCard
+			displayName={draftName}
+			bio={draftBio}
+			pronouns={draftPronouns}
+			{imageUrl}
+			{onAvatarChange}
+		/>
 	</div>
 </section>

@@ -10,6 +10,7 @@
 	import { STORAGE_KEYS } from '$lib/constants';
 	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
 	import { settingsChanges, hasUnsavedChanges } from '$lib/stores/settingsChanges';
+	import { avatarUrl as avatarStore } from '$lib/stores/avatar';
 	import { toaster } from '$lib/stores/toaster';
 	import PublicProfile from './components/PublicProfile.svelte';
 	import Account from './components/Account.svelte';
@@ -27,6 +28,9 @@
 	let currentTheme = $state<ThemeMode>('system');
 	let accentColor = $state('');
 	let typography = $state('');
+
+	// Avatar
+	let avatarUrl = $state<string | null>(null);
 
 	// Notification preferences
 	let pushEnabled = $state(false);
@@ -52,6 +56,9 @@
 		username = settings.username ?? '';
 		currentTheme = (settings.theme as ThemeMode) || 'system';
 		themeStore.set(currentTheme);
+
+		avatarUrl = settings.imageUrl ?? null;
+		avatarStore.set(avatarUrl);
 
 		bio = settings.preferences?.bio ?? '';
 		accentColor = settings.preferences?.accentColor ?? '';
@@ -224,6 +231,11 @@
 		}
 	}
 
+	// Handle avatar change (immediate, not part of save/discard flow)
+	function handleAvatarChange(newUrl: string | null) {
+		avatarUrl = newUrl;
+	}
+
 	// Discard all changes
 	function handleDiscardAll() {
 		const originals = settingsChanges.getOriginalValues();
@@ -352,6 +364,8 @@
 					{displayName}
 					{bio}
 					{pronouns}
+					imageUrl={avatarUrl}
+					onAvatarChange={handleAvatarChange}
 					onFieldChange={(field, value) => {
 						if (field === 'displayName') displayName = value as string;
 						else if (field === 'bio') bio = value as string;

@@ -2,7 +2,13 @@
 	import { onMount } from 'svelte';
 	import { untrack } from 'svelte';
 	import { settingsChanges } from '$lib/stores/settingsChanges';
-	import { isPushSupported, getPushStatus, subscribeToPush, unsubscribeFromPush, type PushStatus } from '$lib/notifications/push';
+	import {
+		isPushSupported,
+		getPushStatus,
+		subscribeToPush,
+		unsubscribeFromPush,
+		type PushStatus
+	} from '$lib/notifications/push';
 	import FieldWrapper from './FieldWrapper.svelte';
 	import { Bell, BellOff, Flame, Target, Calendar, Clock, AlertCircle } from '@lucide/svelte';
 
@@ -77,11 +83,16 @@
 				break;
 		}
 
-		const original = field === 'pushEnabled' ? pushEnabled :
-			field === 'habitReminders' ? habitReminders :
-			field === 'streakMilestones' ? streakMilestones :
-			field === 'goalProgress' ? goalProgress :
-			holidaySuggestions;
+		const original =
+			field === 'pushEnabled'
+				? pushEnabled
+				: field === 'habitReminders'
+					? habitReminders
+					: field === 'streakMilestones'
+						? streakMilestones
+						: field === 'goalProgress'
+							? goalProgress
+							: holidaySuggestions;
 
 		settingsChanges.setField(field as any, original, value);
 		onFieldChange?.(field, value);
@@ -152,7 +163,8 @@
 						Notifications blocked
 					</p>
 					<p class="text-sm text-warning-600 dark:text-warning-400 mt-1">
-						You've blocked notifications for this site. To enable them, click the lock icon in your browser's address bar and allow notifications.
+						You've blocked notifications for this site. To enable them, click the lock icon in your
+						browser's address bar and allow notifications.
 					</p>
 				</div>
 			</div>
@@ -166,7 +178,9 @@
 				</div>
 				<button
 					type="button"
-					class="btn {pushStatus === 'subscribed' ? 'preset-filled-primary-500' : 'preset-outlined'} min-w-[100px]"
+					class="btn {pushStatus === 'subscribed'
+						? 'preset-filled-primary-500'
+						: 'preset-outlined'} min-w-[100px]"
 					onclick={handlePushToggle}
 					disabled={pushLoading}
 				>
@@ -193,7 +207,9 @@
 
 		<div class="space-y-4">
 			<!-- Habit Reminders -->
-			<label class="flex items-center justify-between cursor-pointer p-3 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+			<label
+				class="flex items-center justify-between cursor-pointer p-3 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+			>
 				<div class="flex items-center gap-3">
 					<div class="p-2 rounded-full bg-primary-100 dark:bg-primary-900/30">
 						<Bell class="size-4 text-primary-600 dark:text-primary-400" />
@@ -214,7 +230,9 @@
 			</label>
 
 			<!-- Streak Milestones -->
-			<label class="flex items-center justify-between cursor-pointer p-3 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+			<label
+				class="flex items-center justify-between cursor-pointer p-3 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+			>
 				<div class="flex items-center gap-3">
 					<div class="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30">
 						<Flame class="size-4 text-orange-600 dark:text-orange-400" />
@@ -235,7 +253,9 @@
 			</label>
 
 			<!-- Goal Progress -->
-			<label class="flex items-center justify-between cursor-pointer p-3 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+			<label
+				class="flex items-center justify-between cursor-pointer p-3 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+			>
 				<div class="flex items-center gap-3">
 					<div class="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
 						<Target class="size-4 text-green-600 dark:text-green-400" />
@@ -256,7 +276,9 @@
 			</label>
 
 			<!-- Holiday Suggestions -->
-			<label class="flex items-center justify-between cursor-pointer p-3 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+			<label
+				class="flex items-center justify-between cursor-pointer p-3 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+			>
 				<div class="flex items-center gap-3">
 					<div class="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
 						<Calendar class="size-4 text-blue-600 dark:text-blue-400" />
@@ -294,8 +316,6 @@
 				onchange={handleTimeChange}
 			/>
 		</FieldWrapper>
-		<p class="text-sm text-surface-500 dark:text-surface-400">
-			When to send daily habit reminders
-		</p>
+		<p class="text-sm text-surface-500 dark:text-surface-400">When to send daily habit reminders</p>
 	</div>
 </section>

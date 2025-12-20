@@ -11,7 +11,10 @@ const notificationPrefsSchema = z.object({
 	enabled: z.boolean().optional(),
 	pushEnabled: z.boolean().optional(),
 	habitReminders: z.boolean().optional(),
-	reminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+	reminderTime: z
+		.string()
+		.regex(/^\d{2}:\d{2}$/)
+		.optional(),
 	streakMilestones: z.boolean().optional(),
 	goalProgress: z.boolean().optional(),
 	holidaySuggestions: z.boolean().optional()

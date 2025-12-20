@@ -1,16 +1,56 @@
 <script lang="ts">
-	export let themeMode: 'light' | 'dark' = 'light';
-	export let accentColor: string = 'indigo';
-	export let typography: string = 'sans';
+	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
+	import { settingsChanges } from '$lib/stores/settingsChanges';
+	import FieldWrapper from './FieldWrapper.svelte';
 
-	export let onSave: (payload: {
-		themeMode: 'light' | 'dark';
+	interface Props {
+		currentTheme: ThemeMode;
 		accentColor: string;
 		typography: string;
-	}) => void;
+		onFieldChange?: (field: string, value: unknown) => void;
+	}
 
-	function save() {
-		onSave({ themeMode, accentColor, typography });
+	let { currentTheme, accentColor, typography, onFieldChange }: Props = $props();
+
+	let draftTheme = $state(currentTheme);
+	let draftAccentColor = $state(accentColor);
+	let draftTypography = $state(typography);
+
+	// Sync draft values when props change (e.g., on discard)
+	$effect(() => {
+		draftTheme = currentTheme;
+	});
+
+	$effect(() => {
+		draftAccentColor = accentColor;
+	});
+
+	$effect(() => {
+		draftTypography = typography;
+	});
+
+	function handleThemeChange(event: Event) {
+		const select = event.target as HTMLSelectElement;
+		const newMode = select.value as ThemeMode;
+		draftTheme = newMode;
+		// Apply theme immediately for visual feedback
+		themeStore.set(newMode);
+		settingsChanges.setField('theme', currentTheme, newMode);
+		onFieldChange?.('theme', newMode);
+	}
+
+	function handleAccentColorChange(event: Event) {
+		const value = (event.target as HTMLSelectElement).value;
+		draftAccentColor = value;
+		settingsChanges.setField('accentColor', accentColor, value);
+		onFieldChange?.('accentColor', value);
+	}
+
+	function handleTypographyChange(event: Event) {
+		const value = (event.target as HTMLSelectElement).value;
+		draftTypography = value;
+		settingsChanges.setField('typography', typography, value);
+		onFieldChange?.('typography', value);
 	}
 </script>
 
@@ -18,49 +58,43 @@
 	<h1 class="text-2xl font-bold">Preferences</h1>
 
 	<div class="card p-6 space-y-4">
-		<div>
-			<label for="theme-mode" class="label">Appearance (theme)</label>
+		<FieldWrapper field="theme" label="Appearance (theme)">
 			<select
-				id="theme-mode"
-				class="select w-full px-3 py-2 rounded border border-indigo-600 text-sm"
-				bind:value={themeMode}
+				id="theme"
+				class="select w-full px-3 py-2 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-sm"
+				value={draftTheme}
+				onchange={handleThemeChange}
 			>
+				<option value="system">System</option>
 				<option value="light">Light</option>
 				<option value="dark">Dark</option>
 			</select>
-		</div>
+		</FieldWrapper>
 
-		<div>
-			<label for="accent-color" class="label">Accent color</label>
+		<FieldWrapper field="accentColor" label="Accent color">
 			<select
-				id="accent-color"
-				class="select w-full px-3 py-2 rounded border border-indigo-600 text-sm"
-				bind:value={accentColor}
+				id="accentColor"
+				class="select w-full px-3 py-2 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-sm"
+				value={draftAccentColor}
+				onchange={handleAccentColorChange}
 			>
 				<option value="indigo">Indigo</option>
 				<option value="emerald">Emerald</option>
 				<option value="rose">Rose</option>
 			</select>
-		</div>
+		</FieldWrapper>
 
-		<div>
-			<label for="typography" class="label">Typography</label>
+		<FieldWrapper field="typography" label="Typography">
 			<select
 				id="typography"
-				class="select w-full px-3 py-2 rounded border border-indigo-600 text-sm"
-				bind:value={typography}
+				class="select w-full px-3 py-2 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-sm"
+				value={draftTypography}
+				onchange={handleTypographyChange}
 			>
 				<option value="sans">Sans</option>
 				<option value="serif">Serif</option>
 				<option value="mono">Mono</option>
 			</select>
-		</div>
-
-		<button
-			class="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-			on:click={save}
-		>
-			Save
-		</button>
+		</FieldWrapper>
 	</div>
 </section>

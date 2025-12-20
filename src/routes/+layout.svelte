@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import Header from '$lib/components/Header.svelte';
+	import { themeMode } from '$lib/stores/theme';
 
 	export let data: {
 		user: {
@@ -12,6 +14,10 @@
 			email?: string | null;
 		} | null;
 	};
+
+	onMount(() => {
+		themeMode.initialize();
+	});
 </script>
 
 <svelte:head>

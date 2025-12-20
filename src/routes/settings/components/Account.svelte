@@ -1,34 +1,54 @@
 <script lang="ts">
 	import { Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
 	import { XIcon } from '@lucide/svelte';
+	import { settingsChanges } from '$lib/stores/settingsChanges';
+	import FieldWrapper from './FieldWrapper.svelte';
 
-	export let username: string;
-	export let email: string;
+	interface Props {
+		username: string;
+		email: string;
+		onFieldChange?: (field: string, value: unknown) => void;
+	}
 
-	export let onSave: (payload: { username: string; email: string }) => void;
+	let { username, email, onFieldChange }: Props = $props();
 
-	let openField: null | 'username' | 'email' = null;
-	let value = '';
-	let hasEdited = false;
+	let draftUsername = $state(username);
+	let draftEmail = $state(email);
 
-	const fields: ('username' | 'email')[] = ['username', 'email'];
+	let openField: null | 'username' | 'email' = $state(null);
+	let editValue = $state('');
 
-	function open(field: typeof openField) {
+	// Sync draft values when props change (e.g., on discard)
+	$effect(() => {
+		draftUsername = username;
+	});
+
+	$effect(() => {
+		draftEmail = email;
+	});
+
+	function open(field: 'username' | 'email') {
 		openField = field;
-		value = { username, email }[field!];
-		hasEdited = false;
+		editValue = field === 'username' ? draftUsername : draftEmail;
 	}
 
-	$: if (openField && !hasEdited) {
-		value = { username, email }[openField];
+	function applyEdit() {
+		if (editValue.length > 20) editValue = editValue.slice(0, 20);
+
+		if (openField === 'username') {
+			draftUsername = editValue;
+			settingsChanges.setField('username', username, editValue);
+			onFieldChange?.('username', editValue);
+		} else if (openField === 'email') {
+			draftEmail = editValue;
+			settingsChanges.setField('email', email, editValue);
+			onFieldChange?.('email', editValue);
+		}
+
+		openField = null;
 	}
 
-	function save() {
-		if (value.length > 20) value = value.slice(0, 20);
-		onSave({
-			username: openField === 'username' ? value : username,
-			email: openField === 'email' ? value : email
-		});
+	function cancelEdit() {
 		openField = null;
 	}
 </script>
@@ -37,20 +57,29 @@
 	<h1 class="text-2xl font-bold">Account</h1>
 
 	<div class="card p-6 space-y-6">
-		{#each fields as field}
+		<FieldWrapper field="username" label="Username">
 			<div class="flex justify-between items-center">
-				<div class="flex flex-col">
-					<span class="font-semibold capitalize">{field}</span>
-					<span class="text-gray-500">{field === 'username' ? username : email}</span>
-				</div>
+				<span class="text-surface-600 dark:text-surface-400">{draftUsername}</span>
 				<button
-					class="px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700"
-					on:click={() => open(field)}
+					class="px-3 py-1 rounded bg-primary-600 text-white hover:bg-primary-700"
+					onclick={() => open('username')}
 				>
 					Edit
 				</button>
 			</div>
-		{/each}
+		</FieldWrapper>
+
+		<FieldWrapper field="email" label="Email">
+			<div class="flex justify-between items-center">
+				<span class="text-surface-600 dark:text-surface-400">{draftEmail}</span>
+				<button
+					class="px-3 py-1 rounded bg-primary-600 text-white hover:bg-primary-700"
+					onclick={() => open('email')}
+				>
+					Edit
+				</button>
+			</div>
+		</FieldWrapper>
 	</div>
 
 	{#if openField}
@@ -63,31 +92,36 @@
 					>
 						<header class="flex justify-between items-center">
 							<h2 class="font-bold text-lg">Edit {openField}</h2>
-							<button on:click={() => (openField = null)}>
+							<button onclick={cancelEdit}>
 								<XIcon class="size-4" />
 							</button>
 						</header>
 
-						<p class="text-sm text-red-500">
+						<p class="text-sm text-warning-600 dark:text-warning-400">
 							Warning: Making these changes could have negative effects.
 						</p>
 
 						<input
-							class="input w-full"
-							bind:value
-							on:input={() => (hasEdited = true)}
-							maxlength={20}
+							class="input w-full border border-surface-300 dark:border-surface-600"
+							bind:value={editValue}
+							maxlength={openField === 'username' ? 20 : 50}
 							placeholder={openField === 'username'
 								? 'Enter username (max 20)'
 								: 'Enter email (max 50)'}
 						/>
 
 						<footer class="flex justify-end gap-2">
-							<button class="border px-4 py-2 rounded" on:click={() => (openField = null)}>
+							<button
+								class="border border-surface-300 dark:border-surface-600 px-4 py-2 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+								onclick={cancelEdit}
+							>
 								Cancel
 							</button>
-							<button class="bg-indigo-600 text-white px-4 py-2 rounded" on:click={save}>
-								Save
+							<button
+								class="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700"
+								onclick={applyEdit}
+							>
+								Apply
 							</button>
 						</footer>
 					</Dialog.Content>

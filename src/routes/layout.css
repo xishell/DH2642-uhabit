@@ -5,6 +5,9 @@
 
 @import '../midnight.css';
 
+/* Enable class-based and data-attribute dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *, [data-mode="dark"], [data-mode="dark"] *));
+
 /* Global focus states for accessibility */
 @layer base {
 	/* Visible focus ring for all interactive elements */

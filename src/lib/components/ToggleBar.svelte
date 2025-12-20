@@ -18,7 +18,7 @@
 </script>
 
 <div
-	class="text-sm p-[5px] rounded-full border border-surface-700 inline-flex gap-2 bg-surface-800"
+	class="text-sm p-[5px] rounded-full border border-surface-300 dark:border-surface-700 inline-flex gap-2 bg-surface-100 dark:bg-surface-800"
 	role="tablist"
 	aria-label="Select view"
 >
@@ -27,7 +27,8 @@
 		class="py-1 px-3 rounded-full transition"
 		class:bg-primary-500={activeTab === 0}
 		class:text-white={activeTab === 0}
-		class:text-surface-300={activeTab !== 0}
+		class:text-surface-600={activeTab !== 0}
+		class:dark:text-surface-300={activeTab !== 0}
 		onclick={activateHabits}
 		aria-pressed={activeTab === 0}
 	>
@@ -39,7 +40,8 @@
 		class="py-1 px-3 rounded-full transition"
 		class:bg-primary-500={activeTab === 1}
 		class:text-white={activeTab === 1}
-		class:text-surface-300={activeTab !== 1}
+		class:text-surface-600={activeTab !== 1}
+		class:dark:text-surface-300={activeTab !== 1}
 		onclick={activateGoals}
 		aria-pressed={activeTab === 1}
 	>

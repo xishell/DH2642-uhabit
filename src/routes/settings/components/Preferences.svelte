@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
 	import { settingsChanges } from '$lib/stores/settingsChanges';
 	import FieldWrapper from './FieldWrapper.svelte';
@@ -12,9 +13,9 @@
 
 	let { currentTheme, accentColor, typography, onFieldChange }: Props = $props();
 
-	let draftTheme = $state(currentTheme);
-	let draftAccentColor = $state(accentColor);
-	let draftTypography = $state(typography);
+	let draftTheme = $state(untrack(() => currentTheme));
+	let draftAccentColor = $state(untrack(() => accentColor));
+	let draftTypography = $state(untrack(() => typography));
 
 	// Sync draft values when props change (e.g., on discard)
 	$effect(() => {

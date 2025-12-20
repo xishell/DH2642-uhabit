@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Progress } from '@skeletonlabs/skeleton-svelte';
-	import { Plus, Minus } from 'lucide-svelte';
+	import { Plus, Minus, Loader2 } from 'lucide-svelte';
 	import { untrack } from 'svelte';
 	import type { HabitWithStatus } from '$lib/types/habit';
 
@@ -13,12 +13,13 @@
 	}: {
 		selectedProgressive: HabitWithStatus;
 		initialProgress?: number | null;
-		onSave?: (data: HabitWithStatus) => void;
+		onSave?: (data: HabitWithStatus) => Promise<void> | void;
 		onClose?: () => void;
 		onProgressChange?: (progress: number) => void;
 	} = $props();
 
 	let progress = $state(untrack(() => initialProgress ?? selectedProgressive.progress));
+	let isSaving = $state(false);
 
 	const target = $derived(selectedProgressive.habit.targetAmount ?? 0);
 	const pct = $derived(target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : 0);
@@ -64,8 +65,14 @@
 		}
 	}
 
-	function save() {
-		onSave?.({ ...selectedProgressive, progress });
+	async function save() {
+		if (isSaving) return;
+		isSaving = true;
+		try {
+			await onSave?.({ ...selectedProgressive, progress });
+		} finally {
+			isSaving = false;
+		}
 	}
 
 	function handleBackdropClick(e: MouseEvent) {
@@ -103,7 +110,7 @@
 			<Progress value={pct} max={100} class="w-full h-full">
 				<Progress.Circle class="[--size:--spacing(32)]">
 					<Progress.CircleTrack class="stroke-surface-700" />
-					<Progress.CircleRange class={isCompleted ? 'stroke-success-500' : 'stroke-primary-500'} />
+					<Progress.CircleRange class={isCompleted ? 'stroke-primary-600' : 'stroke-primary-500'} />
 				</Progress.Circle>
 			</Progress>
 			<div
@@ -118,7 +125,7 @@
 		<div class="flex items-center gap-8 mb-6">
 			<button
 				onclick={decrement}
-				disabled={progress <= 0}
+				disabled={progress <= 0 || isSaving}
 				class="w-12 h-12 rounded-full border-2 border-surface-600 hover:border-surface-500 hover:bg-surface-700 transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
 			>
 				<Minus class="w-5 h-5 text-surface-300" />
@@ -131,11 +138,12 @@
 				onkeydown={handleKeyDown}
 				min="0"
 				max={target}
-				class="text-3xl font-bold text-surface-50 w-20 text-center bg-transparent border-b-2 border-surface-600 focus:border-primary-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+				disabled={isSaving}
+				class="text-3xl font-bold text-surface-50 w-20 text-center bg-transparent border-b-2 border-surface-600 focus:border-primary-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
 			/>
 			<button
 				onclick={increment}
-				disabled={progress >= target}
+				disabled={progress >= target || isSaving}
 				class="w-12 h-12 rounded-full border-2 border-surface-600 hover:border-surface-500 hover:bg-surface-700 transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
 			>
 				<Plus class="w-5 h-5 text-surface-300" />
@@ -145,9 +153,15 @@
 		<!-- Save Button -->
 		<button
 			onclick={save}
-			class="w-full py-3 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition"
+			disabled={isSaving}
+			class="w-full py-3 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 		>
-			{isCompleted ? 'Save' : 'Update Progress'}
+			{#if isSaving}
+				<Loader2 class="w-5 h-5 animate-spin" />
+				<span>Saving...</span>
+			{:else}
+				{isCompleted ? 'Save' : 'Update Progress'}
+			{/if}
 		</button>
 	</div>
 </div>

@@ -2,6 +2,9 @@
 	import Modal from './Modal.svelte';
 	import HabitModal from './HabitModal.svelte';
 	import GoalHabitsSelector from './GoalHabitsSelector.svelte';
+	import ColorPicker from './ColorPicker.svelte';
+	import DateInput from './DateInput.svelte';
+	import FormField from './FormField.svelte';
 	import type {
 		Goal,
 		GoalWithHabits,
@@ -239,12 +242,8 @@
 
 <Modal {open} title={modalTitle} {onclose}>
 	<form onsubmit={handleSubmit} class="flex flex-col gap-6">
-		<!-- Goal Details -->
 		<div class="flex flex-col gap-4">
-			<div class="flex flex-col gap-1">
-				<label for="goal-title" class="text-sm font-medium"
-					>Title <span class="text-error-500">*</span></label
-				>
+			<FormField id="goal-title" label="Title" required error={fieldErrors.title}>
 				<input
 					id="goal-title"
 					type="text"
@@ -259,15 +258,8 @@
 					aria-invalid={!!fieldErrors.title}
 					aria-describedby={fieldErrors.title ? 'goal-title-error' : undefined}
 				/>
-				{#if fieldErrors.title}
-					<p id="goal-title-error" class="text-error-500 text-xs mt-1" role="alert">
-						{fieldErrors.title}
-					</p>
-				{/if}
-			</div>
-
-			<div class="flex flex-col gap-1">
-				<label for="goal-description" class="text-sm font-medium">Description</label>
+			</FormField>
+			<FormField id="goal-description" label="Description" error={fieldErrors.description}>
 				<textarea
 					id="goal-description"
 					class="w-full rounded-md border px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -281,87 +273,46 @@
 					aria-invalid={!!fieldErrors.description}
 					aria-describedby={fieldErrors.description ? 'goal-description-error' : undefined}
 				></textarea>
-				{#if fieldErrors.description}
-					<p id="goal-description-error" class="text-error-500 text-xs mt-1" role="alert">
-						{fieldErrors.description}
-					</p>
-				{/if}
-			</div>
+			</FormField>
 
-			<div class="flex flex-col gap-1">
-				<span class="text-sm font-medium">Color</span>
-				<div class="flex gap-2 flex-wrap">
-					{#each colors as color}
-						<button
-							type="button"
-							class="relative w-9 h-9 rounded-full border-2 transition-all duration-150"
-							style="background-color: {color};"
-							class:border-primary-500={selectedColor === color}
-							class:ring-2={selectedColor === color}
-							class:ring-primary-200={selectedColor === color}
-							class:border-transparent={selectedColor !== color}
-							onclick={() => (selectedColor = color)}
-							aria-label={`Select color ${color}`}
-							aria-pressed={selectedColor === color}
-						>
-							{#if selectedColor === color}
-								<span
-									class="absolute inset-0 m-auto w-3 h-3 rounded-full bg-white/80 dark:bg-black/70"
-								></span>
-							{/if}
-						</button>
-					{/each}
-				</div>
-			</div>
+			<ColorPicker {colors} {selectedColor} onSelect={(c) => (selectedColor = c)} />
 
 			<div class="grid grid-cols-2 gap-4">
-				<div class="flex flex-col gap-1">
-					<label for="goal-start" class="text-sm font-medium"
-						>Start Date <span class="text-error-500">*</span></label
-					>
-					<input
-						id="goal-start"
-						type="date"
-						class="border rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
-						class:border-surface-400-600={!fieldErrors.startDate}
-						class:border-error-500={fieldErrors.startDate}
-						bind:value={startDate}
-						onblur={() => validateField('startDate')}
-						onfocus={() => clearFieldError('startDate')}
-						aria-required="true"
-						aria-invalid={!!fieldErrors.startDate}
-						aria-describedby={fieldErrors.startDate ? 'goal-start-error' : undefined}
-					/>
-					{#if fieldErrors.startDate}
-						<p id="goal-start-error" class="text-error-500 text-xs mt-1" role="alert">
-							{fieldErrors.startDate}
-						</p>
-					{/if}
-				</div>
-				<div class="flex flex-col gap-1">
-					<label for="goal-end" class="text-sm font-medium"
-						>End Date <span class="text-error-500">*</span></label
-					>
-					<input
-						id="goal-end"
-						type="date"
-						class="border rounded-md px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
-						class:border-surface-400-600={!fieldErrors.endDate}
-						class:border-error-500={fieldErrors.endDate}
-						bind:value={endDate}
-						min={startDate}
-						onblur={() => validateField('endDate')}
-						onfocus={() => clearFieldError('endDate')}
-						aria-required="true"
-						aria-invalid={!!fieldErrors.endDate}
-						aria-describedby={fieldErrors.endDate ? 'goal-end-error' : undefined}
-					/>
-					{#if fieldErrors.endDate}
-						<p id="goal-end-error" class="text-error-500 text-xs mt-1" role="alert">
-							{fieldErrors.endDate}
-						</p>
-					{/if}
-				</div>
+				<DateInput
+					id="goal-start"
+					label="Start Date"
+					bind:value={startDate}
+					hasError={!!fieldErrors.startDate}
+					errorId="goal-start-error"
+					onblur={() => validateField('startDate')}
+					onfocus={() => clearFieldError('startDate')}
+				>
+					{#snippet error()}{#if fieldErrors.startDate}<p
+								id="goal-start-error"
+								class="text-error-500 text-xs mt-1"
+								role="alert"
+							>
+								{fieldErrors.startDate}
+							</p>{/if}{/snippet}
+				</DateInput>
+				<DateInput
+					id="goal-end"
+					label="End Date"
+					bind:value={endDate}
+					min={startDate}
+					hasError={!!fieldErrors.endDate}
+					errorId="goal-end-error"
+					onblur={() => validateField('endDate')}
+					onfocus={() => clearFieldError('endDate')}
+				>
+					{#snippet error()}{#if fieldErrors.endDate}<p
+								id="goal-end-error"
+								class="text-error-500 text-xs mt-1"
+								role="alert"
+							>
+								{fieldErrors.endDate}
+							</p>{/if}{/snippet}
+				</DateInput>
 			</div>
 		</div>
 

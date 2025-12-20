@@ -62,39 +62,28 @@
 		}
 	});
 
+	const draftSetters: Record<string, (v: boolean) => void> = {
+		pushEnabled: (v) => (draftPushEnabled = v),
+		habitReminders: (v) => (draftHabitReminders = v),
+		streakMilestones: (v) => (draftStreakMilestones = v),
+		goalProgress: (v) => (draftGoalProgress = v),
+		holidaySuggestions: (v) => (draftHolidaySuggestions = v)
+	};
+	const getOriginal = (field: string): boolean => {
+		const origMap: Record<string, () => boolean> = {
+			pushEnabled: () => pushEnabled,
+			habitReminders: () => habitReminders,
+			streakMilestones: () => streakMilestones,
+			goalProgress: () => goalProgress,
+			holidaySuggestions: () => holidaySuggestions
+		};
+		return origMap[field]?.() ?? false;
+	};
+
 	function handleToggle(field: string, event: Event) {
 		const value = (event.target as HTMLInputElement).checked;
-
-		switch (field) {
-			case 'pushEnabled':
-				draftPushEnabled = value;
-				break;
-			case 'habitReminders':
-				draftHabitReminders = value;
-				break;
-			case 'streakMilestones':
-				draftStreakMilestones = value;
-				break;
-			case 'goalProgress':
-				draftGoalProgress = value;
-				break;
-			case 'holidaySuggestions':
-				draftHolidaySuggestions = value;
-				break;
-		}
-
-		const original =
-			field === 'pushEnabled'
-				? pushEnabled
-				: field === 'habitReminders'
-					? habitReminders
-					: field === 'streakMilestones'
-						? streakMilestones
-						: field === 'goalProgress'
-							? goalProgress
-							: holidaySuggestions;
-
-		settingsChanges.setField(field as any, original, value);
+		draftSetters[field]?.(value);
+		settingsChanges.setField(field as any, getOriginal(field), value);
 		onFieldChange?.(field, value);
 	}
 

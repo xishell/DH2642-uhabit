@@ -3,6 +3,8 @@
 	import SelectWeekDay from './SelectWeekDay.svelte';
 	import SelectMonthDay from './SelectMonthDay.svelte';
 	import SelectOrEdit from './SelectOrEdit.svelte';
+	import ColorPicker from './ColorPicker.svelte';
+	import FormField from './FormField.svelte';
 	import type { Habit } from '$lib/types/habit';
 	import { z } from 'zod';
 	import { toaster } from '$lib/stores/toaster';
@@ -126,56 +128,24 @@
 		}
 	});
 
-	function selectColor(color: string) {
-		selectedColor = color;
-	}
-
-	function validateForm(): string | null {
-		if (!title.trim()) return 'Title is required';
-		return null;
-	}
-
-	async function handleSubmit(e: SubmitEvent) {
-		e.preventDefault();
-
-		// Validate all fields with Zod
-		const formData = {
-			title: title.trim(),
-			notes: notes.trim() || undefined,
-			targetAmount: targetAmount,
-			unit: unit.trim() || null
+	function mapZodErrors(issues: z.ZodIssue[]): Record<string, string | null> {
+		const errors: Record<string, string | null> = {
+			title: null,
+			notes: null,
+			targetAmount: null,
+			unit: null
 		};
+		issues.forEach((issue) => {
+			const f = issue.path[0] as string;
+			if (f in errors) errors[f] = issue.message;
+		});
+		return errors;
+	}
 
-		const result = habitSchema.safeParse(formData);
-		if (!result.success) {
-			// Map errors to field-level errors
-			const newFieldErrors: Record<string, string | null> = {
-				title: null,
-				notes: null,
-				targetAmount: null,
-				unit: null
-			};
-			result.error.issues.forEach((issue) => {
-				const field = issue.path[0] as string;
-				if (field in newFieldErrors) {
-					newFieldErrors[field] = issue.message;
-				}
-			});
-			fieldErrors = newFieldErrors;
-			toaster.error({
-				title: 'Validation error',
-				description: result.error.issues[0]?.message ?? 'Please fix the errors above'
-			});
-			return;
-		}
-
-		isSubmitting = true;
-
-		const hasTarget = targetAmount !== null && targetAmount > 0;
-		const hasUnit = unit.trim() !== '';
-		const isNumeric = hasTarget && hasUnit;
-
-		const habitData: Partial<Habit> = {
+	function buildHabitData(): Partial<Habit> {
+		const isNumeric = targetAmount !== null && targetAmount > 0 && unit.trim() !== '';
+		return {
+			...(habit?.id && { id: habit.id }),
 			title: title.trim(),
 			notes: notes.trim() || null,
 			color: selectedColor,
@@ -185,13 +155,28 @@
 			targetAmount: isNumeric ? targetAmount : null,
 			unit: isNumeric ? unit.trim() : null
 		};
+	}
 
-		if (habit?.id) {
-			habitData.id = habit.id;
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		const formData = {
+			title: title.trim(),
+			notes: notes.trim() || undefined,
+			targetAmount,
+			unit: unit.trim() || null
+		};
+		const result = habitSchema.safeParse(formData);
+		if (!result.success) {
+			fieldErrors = mapZodErrors(result.error.issues);
+			toaster.error({
+				title: 'Validation error',
+				description: result.error.issues[0]?.message ?? 'Please fix the errors above'
+			});
+			return;
 		}
-
+		isSubmitting = true;
 		try {
-			await onsave(habitData);
+			await onsave(buildHabitData());
 		} catch (err) {
 			toaster.error({
 				title: 'Failed to save habit',
@@ -206,12 +191,8 @@
 <Modal {open} title={modalTitle} {onclose}>
 	<form onsubmit={handleSubmit} class="flex flex-col gap-6">
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-			<!-- Left column: Title, Notes, Color -->
 			<div class="flex flex-col gap-4">
-				<div class="flex flex-col gap-1">
-					<label for="habit-title" class="text-sm font-medium"
-						>Title <span class="text-error-500">*</span></label
-					>
+				<FormField id="habit-title" label="Title" required error={fieldErrors.title}>
 					<input
 						id="habit-title"
 						type="text"
@@ -226,15 +207,8 @@
 						aria-invalid={!!fieldErrors.title}
 						aria-describedby={fieldErrors.title ? 'habit-title-error' : undefined}
 					/>
-					{#if fieldErrors.title}
-						<p id="habit-title-error" class="text-error-500 text-xs mt-1" role="alert">
-							{fieldErrors.title}
-						</p>
-					{/if}
-				</div>
-
-				<div class="flex flex-col gap-1">
-					<label for="habit-notes" class="text-sm font-medium">Notes</label>
+				</FormField>
+				<FormField id="habit-notes" label="Notes" error={fieldErrors.notes}>
 					<textarea
 						id="habit-notes"
 						class="w-full rounded-md border px-3 py-2 text-sm bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -248,38 +222,8 @@
 						aria-invalid={!!fieldErrors.notes}
 						aria-describedby={fieldErrors.notes ? 'habit-notes-error' : undefined}
 					></textarea>
-					{#if fieldErrors.notes}
-						<p id="habit-notes-error" class="text-error-500 text-xs mt-1" role="alert">
-							{fieldErrors.notes}
-						</p>
-					{/if}
-				</div>
-
-				<div class="flex flex-col gap-1">
-					<span class="text-sm font-medium">Color</span>
-					<div class="flex gap-2 flex-wrap">
-						{#each colors as color}
-							<button
-								type="button"
-								class="relative w-9 h-9 rounded-full border-2 transition-all duration-150"
-								style="background-color: {color};"
-								class:border-primary-500={selectedColor === color}
-								class:ring-2={selectedColor === color}
-								class:ring-primary-200={selectedColor === color}
-								class:border-transparent={selectedColor !== color}
-								onclick={() => selectColor(color)}
-								aria-label={`Select color ${color}`}
-								aria-pressed={selectedColor === color}
-							>
-								{#if selectedColor === color}
-									<span
-										class="absolute inset-0 m-auto w-3 h-3 rounded-full bg-white/80 dark:bg-black/70"
-									></span>
-								{/if}
-							</button>
-						{/each}
-					</div>
-				</div>
+				</FormField>
+				<ColorPicker {colors} {selectedColor} onSelect={(c) => (selectedColor = c)} />
 			</div>
 
 			<!-- Right column -->

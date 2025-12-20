@@ -2,9 +2,6 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { beforeNavigate } from '$app/navigation';
-	import { Collapsible } from '@skeletonlabs/skeleton-svelte';
-	import { ArrowUpDownIcon } from '@lucide/svelte';
-
 	import { getPreferences, updatePreferences, getSession } from '$lib/auth/client';
 	import type { UserSettingsResponse } from '$lib/auth/client';
 	import { STORAGE_KEYS } from '$lib/constants';
@@ -18,6 +15,8 @@
 	import Notifications from './components/Notifications.svelte';
 	import TabNav from './components/TabNav.svelte';
 	import SaveBar from './components/SaveBar.svelte';
+	import SettingsSkeleton from './components/SettingsSkeleton.svelte';
+	import MobileNav from './components/MobileNav.svelte';
 
 	// Current values (editable)
 	let displayName = $state('');
@@ -50,55 +49,58 @@
 
 	const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000;
 
-	const applySettings = (settings: UserSettingsResponse, setAsOriginal = false) => {
-		displayName = settings.displayName ?? '';
-		pronouns = settings.pronouns ?? '';
-		username = settings.username ?? '';
-		currentTheme = (settings.theme as ThemeMode) || 'system';
-		themeStore.set(currentTheme);
-
-		avatarUrl = settings.imageUrl ?? null;
+	function applyProfileSettings(s: UserSettingsResponse) {
+		displayName = s.displayName ?? '';
+		pronouns = s.pronouns ?? '';
+		username = s.username ?? '';
+		avatarUrl = s.imageUrl ?? null;
 		avatarStore.set(avatarUrl);
-
-		bio = settings.preferences?.bio ?? '';
-		accentColor = settings.preferences?.accentColor ?? '';
-		typography = settings.preferences?.typography ?? '';
-
-		// Apply notification preferences
-		const notifPrefs = settings.preferences?.notificationPrefs;
-		pushEnabled = notifPrefs?.pushEnabled ?? false;
-		habitReminders = notifPrefs?.habitReminders ?? true;
-		streakMilestones = notifPrefs?.streakMilestones ?? true;
-		goalProgress = notifPrefs?.goalProgress ?? true;
-		holidaySuggestions = notifPrefs?.holidaySuggestions ?? true;
-		reminderTime = notifPrefs?.reminderTime ?? '08:00';
-
-		if (setAsOriginal) {
-			originalValues = {
-				displayName,
-				bio,
-				pronouns,
-				username,
-				email,
-				theme: currentTheme,
-				accentColor,
-				typography,
-				pushEnabled,
-				habitReminders,
-				streakMilestones,
-				goalProgress,
-				holidaySuggestions,
-				reminderTime
-			};
-			settingsChanges.clearAll();
-		}
-	};
-
-	// Track field changes
-	function trackChange(field: string, value: unknown) {
-		const original = originalValues[field];
-		settingsChanges.setField(field as any, original, value);
 	}
+
+	function applyPreferences(s: UserSettingsResponse) {
+		currentTheme = (s.theme as ThemeMode) || 'system';
+		themeStore.set(currentTheme);
+		bio = s.preferences?.bio ?? '';
+		accentColor = s.preferences?.accentColor ?? '';
+		typography = s.preferences?.typography ?? '';
+	}
+
+	function applyNotificationPrefs(notifPrefs: UserSettingsResponse['preferences']) {
+		const n = notifPrefs?.notificationPrefs;
+		pushEnabled = n?.pushEnabled ?? false;
+		habitReminders = n?.habitReminders ?? true;
+		streakMilestones = n?.streakMilestones ?? true;
+		goalProgress = n?.goalProgress ?? true;
+		holidaySuggestions = n?.holidaySuggestions ?? true;
+		reminderTime = n?.reminderTime ?? '08:00';
+	}
+
+	function captureOriginalValues() {
+		originalValues = {
+			displayName,
+			bio,
+			pronouns,
+			username,
+			email,
+			theme: currentTheme,
+			accentColor,
+			typography,
+			pushEnabled,
+			habitReminders,
+			streakMilestones,
+			goalProgress,
+			holidaySuggestions,
+			reminderTime
+		};
+		settingsChanges.clearAll();
+	}
+
+	const applySettings = (settings: UserSettingsResponse, setAsOriginal = false) => {
+		applyProfileSettings(settings);
+		applyPreferences(settings);
+		applyNotificationPrefs(settings.preferences);
+		if (setAsOriginal) captureOriginalValues();
+	};
 
 	const readSettingsCache = () => {
 		if (!browser) return null;
@@ -161,10 +163,6 @@
 			isLoading = false;
 		}
 	});
-
-	function go(id: string) {
-		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-	}
 
 	// Warn before navigation if there are unsaved changes
 	beforeNavigate(({ cancel }) => {
@@ -236,53 +234,29 @@
 		avatarUrl = newUrl;
 	}
 
+	// Field setters for discarding changes
+	const fieldSetters: Record<string, (v: unknown) => void> = {
+		displayName: (v) => (displayName = v as string),
+		bio: (v) => (bio = v as string),
+		pronouns: (v) => (pronouns = v as string),
+		username: (v) => (username = v as string),
+		theme: (v) => {
+			currentTheme = v as ThemeMode;
+			themeStore.set(currentTheme);
+		},
+		accentColor: (v) => (accentColor = v as string),
+		typography: (v) => (typography = v as string),
+		pushEnabled: (v) => (pushEnabled = v as boolean),
+		habitReminders: (v) => (habitReminders = v as boolean),
+		streakMilestones: (v) => (streakMilestones = v as boolean),
+		goalProgress: (v) => (goalProgress = v as boolean),
+		holidaySuggestions: (v) => (holidaySuggestions = v as boolean),
+		reminderTime: (v) => (reminderTime = v as string)
+	};
+
 	// Discard all changes
 	function handleDiscardAll() {
-		const originals = settingsChanges.getOriginalValues();
-		originals.forEach((value, field) => {
-			switch (field) {
-				case 'displayName':
-					displayName = value as string;
-					break;
-				case 'bio':
-					bio = value as string;
-					break;
-				case 'pronouns':
-					pronouns = value as string;
-					break;
-				case 'username':
-					username = value as string;
-					break;
-				case 'theme':
-					currentTheme = value as ThemeMode;
-					themeStore.set(currentTheme);
-					break;
-				case 'accentColor':
-					accentColor = value as string;
-					break;
-				case 'typography':
-					typography = value as string;
-					break;
-				case 'pushEnabled':
-					pushEnabled = value as boolean;
-					break;
-				case 'habitReminders':
-					habitReminders = value as boolean;
-					break;
-				case 'streakMilestones':
-					streakMilestones = value as boolean;
-					break;
-				case 'goalProgress':
-					goalProgress = value as boolean;
-					break;
-				case 'holidaySuggestions':
-					holidaySuggestions = value as boolean;
-					break;
-				case 'reminderTime':
-					reminderTime = value as string;
-					break;
-			}
-		});
+		settingsChanges.getOriginalValues().forEach((value, field) => fieldSetters[field]?.(value));
 		settingsChanges.clearAll();
 	}
 </script>
@@ -301,63 +275,7 @@
 	<!-- MAIN CONTENT -->
 	<main class="flex-1 p-6 max-w-4xl space-y-16" class:pb-24={isMobile}>
 		{#if isLoading}
-			<div class="space-y-12 animate-pulse">
-				<section class="space-y-6">
-					<div class="h-6 w-40 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div class="card p-6 space-y-4">
-							<div class="h-4 w-28 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-							<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-							<div class="h-4 w-20 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-							<div class="h-24 w-full bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-							<div class="h-4 w-24 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-							<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-							<div class="h-10 w-28 bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-						</div>
-						<div class="card p-6 space-y-4">
-							<div class="h-32 w-full bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-							<div class="h-5 w-1/2 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-							<div class="h-4 w-full bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-							<div class="h-4 w-2/3 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-						</div>
-					</div>
-				</section>
-
-				<section class="space-y-6">
-					<div class="h-6 w-28 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-					<div class="card p-6 space-y-4">
-						<div class="flex items-center justify-between">
-							<div class="h-4 w-24 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-							<div class="h-8 w-16 bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-						</div>
-						<div class="flex items-center justify-between">
-							<div class="h-4 w-24 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-							<div class="h-8 w-16 bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-						</div>
-					</div>
-				</section>
-
-				<section class="space-y-6">
-					<div class="h-6 w-32 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-					<div class="card p-6 space-y-4">
-						<div class="h-4 w-40 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-						<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-						<div class="h-4 w-32 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-						<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-						<div class="h-4 w-24 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-						<div class="h-10 w-full bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-						<div class="h-10 w-28 bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-					</div>
-				</section>
-
-				<section class="space-y-6">
-					<div class="h-6 w-36 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-					<div class="card p-6 space-y-4">
-						<div class="h-6 w-3/4 bg-surface-200 dark:bg-surface-700 rounded-full"></div>
-						<div class="h-10 w-28 bg-surface-200 dark:bg-surface-700 rounded-xl"></div>
-					</div>
-				</section>
-			</div>
+			<SettingsSkeleton />
 		{:else}
 			<section id="profile">
 				<PublicProfile
@@ -366,44 +284,27 @@
 					{pronouns}
 					imageUrl={avatarUrl}
 					onAvatarChange={handleAvatarChange}
-					onFieldChange={(field, value) => {
-						if (field === 'displayName') displayName = value as string;
-						else if (field === 'bio') bio = value as string;
-						else if (field === 'pronouns') pronouns = value as string;
-					}}
+					onFieldChange={(field, value) => fieldSetters[field]?.(value)}
 				/>
 			</section>
-
 			<hr class="border-surface-200 dark:border-surface-700" />
-
 			<section id="account">
 				<Account
 					{username}
 					{email}
-					onFieldChange={(field, value) => {
-						if (field === 'username') username = value as string;
-						else if (field === 'email') email = value as string;
-					}}
+					onFieldChange={(field, value) => fieldSetters[field]?.(value)}
 				/>
 			</section>
-
 			<hr class="border-surface-200 dark:border-surface-700" />
-
 			<section id="preferences">
 				<Preferences
 					{currentTheme}
 					{accentColor}
 					{typography}
-					onFieldChange={(field, value) => {
-						if (field === 'theme') currentTheme = value as ThemeMode;
-						else if (field === 'accentColor') accentColor = value as string;
-						else if (field === 'typography') typography = value as string;
-					}}
+					onFieldChange={(field, value) => fieldSetters[field]?.(value)}
 				/>
 			</section>
-
 			<hr class="border-surface-200 dark:border-surface-700" />
-
 			<section id="notifications">
 				<Notifications
 					{pushEnabled}
@@ -412,59 +313,14 @@
 					{goalProgress}
 					{holidaySuggestions}
 					{reminderTime}
-					onFieldChange={(field, value) => {
-						switch (field) {
-							case 'pushEnabled':
-								pushEnabled = value as boolean;
-								break;
-							case 'habitReminders':
-								habitReminders = value as boolean;
-								break;
-							case 'streakMilestones':
-								streakMilestones = value as boolean;
-								break;
-							case 'goalProgress':
-								goalProgress = value as boolean;
-								break;
-							case 'holidaySuggestions':
-								holidaySuggestions = value as boolean;
-								break;
-							case 'reminderTime':
-								reminderTime = value as string;
-								break;
-						}
-					}}
+					onFieldChange={(field, value) => fieldSetters[field]?.(value)}
 				/>
 			</section>
 		{/if}
 	</main>
 
-	<!-- MOBILE FLOATING NAV -->
 	{#if isMobile}
-		<div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-			<Collapsible class="card preset-filled-surface-100-900 px-4 py-3 w-64 shadow-xl">
-				<div class="flex justify-between items-center">
-					<p class="font-semibold text-sm">Settings</p>
-
-					<Collapsible.Trigger class="btn-icon hover:preset-tonal scale-90">
-						<ArrowUpDownIcon class="size-4" />
-					</Collapsible.Trigger>
-				</div>
-
-				<Collapsible.Content class="mt-3 flex flex-col gap-2">
-					<button class="anchor text-left text-sm" onclick={() => go('profile')}>
-						Public profile
-					</button>
-					<button class="anchor text-left text-sm" onclick={() => go('account')}> Account </button>
-					<button class="anchor text-left text-sm" onclick={() => go('preferences')}>
-						Preferences
-					</button>
-					<button class="anchor text-left text-sm" onclick={() => go('notifications')}>
-						Notifications
-					</button>
-				</Collapsible.Content>
-			</Collapsible>
-		</div>
+		<MobileNav />
 	{/if}
 
 	<!-- FLOATING SAVE BAR -->

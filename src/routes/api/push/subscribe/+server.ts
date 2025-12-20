@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
@@ -88,7 +88,7 @@ export const DELETE: RequestHandler = async (event) => {
 	const data = await parseAndValidate(request, unsubscribeSchema);
 
 	// Delete subscription (only if it belongs to this user)
-	const result = await db
+	await db
 		.delete(pushSubscription)
 		.where(and(eq(pushSubscription.endpoint, data.endpoint), eq(pushSubscription.userId, userId)));
 

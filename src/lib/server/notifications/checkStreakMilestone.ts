@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { DB } from '$lib/server/api-helpers';
 import { habit, notification } from '$lib/server/db/schema';
 import type { Notification, StreakMilestoneMetadata } from '$lib/types/notification';
-import { sendWakeUpPush, getPushConfig, type PushConfig } from '$lib/server/push';
+import { sendWakeUpPush, getPushConfig } from '$lib/server/push';
 
 /** Milestone streak values that trigger notifications */
 const STREAK_MILESTONES = [7, 30, 100, 365] as const;

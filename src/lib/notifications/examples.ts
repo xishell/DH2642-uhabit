@@ -1,16 +1,8 @@
-/**
- * Notification System - Frontend Examples
- *
- * Copy-paste these snippets into your components.
- * These are reference implementations, not meant to be imported directly.
- */
-
-import type { Notification, NotificationPreferences } from '$lib/types/notification';
+/** Notification System - Frontend Examples: Copy-paste snippets, not meant to be imported directly. */
+import type { Notification } from '$lib/types/notification';
 import type { Holiday } from '$lib/types/holiday';
 
-// ============================================================================
-// API HELPERS
-// ============================================================================
+// ================================ API HELPERS ================================
 
 /**
  * Fetch notifications with optional filters

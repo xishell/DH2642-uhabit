@@ -1,28 +1,12 @@
-import { eq, and, isNotNull } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
 import type { DB } from '$lib/server/api-helpers';
 import { user, habit, notification } from '$lib/server/db/schema';
 import { getHolidaysForCurrentPeriod } from '$lib/server/holidays/holidayCache';
-import { filterHolidaysByDateRange, findHolidayOnDate } from '$lib/server/holidays/nagerDateClient';
-import type { Holiday, HolidayConflict } from '$lib/types/holiday';
+import { filterHolidaysByDateRange } from '$lib/server/holidays/nagerDateClient';
+import type { HolidayConflict } from '$lib/types/holiday';
 import type { Notification, HolidayRescheduleMetadata } from '$lib/types/notification';
 import { sendWakeUpPush, getPushConfig } from '$lib/server/push';
 import type { NotificationOptions } from './checkStreakMilestone';
-
-/**
- * Get dates for the next N days
- */
-function getNextDays(days: number): string[] {
-	const dates: string[] = [];
-	const today = new Date();
-
-	for (let i = 1; i <= days; i++) {
-		const date = new Date(today);
-		date.setDate(today.getDate() + i);
-		dates.push(date.toISOString().split('T')[0]);
-	}
-
-	return dates;
-}
 
 /**
  * Check if a habit is scheduled on a specific date
@@ -67,104 +51,49 @@ function isHabitScheduledOnDate(
 	return false;
 }
 
-/**
- * Calculate a suggested reschedule date (2 days before the holiday)
- */
+/** Calculate a suggested reschedule date (2 days before the holiday) */
 function getSuggestedDate(holidayDate: string): string {
 	const date = new Date(holidayDate);
 	date.setDate(date.getDate() - 2);
 	return date.toISOString().split('T')[0];
 }
 
-/**
- * Check for holiday conflicts for a single user
- *
- * @param db - Database instance
- * @param userId - User ID to check
- * @param daysAhead - How many days ahead to check (default: 7)
- * @param options - Optional push notification config
- * @returns Array of created notifications for conflicts found
- */
-export async function checkHolidayConflictsForUser(
-	db: DB,
-	userId: string,
-	daysAhead = 7,
-	options?: NotificationOptions
-): Promise<Notification[]> {
-	// Get user's country
-	const users = await db.select().from(user).where(eq(user.id, userId)).limit(1);
+type HabitRecord = { id: string; title: string; frequency: string; period: string | null };
 
-	if (users.length === 0 || !users[0].country) {
-		return [];
-	}
-
-	const countryCode = users[0].country;
-
-	// Get holidays for the period
-	const endDate = new Date();
-	endDate.setDate(endDate.getDate() + daysAhead);
-	const includeNextYear = endDate.getFullYear() > new Date().getFullYear();
-
-	const allHolidays = await getHolidaysForCurrentPeriod(db, countryCode, includeNextYear);
-
-	const today = new Date().toISOString().split('T')[0];
-	const endDateStr = endDate.toISOString().split('T')[0];
-	const upcomingHolidays = filterHolidaysByDateRange(allHolidays, today, endDateStr);
-
-	if (upcomingHolidays.length === 0) {
-		return [];
-	}
-
-	// Get user's active habits
-	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
-
-	if (habits.length === 0) {
-		return [];
-	}
-
-	// Find conflicts
-	const conflicts: HolidayConflict[] = [];
-
-	for (const holiday of upcomingHolidays) {
-		// Only check public holidays
-		if (!holiday.isPublic) continue;
-
-		const conflictingHabits = habits.filter((h) =>
-			isHabitScheduledOnDate({ frequency: h.frequency, period: h.period }, holiday.date)
-		);
-
-		if (conflictingHabits.length > 0) {
-			conflicts.push({
+/** Find conflicts between habits and public holidays */
+function findConflicts(
+	habits: HabitRecord[],
+	holidays: { date: string; name: string; isPublic?: boolean }[]
+): HolidayConflict[] {
+	return holidays
+		.filter((h) => h.isPublic)
+		.map((holiday) => {
+			const conflicting = habits.filter((h) => isHabitScheduledOnDate(h, holiday.date));
+			if (conflicting.length === 0) return null;
+			return {
 				holiday,
-				habits: conflictingHabits.map((h) => ({ id: h.id, title: h.title })),
+				habits: conflicting.map((h) => ({ id: h.id, title: h.title })),
 				suggestedDate: getSuggestedDate(holiday.date)
-			});
-		}
-	}
+			};
+		})
+		.filter((c): c is HolidayConflict => c !== null);
+}
 
-	if (conflicts.length === 0) {
-		return [];
-	}
-
-	// Create notifications for each conflict
-	const notifications: Notification[] = [];
-	const now = new Date();
-
-	for (const conflict of conflicts) {
-		const metadata: HolidayRescheduleMetadata = {
-			kind: 'holiday_reschedule',
-			holidayDate: conflict.holiday.date,
-			holidayName: conflict.holiday.name,
-			conflictingHabits: conflict.habits,
-			suggestedDate: conflict.suggestedDate
-		};
-
-		const habitNames =
-			conflict.habits.length === 1
-				? `"${conflict.habits[0].title}"`
-				: `${conflict.habits.length} habits`;
-
-		const notificationData = {
+/** Create a notification for a holiday conflict */
+function createConflictNotification(userId: string, conflict: HolidayConflict, now: Date) {
+	const metadata: HolidayRescheduleMetadata = {
+		kind: 'holiday_reschedule',
+		holidayDate: conflict.holiday.date,
+		holidayName: conflict.holiday.name,
+		conflictingHabits: conflict.habits,
+		suggestedDate: conflict.suggestedDate
+	};
+	const habitNames =
+		conflict.habits.length === 1
+			? `"${conflict.habits[0].title}"`
+			: `${conflict.habits.length} habits`;
+	return {
+		data: {
 			id: crypto.randomUUID(),
 			userId,
 			type: 'holiday_reschedule' as const,
@@ -176,33 +105,65 @@ export async function checkHolidayConflictsForUser(
 			read: false,
 			dismissed: false,
 			createdAt: now,
-			expiresAt: new Date(conflict.holiday.date) // Expires on the holiday
-		};
+			expiresAt: new Date(conflict.holiday.date)
+		},
+		metadata
+	};
+}
 
-		await db.insert(notification).values(notificationData);
+/** Send push notification if configured */
+async function sendPushIfConfigured(
+	db: DB,
+	userId: string,
+	options?: NotificationOptions
+): Promise<void> {
+	if (!options?.env) return;
+	const pushConfig = getPushConfig(options.env);
+	if (!pushConfig) return;
+	const pushPromise = sendWakeUpPush(db, userId, pushConfig).catch((err) => {
+		console.error('[Push] Failed to send holiday conflict push:', err);
+	});
+	if (options.waitUntil) options.waitUntil(pushPromise);
+	else await pushPromise;
+}
 
-		notifications.push({
-			...notificationData,
-			metadata
-		});
+/**
+ * Check for holiday conflicts for a single user
+ */
+export async function checkHolidayConflictsForUser(
+	db: DB,
+	userId: string,
+	daysAhead = 7,
+	options?: NotificationOptions
+): Promise<Notification[]> {
+	const users = await db.select().from(user).where(eq(user.id, userId)).limit(1);
+	if (users.length === 0 || !users[0].country) return [];
+
+	const endDate = new Date();
+	endDate.setDate(endDate.getDate() + daysAhead);
+	const today = new Date().toISOString().split('T')[0];
+	const endDateStr = endDate.toISOString().split('T')[0];
+	const includeNextYear = endDate.getFullYear() > new Date().getFullYear();
+
+	const allHolidays = await getHolidaysForCurrentPeriod(db, users[0].country, includeNextYear);
+	const upcomingHolidays = filterHolidaysByDateRange(allHolidays, today, endDateStr);
+	if (upcomingHolidays.length === 0) return [];
+
+	const habits = await db.select().from(habit).where(eq(habit.userId, userId));
+	if (habits.length === 0) return [];
+
+	const conflicts = findConflicts(habits, upcomingHolidays);
+	if (conflicts.length === 0) return [];
+
+	const now = new Date();
+	const notifications: Notification[] = [];
+	for (const conflict of conflicts) {
+		const { data, metadata } = createConflictNotification(userId, conflict, now);
+		await db.insert(notification).values(data);
+		notifications.push({ ...data, metadata });
 	}
 
-	// Send push notification if configured and we created notifications
-	if (notifications.length > 0 && options?.env) {
-		const pushConfig = getPushConfig(options.env);
-		if (pushConfig) {
-			const pushPromise = sendWakeUpPush(db, userId, pushConfig).catch((err) => {
-				console.error('[Push] Failed to send holiday conflict push:', err);
-			});
-
-			if (options.waitUntil) {
-				options.waitUntil(pushPromise);
-			} else {
-				await pushPromise;
-			}
-		}
-	}
-
+	await sendPushIfConfigured(db, userId, options);
 	return notifications;
 }
 

@@ -10,11 +10,30 @@
 	let {
 		user = null
 	}: {
-		user?: { id: string; name: string } | null;
+		user?: {
+			id: string;
+			name?: string | null;
+			username?: string | null;
+			displayName?: string | null;
+			email?: string | null;
+		} | null;
 	} = $props();
 
 	const currentPath = $derived($page.url.pathname);
-	const initials = $derived.by(() => user?.name?.trim().slice(0, 2).toUpperCase() || 'U');
+	const initials = $derived.by(() => {
+		const source =
+			user?.displayName?.trim() ||
+			user?.username?.trim() ||
+			user?.name?.trim() ||
+			user?.email?.trim() ||
+			'';
+		if (!source) return 'U';
+		const parts = source.split(/\s+/).filter(Boolean);
+		if (parts.length >= 2) {
+			return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+		}
+		return source.slice(0, 2).toUpperCase();
+	});
 
 	let menuOpen = $state(false);
 	let menuRoot = $state<HTMLDivElement | null>(null);

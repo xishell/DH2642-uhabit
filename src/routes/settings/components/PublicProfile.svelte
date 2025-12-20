@@ -10,6 +10,13 @@
 	let draftName = displayName;
 	let draftBio = bio;
 	let draftPronouns = pronouns;
+	let hasEdited = false;
+
+	$: if (!hasEdited) {
+		draftName = displayName;
+		draftBio = bio;
+		draftPronouns = pronouns;
+	}
 
 	function save() {
 		if (draftName.length > 20) draftName = draftName.slice(0, 20);
@@ -20,6 +27,7 @@
 			bio: draftBio,
 			pronouns: draftPronouns
 		});
+		hasEdited = false;
 	}
 </script>
 
@@ -34,6 +42,7 @@
 					id="displayName"
 					class="input w-full border border-indigo-600"
 					bind:value={draftName}
+					on:input={() => (hasEdited = true)}
 					maxlength={20}
 				/>
 			</div>
@@ -44,6 +53,7 @@
 					id="bio"
 					class="textarea w-full border border-indigo-600"
 					bind:value={draftBio}
+					on:input={() => (hasEdited = true)}
 					maxlength={100}
 				></textarea>
 			</div>
@@ -54,6 +64,7 @@
 					id="pronouns"
 					class="select w-full px-2 py-2 rounded border border-indigo-600 text-sm"
 					bind:value={draftPronouns}
+					on:change={() => (hasEdited = true)}
 				>
 					<option value="she/her">she/her</option>
 					<option value="he/him">he/him</option>

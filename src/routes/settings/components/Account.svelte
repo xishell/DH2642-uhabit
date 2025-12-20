@@ -9,12 +9,18 @@
 
 	let openField: null | 'username' | 'email' = null;
 	let value = '';
+	let hasEdited = false;
 
 	const fields: ('username' | 'email')[] = ['username', 'email'];
 
 	function open(field: typeof openField) {
 		openField = field;
 		value = { username, email }[field!];
+		hasEdited = false;
+	}
+
+	$: if (openField && !hasEdited) {
+		value = { username, email }[openField];
 	}
 
 	function save() {
@@ -69,6 +75,7 @@
 						<input
 							class="input w-full"
 							bind:value
+							on:input={() => (hasEdited = true)}
 							maxlength={20}
 							placeholder={openField === 'username'
 								? 'Enter username (max 20)'

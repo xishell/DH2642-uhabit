@@ -22,7 +22,11 @@ const preferencesSchema = z.object({
 		.object({
 			notifications: z.boolean().optional(),
 			emailNotifications: z.boolean().optional(),
-			weekStartsOn: z.number().int().min(0).max(6).optional()
+			weekStartsOn: z.number().int().min(0).max(6).optional(),
+			bio: z.string().max(100).optional(),
+			pronouns: z.string().max(20).optional(),
+			accentColor: z.string().max(20).optional(),
+			typography: z.string().max(20).optional()
 		})
 		.optional()
 });

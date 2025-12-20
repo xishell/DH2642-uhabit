@@ -28,7 +28,9 @@ export const STORAGE_KEYS = {
 	/** ETag for habits list caching */
 	HABITS_ETAG: 'uhabit-habits-etag',
 	/** ETag for goals list caching */
-	GOALS_ETAG: 'uhabit-goals-etag'
+	GOALS_ETAG: 'uhabit-goals-etag',
+	/** Cached settings payload */
+	SETTINGS_CACHE: 'uhabit-settings-cache'
 } as const;
 
 // KV cache keys (server-side Cloudflare KV)

@@ -4,6 +4,8 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import Header from '$lib/components/Header.svelte';
 	import { themeMode } from '$lib/stores/theme';
+	import { Toast } from '@skeletonlabs/skeleton-svelte';
+	import { toaster } from '$lib/stores/toaster';
 
 	export let data: {
 		user: {
@@ -35,3 +37,16 @@
 		<slot />
 	</main>
 </div>
+
+<!-- Global Toast Container -->
+<Toast.Group {toaster}>
+	{#snippet children(toast)}
+		<Toast {toast}>
+			<Toast.Message>
+				<Toast.Title>{toast.title}</Toast.Title>
+				<Toast.Description>{toast.description}</Toast.Description>
+			</Toast.Message>
+			<Toast.CloseTrigger />
+		</Toast>
+	{/snippet}
+</Toast.Group>

@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { beforeNavigate } from '$app/navigation';
-	import { Toast, createToaster, Collapsible } from '@skeletonlabs/skeleton-svelte';
+	import { Collapsible } from '@skeletonlabs/skeleton-svelte';
 	import { ArrowUpDownIcon } from '@lucide/svelte';
 
 	import { getPreferences, updatePreferences, getSession } from '$lib/auth/client';
@@ -10,14 +10,13 @@
 	import { STORAGE_KEYS } from '$lib/constants';
 	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
 	import { settingsChanges, hasUnsavedChanges } from '$lib/stores/settingsChanges';
+	import { toaster } from '$lib/stores/toaster';
 	import PublicProfile from './components/PublicProfile.svelte';
 	import Account from './components/Account.svelte';
 	import Preferences from './components/Preferences.svelte';
 	import Notifications from './components/Notifications.svelte';
 	import TabNav from './components/TabNav.svelte';
 	import SaveBar from './components/SaveBar.svelte';
-
-	const toaster = createToaster();
 
 	// Current values (editable)
 	let displayName = $state('');
@@ -390,17 +389,4 @@
 
 	<!-- FLOATING SAVE BAR -->
 	<SaveBar onSave={handleSaveAll} onDiscard={handleDiscardAll} {isSaving} />
-
-	<!-- TOASTS -->
-	<Toast.Group {toaster}>
-		{#snippet children(toast)}
-			<Toast {toast}>
-				<Toast.Message>
-					<Toast.Title>{toast.title}</Toast.Title>
-					<Toast.Description>{toast.description}</Toast.Description>
-				</Toast.Message>
-				<Toast.CloseTrigger />
-			</Toast>
-		{/snippet}
-	</Toast.Group>
 </div>

@@ -5,6 +5,7 @@
 	import SelectOrEdit from './SelectOrEdit.svelte';
 	import type { Habit } from '$lib/types/habit';
 	import { z } from 'zod';
+	import { toaster } from '$lib/stores/toaster';
 
 	let {
 		open = false,
@@ -71,7 +72,6 @@
 	let period = $state<number[]>([]);
 
 	let isSubmitting = $state(false);
-	let error = $state<string | null>(null);
 
 	// Field-level errors for accessibility
 	let fieldErrors = $state<Record<string, string | null>>({
@@ -122,7 +122,6 @@
 				unit = '';
 				period = [];
 			}
-			error = null;
 			fieldErrors = { title: null, notes: null, targetAmount: null, unit: null };
 		}
 	});
@@ -163,12 +162,14 @@
 				}
 			});
 			fieldErrors = newFieldErrors;
-			error = result.error.issues[0]?.message ?? 'Please fix the errors above';
+			toaster.error({
+				title: 'Validation error',
+				description: result.error.issues[0]?.message ?? 'Please fix the errors above'
+			});
 			return;
 		}
 
 		isSubmitting = true;
-		error = null;
 
 		const hasTarget = targetAmount !== null && targetAmount > 0;
 		const hasUnit = unit.trim() !== '';
@@ -192,7 +193,10 @@
 		try {
 			await onsave(habitData);
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to save habit';
+			toaster.error({
+				title: 'Failed to save habit',
+				description: err instanceof Error ? err.message : 'An unexpected error occurred'
+			});
 		} finally {
 			isSubmitting = false;
 		}
@@ -201,10 +205,6 @@
 
 <Modal {open} title={modalTitle} {onclose}>
 	<form onsubmit={handleSubmit} class="flex flex-col gap-6">
-		{#if error}
-			<p class="text-error-600 text-sm text-center" role="alert">{error}</p>
-		{/if}
-
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 			<!-- Left column: Title, Notes, Color -->
 			<div class="flex flex-col gap-4">

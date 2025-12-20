@@ -196,7 +196,7 @@
 						stroke-linecap="round"
 						stroke-dasharray={ringCircumference}
 						stroke-dashoffset={ringOffset}
-						style="opacity: {animatedOpacity};"
+						style="opacity: {animatedOpacity}; transition: stroke-dashoffset 0.5s ease;"
 					/>
 				{/each}
 			</svg>

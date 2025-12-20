@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { settingsChanges } from '$lib/stores/settingsChanges';
 	import FieldWrapper from './FieldWrapper.svelte';
 
@@ -9,7 +10,7 @@
 
 	let { desktopNotifications, onFieldChange }: Props = $props();
 
-	let draftNotifications = $state(desktopNotifications);
+	let draftNotifications = $state(untrack(() => desktopNotifications));
 
 	// Sync draft values when props change (e.g., on discard)
 	$effect(() => {

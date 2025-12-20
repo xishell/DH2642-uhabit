@@ -110,7 +110,7 @@
 			<Progress value={pct} max={100} class="w-full h-full">
 				<Progress.Circle class="[--size:--spacing(32)]">
 					<Progress.CircleTrack class="stroke-surface-700" />
-					<Progress.CircleRange class={isCompleted ? 'stroke-success-500' : 'stroke-primary-500'} />
+					<Progress.CircleRange class={isCompleted ? 'stroke-primary-600' : 'stroke-primary-500'} />
 				</Progress.Circle>
 			</Progress>
 			<div

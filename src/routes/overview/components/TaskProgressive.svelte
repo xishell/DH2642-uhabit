@@ -66,7 +66,7 @@
 
 	<Progress value={pct} max={100} class="h-2 rounded-full">
 		<Progress.Track class="bg-surface-300 dark:bg-surface-700">
-			<Progress.Range class={isCompleted ? 'bg-success-600' : 'bg-primary-500'} />
+			<Progress.Range class={isCompleted ? 'bg-primary-600' : 'bg-primary-500'} />
 		</Progress.Track>
 	</Progress>
 </button>

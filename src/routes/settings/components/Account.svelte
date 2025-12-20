@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
 	import { XIcon } from '@lucide/svelte';
 	import { settingsChanges } from '$lib/stores/settingsChanges';
@@ -12,8 +13,8 @@
 
 	let { username, email, onFieldChange }: Props = $props();
 
-	let draftUsername = $state(username);
-	let draftEmail = $state(email);
+	let draftUsername = $state(untrack(() => username));
+	let draftEmail = $state(untrack(() => email));
 
 	let openField: null | 'username' | 'email' = $state(null);
 	let editValue = $state('');

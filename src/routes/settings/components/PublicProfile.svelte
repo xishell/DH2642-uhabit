@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import ProfileCard from './ProfileCard.svelte';
 	import FieldWrapper from './FieldWrapper.svelte';
 	import { settingsChanges } from '$lib/stores/settingsChanges';
@@ -12,9 +13,9 @@
 
 	let { displayName, bio, pronouns, onFieldChange }: Props = $props();
 
-	let draftName = $state(displayName);
-	let draftBio = $state(bio);
-	let draftPronouns = $state(pronouns);
+	let draftName = $state(untrack(() => displayName));
+	let draftBio = $state(untrack(() => bio));
+	let draftPronouns = $state(untrack(() => pronouns));
 
 	// Sync draft values when props change (e.g., on discard)
 	$effect(() => {

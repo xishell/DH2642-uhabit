@@ -18,6 +18,7 @@ const updateGoalSchema = z
 	.object({
 		title: z.string().min(1).max(255).optional(),
 		description: z.string().nullish(),
+		color: z.string().nullish(),
 		startDate: z
 			.string()
 			.regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD')
@@ -132,6 +133,7 @@ const buildGoalUpdates = (data: z.infer<typeof updateGoalSchema>) => {
 	const updates: Partial<typeof goal.$inferInsert> = { updatedAt: new Date() };
 	if (data.title !== undefined) updates.title = data.title;
 	if (data.description !== undefined) updates.description = data.description;
+	if (data.color !== undefined) updates.color = data.color;
 	if (data.startDate !== undefined) updates.startDate = new Date(data.startDate + 'T00:00:00Z');
 	if (data.endDate !== undefined) updates.endDate = new Date(data.endDate + 'T23:59:59Z');
 	return updates;

@@ -8,6 +8,7 @@ export type Goal = {
 	userId: string;
 	title: string;
 	description: string | null;
+	color: string | null;
 	startDate: Date;
 	endDate: Date;
 	createdAt: Date;

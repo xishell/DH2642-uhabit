@@ -91,11 +91,12 @@ export const goal = sqliteTable(
 			.references(() => user.id, { onDelete: 'cascade' }),
 		title: text('title').notNull(),
 		description: text('description'),
-		// Date range for the goal
-		startDate: integer('startDate', { mode: 'timestamp' }).notNull(),
-		endDate: integer('endDate', { mode: 'timestamp' }).notNull(),
-		createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
-		updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull()
+		color: text('color'),
+		// Date range for the goal (stored as milliseconds)
+		startDate: integer('startDate', { mode: 'timestamp_ms' }).notNull(),
+		endDate: integer('endDate', { mode: 'timestamp_ms' }).notNull(),
+		createdAt: integer('createdAt', { mode: 'timestamp_ms' }).notNull(),
+		updatedAt: integer('updatedAt', { mode: 'timestamp_ms' }).notNull()
 	},
 	(table) => ({
 		userIdx: index('goal_user_id_idx').on(table.userId),

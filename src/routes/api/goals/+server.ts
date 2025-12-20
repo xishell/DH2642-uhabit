@@ -20,6 +20,7 @@ const createGoalSchema = z
 	.object({
 		title: z.string().min(1).max(255),
 		description: z.string().nullish(),
+		color: z.string().nullish(),
 		startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD'),
 		endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be YYYY-MM-DD'),
 		habitIds: z.array(z.string().uuid()).optional()
@@ -222,6 +223,7 @@ export const POST: RequestHandler = async (event) => {
 		userId,
 		title: data.title,
 		description: data.description || null,
+		color: data.color || null,
 		startDate: new Date(data.startDate + 'T00:00:00Z'),
 		endDate: new Date(data.endDate + 'T23:59:59Z'),
 		createdAt: now,
@@ -233,14 +235,15 @@ export const POST: RequestHandler = async (event) => {
 		const statements: D1PreparedStatement[] = [
 			d1
 				.prepare(
-					`INSERT INTO goal (id, userId, title, description, startDate, endDate, createdAt, updatedAt)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+					`INSERT INTO goal (id, userId, title, description, color, startDate, endDate, createdAt, updatedAt)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 				)
 				.bind(
 					goalId,
 					userId,
 					data.title,
 					data.description || null,
+					data.color || null,
 					goalData.startDate.getTime(),
 					goalData.endDate.getTime(),
 					nowTimestamp,

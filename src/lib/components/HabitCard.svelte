@@ -10,27 +10,42 @@
 		onedit?: (habit: Habit) => void;
 	} = $props();
 
-	const formatFrequency = (h: Habit) => {
-		if (h.frequency === 'daily') return 'Daily';
+	const limitList = (items: string[], limit = 3) => {
+		const full = items.join(', ');
+		if (items.length <= limit) return { full, compact: full };
+		return {
+			full,
+			compact: `${items.slice(0, limit).join(', ')} +${items.length - limit} more`
+		};
+	};
+
+	const formatFrequency = (h: Habit): { full: string; compact: string } => {
+		if (h.frequency === 'daily') return { full: 'Daily', compact: 'Daily' };
 		if (h.frequency === 'weekly') {
-			if (!h.period?.length) return 'Weekly';
+			if (!h.period?.length) return { full: 'Weekly', compact: 'Weekly' };
 			const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-			return `Weekly on ${h.period.map((d) => labels[d] || d).join(', ')}`;
+			const days = h.period.map((d) => labels[d] || `${d}`);
+			const { full, compact } = limitList(days, 4);
+			return { full: `Weekly on ${full}`, compact: `Weekly on ${compact}` };
 		}
 		// monthly
-		if (!h.period?.length) return 'Monthly';
+		if (!h.period?.length) return { full: 'Monthly', compact: 'Monthly' };
 		const suffix = (n: number) => {
 			if (n % 10 === 1 && n % 100 !== 11) return `${n}st`;
 			if (n % 10 === 2 && n % 100 !== 12) return `${n}nd`;
 			if (n % 10 === 3 && n % 100 !== 13) return `${n}rd`;
 			return `${n}th`;
 		};
-		return `Monthly on ${h.period.map(suffix).join(', ')}`;
+		const dates = h.period.map(suffix);
+		const { full, compact } = limitList(dates, 3);
+		return { full: `Monthly on ${full}`, compact: `Monthly on ${compact}` };
 	};
+
+	const frequency = $derived(formatFrequency(habit));
 </script>
 
 <div
-	class="w-full min-h-[68px] rounded-lg border-[1.5px] border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 flex justify-between items-center px-5 py-2 hover:bg-surface-200 dark:hover:bg-surface-700 transition-all duration-200"
+	class="w-full min-h-[68px] rounded-xl border-[1.5px] border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 flex justify-between items-center px-5 py-2 hover:bg-surface-200 dark:hover:bg-surface-700 transition-all duration-200"
 >
 	<div class="flex items-center gap-3 min-w-0">
 		{#if habit.color}
@@ -51,10 +66,11 @@
 				</span>
 			</div>
 			<span
-				class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary-50-900 text-primary-900-100 w-fit"
+				class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary-50-900 text-primary-900-100 max-w-full min-w-0"
+				title={frequency.full}
 			>
 				<CalendarClock size={11} class="shrink-0" />
-				<span class="truncate">{formatFrequency(habit)}</span>
+				<span class="truncate">{frequency.compact}</span>
 			</span>
 		</div>
 	</div>

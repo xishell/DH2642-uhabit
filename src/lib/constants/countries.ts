@@ -1,0 +1,133 @@
+import { SUPPORTED_COUNTRIES } from '$lib/types/holiday';
+
+/**
+ * Country display names and locale mappings
+ */
+export const COUNTRY_INFO: Record<string, { name: string; locale: string }> = {
+	AD: { name: 'Andorra', locale: 'ca-AD' },
+	AL: { name: 'Albania', locale: 'sq-AL' },
+	AR: { name: 'Argentina', locale: 'es-AR' },
+	AT: { name: 'Austria', locale: 'de-AT' },
+	AU: { name: 'Australia', locale: 'en-AU' },
+	AX: { name: 'Åland Islands', locale: 'sv-AX' },
+	BA: { name: 'Bosnia and Herzegovina', locale: 'bs-BA' },
+	BB: { name: 'Barbados', locale: 'en-BB' },
+	BE: { name: 'Belgium', locale: 'nl-BE' },
+	BG: { name: 'Bulgaria', locale: 'bg-BG' },
+	BJ: { name: 'Benin', locale: 'fr-BJ' },
+	BO: { name: 'Bolivia', locale: 'es-BO' },
+	BR: { name: 'Brazil', locale: 'pt-BR' },
+	BS: { name: 'Bahamas', locale: 'en-BS' },
+	BW: { name: 'Botswana', locale: 'en-BW' },
+	BY: { name: 'Belarus', locale: 'be-BY' },
+	BZ: { name: 'Belize', locale: 'en-BZ' },
+	CA: { name: 'Canada', locale: 'en-CA' },
+	CH: { name: 'Switzerland', locale: 'de-CH' },
+	CL: { name: 'Chile', locale: 'es-CL' },
+	CN: { name: 'China', locale: 'zh-CN' },
+	CO: { name: 'Colombia', locale: 'es-CO' },
+	CR: { name: 'Costa Rica', locale: 'es-CR' },
+	CU: { name: 'Cuba', locale: 'es-CU' },
+	CY: { name: 'Cyprus', locale: 'el-CY' },
+	CZ: { name: 'Czechia', locale: 'cs-CZ' },
+	DE: { name: 'Germany', locale: 'de-DE' },
+	DK: { name: 'Denmark', locale: 'da-DK' },
+	DO: { name: 'Dominican Republic', locale: 'es-DO' },
+	EC: { name: 'Ecuador', locale: 'es-EC' },
+	EE: { name: 'Estonia', locale: 'et-EE' },
+	EG: { name: 'Egypt', locale: 'ar-EG' },
+	ES: { name: 'Spain', locale: 'es-ES' },
+	FI: { name: 'Finland', locale: 'fi-FI' },
+	FO: { name: 'Faroe Islands', locale: 'fo-FO' },
+	FR: { name: 'France', locale: 'fr-FR' },
+	GA: { name: 'Gabon', locale: 'fr-GA' },
+	GB: { name: 'United Kingdom', locale: 'en-GB' },
+	GD: { name: 'Grenada', locale: 'en-GD' },
+	GI: { name: 'Gibraltar', locale: 'en-GI' },
+	GL: { name: 'Greenland', locale: 'kl-GL' },
+	GM: { name: 'Gambia', locale: 'en-GM' },
+	GR: { name: 'Greece', locale: 'el-GR' },
+	GT: { name: 'Guatemala', locale: 'es-GT' },
+	GY: { name: 'Guyana', locale: 'en-GY' },
+	HN: { name: 'Honduras', locale: 'es-HN' },
+	HR: { name: 'Croatia', locale: 'hr-HR' },
+	HT: { name: 'Haiti', locale: 'fr-HT' },
+	HU: { name: 'Hungary', locale: 'hu-HU' },
+	ID: { name: 'Indonesia', locale: 'id-ID' },
+	IE: { name: 'Ireland', locale: 'en-IE' },
+	IM: { name: 'Isle of Man', locale: 'en-IM' },
+	IS: { name: 'Iceland', locale: 'is-IS' },
+	IT: { name: 'Italy', locale: 'it-IT' },
+	JE: { name: 'Jersey', locale: 'en-JE' },
+	JM: { name: 'Jamaica', locale: 'en-JM' },
+	JP: { name: 'Japan', locale: 'ja-JP' },
+	KR: { name: 'South Korea', locale: 'ko-KR' },
+	LI: { name: 'Liechtenstein', locale: 'de-LI' },
+	LS: { name: 'Lesotho', locale: 'en-LS' },
+	LT: { name: 'Lithuania', locale: 'lt-LT' },
+	LU: { name: 'Luxembourg', locale: 'fr-LU' },
+	LV: { name: 'Latvia', locale: 'lv-LV' },
+	MA: { name: 'Morocco', locale: 'ar-MA' },
+	MC: { name: 'Monaco', locale: 'fr-MC' },
+	MD: { name: 'Moldova', locale: 'ro-MD' },
+	ME: { name: 'Montenegro', locale: 'sr-ME' },
+	MG: { name: 'Madagascar', locale: 'mg-MG' },
+	MK: { name: 'North Macedonia', locale: 'mk-MK' },
+	MN: { name: 'Mongolia', locale: 'mn-MN' },
+	MT: { name: 'Malta', locale: 'mt-MT' },
+	MX: { name: 'Mexico', locale: 'es-MX' },
+	MZ: { name: 'Mozambique', locale: 'pt-MZ' },
+	NA: { name: 'Namibia', locale: 'en-NA' },
+	NE: { name: 'Niger', locale: 'fr-NE' },
+	NG: { name: 'Nigeria', locale: 'en-NG' },
+	NI: { name: 'Nicaragua', locale: 'es-NI' },
+	NL: { name: 'Netherlands', locale: 'nl-NL' },
+	NO: { name: 'Norway', locale: 'nb-NO' },
+	NZ: { name: 'New Zealand', locale: 'en-NZ' },
+	PA: { name: 'Panama', locale: 'es-PA' },
+	PE: { name: 'Peru', locale: 'es-PE' },
+	PH: { name: 'Philippines', locale: 'en-PH' },
+	PL: { name: 'Poland', locale: 'pl-PL' },
+	PR: { name: 'Puerto Rico', locale: 'es-PR' },
+	PT: { name: 'Portugal', locale: 'pt-PT' },
+	PY: { name: 'Paraguay', locale: 'es-PY' },
+	RO: { name: 'Romania', locale: 'ro-RO' },
+	RS: { name: 'Serbia', locale: 'sr-RS' },
+	RU: { name: 'Russia', locale: 'ru-RU' },
+	SE: { name: 'Sweden', locale: 'sv-SE' },
+	SG: { name: 'Singapore', locale: 'en-SG' },
+	SI: { name: 'Slovenia', locale: 'sl-SI' },
+	SJ: { name: 'Svalbard and Jan Mayen', locale: 'nb-SJ' },
+	SK: { name: 'Slovakia', locale: 'sk-SK' },
+	SM: { name: 'San Marino', locale: 'it-SM' },
+	SR: { name: 'Suriname', locale: 'nl-SR' },
+	SV: { name: 'El Salvador', locale: 'es-SV' },
+	TN: { name: 'Tunisia', locale: 'ar-TN' },
+	TR: { name: 'Turkey', locale: 'tr-TR' },
+	UA: { name: 'Ukraine', locale: 'uk-UA' },
+	US: { name: 'United States', locale: 'en-US' },
+	UY: { name: 'Uruguay', locale: 'es-UY' },
+	VA: { name: 'Vatican City', locale: 'it-VA' },
+	VE: { name: 'Venezuela', locale: 'es-VE' },
+	VN: { name: 'Vietnam', locale: 'vi-VN' },
+	ZA: { name: 'South Africa', locale: 'en-ZA' },
+	ZW: { name: 'Zimbabwe', locale: 'en-ZW' }
+};
+
+/**
+ * Get sorted list of countries for dropdown
+ */
+export function getCountryOptions(): Array<{ code: string; name: string }> {
+	return SUPPORTED_COUNTRIES.map((code) => ({
+		code,
+		name: COUNTRY_INFO[code]?.name ?? code
+	})).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Get locale for a country code
+ */
+export function getLocaleForCountry(countryCode: string | null | undefined): string {
+	if (!countryCode) return 'en-US';
+	return COUNTRY_INFO[countryCode]?.locale ?? 'en-US';
+}

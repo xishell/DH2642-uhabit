@@ -7,6 +7,7 @@ export type SettingsField =
 	| 'username'
 	| 'email'
 	| 'theme'
+	| 'country'
 	| 'accentColor'
 	| 'typography'
 	| 'notifications'

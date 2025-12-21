@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { DatePicker, parseDate, Portal } from '@skeletonlabs/skeleton-svelte';
 	import type { DateValue } from '@skeletonlabs/skeleton-svelte';
+	import { userCountry, getLocale } from '$lib/stores/country';
 
 	interface ValueChangeDetails {
 		value: DateValue[];
@@ -15,15 +16,24 @@
 
 	let { value = $bindable([parseDate('2025-11-20')]), onchange }: Props = $props();
 
+	const locale = $derived(getLocale($userCountry));
+
+	// Determine placeholder based on locale date format
+	const placeholder = $derived(() => {
+		// US uses mm/dd/yyyy, most others use dd/mm/yyyy
+		if (locale.startsWith('en-US')) return 'mm/dd/yyyy';
+		return 'dd/mm/yyyy';
+	});
+
 	function handleValueChange(details: ValueChangeDetails) {
 		value = details.value;
 		onchange?.(details.value);
 	}
 </script>
 
-<DatePicker {value} onValueChange={handleValueChange} class="text-sm w-36">
+<DatePicker {value} onValueChange={handleValueChange} {locale} class="text-sm w-36">
 	<DatePicker.Control>
-		<DatePicker.Input placeholder="mm/dd/yyyy" />
+		<DatePicker.Input placeholder={placeholder()} />
 		<DatePicker.Trigger />
 	</DatePicker.Control>
 	<Portal>

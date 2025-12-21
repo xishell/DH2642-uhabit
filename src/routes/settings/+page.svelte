@@ -9,6 +9,7 @@
 	import { reduceMotion as motionStore } from '$lib/stores/reduceMotion';
 	import { settingsChanges, hasUnsavedChanges } from '$lib/stores/settingsChanges';
 	import { avatarUrl as avatarStore } from '$lib/stores/avatar';
+	import { userCountry } from '$lib/stores/country';
 	import { toaster } from '$lib/stores/toaster';
 	import PublicProfile from './components/PublicProfile.svelte';
 	import Account from './components/Account.svelte';
@@ -27,6 +28,7 @@
 	let email = $state('');
 	let currentTheme = $state<ThemeMode>('system');
 	let currentReduceMotion = $state<boolean>(false);
+	let country = $state('');
 	let accentColor = $state('');
 	let typography = $state('');
 
@@ -62,6 +64,8 @@
 	function applyPreferences(s: UserSettingsResponse) {
 		currentTheme = (s.theme as ThemeMode) || 'system';
 		themeStore.set(currentTheme);
+		country = s.country ?? '';
+		userCountry.set(s.country ?? null);
 		bio = s.preferences?.bio ?? '';
 		accentColor = s.preferences?.accentColor ?? '';
 		typography = s.preferences?.typography ?? '';
@@ -94,6 +98,7 @@
 			email,
 			theme: currentTheme,
 			reduceMotion: currentReduceMotion,
+			country,
 			accentColor,
 			typography,
 			pushEnabled,
@@ -209,6 +214,7 @@
 				pronouns,
 				username,
 				theme: currentTheme,
+				country: country || undefined,
 				preferences: {
 					bio,
 					accentColor,
@@ -259,6 +265,10 @@
 		reduceMotion: (v) => {
 			currentReduceMotion = v as boolean;
 			motionStore.set(currentReduceMotion);
+		},
+		country: (v) => {
+			country = v as string;
+			userCountry.set(country || null);
 		},
 		accentColor: (v) => (accentColor = v as string),
 		typography: (v) => (typography = v as string),
@@ -316,6 +326,7 @@
 				<Preferences
 					{currentTheme}
 					reduceMotion={currentReduceMotion}
+					{country}
 					{accentColor}
 					{typography}
 					onFieldChange={(field, value) => fieldSetters[field]?.(value)}

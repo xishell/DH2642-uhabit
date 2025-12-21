@@ -2,22 +2,29 @@
 	import { untrack } from 'svelte';
 	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
 	import { reduceMotion as motionStore } from '$lib/stores/reduceMotion';
+	import { userCountry } from '$lib/stores/country';
 	import { settingsChanges } from '$lib/stores/settingsChanges';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import FieldWrapper from './FieldWrapper.svelte';
+	import { getCountryOptions } from '$lib/constants/countries';
 
 	interface Props {
 		currentTheme: ThemeMode;
 		reduceMotion: boolean;
+		country: string;
 		accentColor: string;
 		typography: string;
 		onFieldChange?: (field: string, value: unknown) => void;
 	}
 
-	let { currentTheme, reduceMotion, accentColor, typography, onFieldChange }: Props = $props();
+	let { currentTheme, reduceMotion, country, accentColor, typography, onFieldChange }: Props =
+		$props();
+
+	const countryOptions = getCountryOptions();
 
 	let draftTheme = $state(untrack(() => currentTheme));
 	let draftReduceMotion = $state(untrack(() => reduceMotion));
+	let draftCountry = $state(untrack(() => country));
 	let draftAccentColor = $state(untrack(() => accentColor));
 	let draftTypography = $state(untrack(() => typography));
 
@@ -28,6 +35,10 @@
 
 	$effect(() => {
 		draftReduceMotion = reduceMotion;
+	});
+
+	$effect(() => {
+		draftCountry = country;
 	});
 
 	$effect(() => {
@@ -52,6 +63,15 @@
 		draftReduceMotion = checked;
 		motionStore.set(checked);
 		onFieldChange?.('reduceMotion', checked);
+	}
+
+	function handleCountryChange(event: Event) {
+		const value = (event.target as HTMLSelectElement).value;
+		draftCountry = value;
+		// Apply immediately for visual feedback
+		userCountry.set(value || null);
+		settingsChanges.setField('country', country, value);
+		onFieldChange?.('country', value);
 	}
 
 	function handleAccentColorChange(event: Event) {
@@ -104,6 +124,23 @@
 				<Switch.HiddenInput />
 			</Switch>
 		</div>
+
+		<FieldWrapper field="country" label="Country / Region">
+			<p class="text-sm text-surface-500 dark:text-surface-400 mb-2">
+				Used for date formatting and public holiday suggestions
+			</p>
+			<select
+				id="country"
+				class="select w-full px-3 py-2 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-sm"
+				value={draftCountry}
+				onchange={handleCountryChange}
+			>
+				<option value="">Select a country</option>
+				{#each countryOptions as { code, name }}
+					<option value={code}>{name}</option>
+				{/each}
+			</select>
+		</FieldWrapper>
 
 		<div class="opacity-50">
 			<div class="flex items-center gap-2 mb-1">

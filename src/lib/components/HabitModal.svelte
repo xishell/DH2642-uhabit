@@ -263,7 +263,7 @@
 						<input
 							id="habit-target"
 							type="number"
-							class="border w-24 h-10 rounded-md text-sm px-3 bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
+							class="border w-24 h-11 rounded-md text-sm px-3 bg-surface-200-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-right"
 							class:border-surface-400-600={!fieldErrors.targetAmount}
 							class:border-error-500={fieldErrors.targetAmount}
 							placeholder="100"

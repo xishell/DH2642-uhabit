@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { onNavigate } from '$app/navigation';
+	import { page } from '$app/stores';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import Header from '$lib/components/Header.svelte';
@@ -85,12 +86,13 @@
 
 	<!-- Open Graph / Facebook / Discord / LinkedIn -->
 	<meta property="og:type" content="website" />
+	<meta property="og:url" content={$page.url.href} />
 	<meta property="og:title" content="uhabit - Build Better Habits" />
 	<meta
 		property="og:description"
 		content="Track your daily habits, build consistency, and achieve your goals with uhabit."
 	/>
-	<meta property="og:image" content="/og-image.png" />
+	<meta property="og:image" content="{$page.url.origin}/og" />
 	<meta property="og:site_name" content="uhabit" />
 
 	<!-- Twitter Card -->
@@ -100,7 +102,7 @@
 		name="twitter:description"
 		content="Track your daily habits, build consistency, and achieve your goals with uhabit."
 	/>
-	<meta name="twitter:image" content="/og-image.png" />
+	<meta name="twitter:image" content="{$page.url.origin}/og" />
 
 	<link rel="icon" href={favicon} />
 </svelte:head>

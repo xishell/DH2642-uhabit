@@ -57,6 +57,7 @@
 		"vitest": "^4.0.10"
 	},
 	"dependencies": {
+		"@ethercorps/sveltekit-og": "^4.2.1",
 		"@lucide/svelte": "^0.562.0",
 		"@skeletonlabs/skeleton": "^4.7.3",
 		"@skeletonlabs/skeleton-svelte": "^4.7.3",

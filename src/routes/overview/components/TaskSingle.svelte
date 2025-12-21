@@ -12,7 +12,7 @@
 	<div class="flex items-center gap-4 flex-1 min-w-0">
 		<div
 			class="
-                w-5 h-5 rounded-full flex items-center justify-center border-2
+                w-5 h-5 shrink-0 rounded-full flex items-center justify-center border-2
                 transition
                 border-surface-500
             "

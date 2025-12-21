@@ -27,8 +27,8 @@
 					<div
 						class="rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 p-3 flex flex-col gap-2 text-surface-900 dark:text-surface-50"
 					>
-						<div class="flex items-center justify-between">
-							<p class="font-semibold">{habit.title}</p>
+						<div class="flex items-center justify-between gap-2 min-w-0">
+							<p class="font-semibold truncate" title={habit.title}>{habit.title}</p>
 							<span class={`text-xs ${habit.delta >= 0 ? 'text-success-500' : 'text-error-500'}`}>
 								{habit.delta >= 0 ? '▲' : '▼'}
 								{formatPercent(Math.abs(habit.delta))}

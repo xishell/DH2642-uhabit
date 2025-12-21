@@ -29,7 +29,7 @@
 			<div
 				role="button"
 				tabindex="0"
-				class="w-5 h-5 rounded-full flex items-center justify-center border-2 transition border-surface-500"
+				class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center border-2 transition border-surface-500"
 				class:border-success-600={isCompleted}
 				class:bg-success-600={isCompleted}
 				onclick={(e) => {

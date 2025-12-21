@@ -50,9 +50,9 @@
 			class="divide-y divide-surface-200 dark:divide-surface-700 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900"
 		>
 			{#each activity as item (item.habitId)}
-				<div class="p-3 flex items-center justify-between gap-3">
-					<div>
-						<p class="font-semibold text-surface-900 dark:text-surface-50">{item.title}</p>
+				<div class="p-3 flex items-center justify-between gap-3 min-w-0">
+					<div class="min-w-0">
+						<p class="font-semibold text-surface-900 dark:text-surface-50 truncate" title={item.title}>{item.title}</p>
 						<p class="text-xs text-surface-400">{item.meta}</p>
 					</div>
 					<span

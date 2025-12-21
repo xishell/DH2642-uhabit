@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronDown, ChevronUp, Calendar, Edit2 } from 'lucide-svelte';
+	import { ChevronDown, ChevronUp, Calendar, Edit2, ClipboardList, Check } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 	import { untrack } from 'svelte';
 	import type { GoalWithProgress, GoalWithHabitStatus } from '$lib/types/goal';
@@ -216,14 +216,7 @@
 									class="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary-50-900 text-primary-900-100 mt-0.5 max-w-full min-w-0"
 									title={frequency.full}
 								>
-									<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M8 7h8M8 11h8m-6 4h6M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"
-										/>
-									</svg>
+									<ClipboardList size={12} />
 									<span class="truncate">{frequency.compact}</span>
 								</span>
 							</div>
@@ -239,19 +232,7 @@
 										class:border-surface-300-600={!status.isCompleted}
 									>
 										{#if status.isCompleted}
-											<svg
-												class="w-4 h-4 text-white"
-												fill="none"
-												viewBox="0 0 24 24"
-												stroke="currentColor"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="3"
-													d="M5 13l4 4L19 7"
-												/>
-											</svg>
+											<Check size={16} class="text-white" strokeWidth={3} />
 										{/if}
 									</div>
 								{:else}

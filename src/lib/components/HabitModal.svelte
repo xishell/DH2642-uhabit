@@ -5,6 +5,7 @@
 	import SelectOrEdit from './SelectOrEdit.svelte';
 	import ColorPicker from './ColorPicker.svelte';
 	import FormField from './FormField.svelte';
+	import ConfirmDialog from './ConfirmDialog.svelte';
 	import type { Habit } from '$lib/types/habit';
 	import { z } from 'zod';
 	import { toaster } from '$lib/stores/toaster';
@@ -74,6 +75,7 @@
 	let period = $state<number[]>([]);
 
 	let isSubmitting = $state(false);
+	let showDeleteConfirm = $state(false);
 
 	// Field-level errors for accessibility
 	let fieldErrors = $state<Record<string, string | null>>({
@@ -305,8 +307,8 @@
 			{#if habit?.id && ondelete}
 				<button
 					type="button"
-					class="px-4 py-2 text-sm rounded-md border border-error-500 text-error-600 hover:bg-error-50 transition-colors"
-					onclick={() => ondelete(habit.id!)}
+					class="px-4 py-2 text-sm rounded-md border border-error-500 text-error-600 hover:bg-error-50 dark:hover:bg-error-950 transition-colors"
+					onclick={() => (showDeleteConfirm = true)}
 					disabled={isSubmitting}
 				>
 					Delete
@@ -322,3 +324,16 @@
 		</div>
 	</form>
 </Modal>
+
+<ConfirmDialog
+	open={showDeleteConfirm && !!habit?.id && !!ondelete}
+	title="Delete Habit"
+	confirmLabel="Delete"
+	oncancel={() => (showDeleteConfirm = false)}
+	onconfirm={() => {
+		showDeleteConfirm = false;
+		ondelete?.(habit!.id!);
+	}}
+>
+	Are you sure you want to delete "<strong>{habit?.title}</strong>"? This action cannot be undone.
+</ConfirmDialog>

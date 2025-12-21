@@ -5,6 +5,7 @@
 	import ColorPicker from './ColorPicker.svelte';
 	import DateInput from './DateInput.svelte';
 	import FormField from './FormField.svelte';
+	import ConfirmDialog from './ConfirmDialog.svelte';
 	import type {
 		Goal,
 		GoalWithHabits,
@@ -71,6 +72,7 @@
 	let selectedHabitIds = $state<Set<string>>(new Set());
 
 	let isSubmitting = $state(false);
+	let showDeleteConfirm = $state(false);
 
 	// Field-level errors for accessibility
 	let fieldErrors = $state<Record<string, string | null>>({
@@ -328,8 +330,8 @@
 			{#if isEditMode && goal?.id && ondelete}
 				<button
 					type="button"
-					class="px-4 py-2 text-sm rounded-md border border-error-500 text-error-600 hover:bg-error-50 transition-colors"
-					onclick={() => ondelete(goal.id!)}
+					class="px-4 py-2 text-sm rounded-md border border-error-500 text-error-600 hover:bg-error-50 dark:hover:bg-error-950 transition-colors"
+					onclick={() => (showDeleteConfirm = true)}
 					disabled={isSubmitting}
 				>
 					Delete
@@ -354,3 +356,16 @@
 		onsave={handleCreateHabit}
 	/>
 {/if}
+
+<ConfirmDialog
+	open={showDeleteConfirm && !!goal?.id && !!ondelete}
+	title="Delete Goal"
+	confirmLabel="Delete"
+	oncancel={() => (showDeleteConfirm = false)}
+	onconfirm={() => {
+		showDeleteConfirm = false;
+		ondelete?.(goal!.id!);
+	}}
+>
+	Are you sure you want to delete "<strong>{goal?.title}</strong>"? This action cannot be undone.
+</ConfirmDialog>

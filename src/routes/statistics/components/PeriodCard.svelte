@@ -5,9 +5,9 @@
 </script>
 
 <div
-	class="period-card overflow-hidden shrink-0 flex-1 flex-col p-4 gap-1 border border-surface-700 bg-surface-800 rounded-xl"
+	class="period-card overflow-hidden shrink-0 flex-1 flex-col p-4 gap-1 border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 rounded-xl"
 >
-	<div class="text-sm text-surface-400">
+	<div class="text-sm text-surface-500 dark:text-surface-400">
 		{title}
 	</div>
 	<div class="text-lg font-semibold text-nowrap">{contents}</div>

@@ -10,6 +10,11 @@
 
 /* Smooth theme transitions */
 @layer base {
+	html,
+	body {
+		overflow-x: hidden;
+	}
+
 	html {
 		transition:
 			background-color 0.3s ease,

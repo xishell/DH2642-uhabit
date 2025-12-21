@@ -16,22 +16,29 @@
 		height: 100%;
 		margin: 0;
 		padding: 0;
+		overscroll-behavior: none;
 	}
 
 	body {
 		min-height: 100dvh;
 	}
 
+	html,
+	body {
+		background-color: oklch(98.5% 0 none);
+	}
+
 	html {
-		background-color: var(--color-surface-50);
 		transition:
 			background-color 0.3s ease,
 			color 0.3s ease;
 	}
 
 	html.dark,
-	html[data-mode='dark'] {
-		background-color: var(--color-surface-900);
+	html[data-mode='dark'],
+	.dark body,
+	[data-mode='dark'] body {
+		background-color: oklch(22% 0 none);
 	}
 
 	body,
@@ -67,11 +74,11 @@ header {
 
 /* Background to prevent black flash - matches theme */
 ::view-transition-group(root) {
-	background: var(--color-surface-900);
+	background: oklch(22% 0 none);
 }
 
 :root:not(.dark):not([data-mode='dark'])::view-transition-group(root) {
-	background: var(--color-surface-50);
+	background: oklch(98.5% 0 none);
 }
 
 /* Slide animations */

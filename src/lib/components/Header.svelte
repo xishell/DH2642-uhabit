@@ -74,7 +74,7 @@
 </script>
 
 <header
-	class="w-full bg-surface-100 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 shadow-sm relative z-50"
+	class="w-full bg-surface-100 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 shadow-sm sticky top-0 z-50"
 >
 	<div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
 		<a

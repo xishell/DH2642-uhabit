@@ -47,7 +47,7 @@ export const PASTEL_COLORS: string[] = [
 	'#FFD6A5', // pastel orange
 	'#FFADAD', // pastel red
 	'#FBC4E2', // pastel pink
-	'#DCC6E0' // pastel purple
+	'#aa92f7' // pastel purple
 ];
 
 // Default color index (green)

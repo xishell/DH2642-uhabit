@@ -52,7 +52,7 @@ All endpoints require a valid Better Auth session cookie. Unauthenticated reques
 targetAmount: number | null; // Target for numeric habits
 unit: string | null; // Unit for numeric habits
 	categoryId: string | null; // Category ID for organization
-	goalId: string | null; // Goal ID (future feature)
+	goalId: string | null; // Goal ID for linking habit to a goal
 	createdAt: Date; // Creation timestamp
 	updatedAt: Date; // Last update timestamp
 }
@@ -71,7 +71,7 @@ unit: string | null; // Unit for numeric habits
 | `targetAmount` | number | No       | Target for numeric habits (e.g., `5` for 5 cups)                              |
 | `unit`         | string | No       | Unit for numeric habits (e.g., `"cups"`, `"liters"`, `"steps"`)               |
 | `categoryId`   | string | No       | Category ID for organizing habits                                             |
-| `goalId`       | string | No       | Goal ID for linking habit to a goal (future feature)                          |
+| `goalId`       | string | No       | Goal ID for linking habit to a goal                                           |
 
 ## Endpoints
 
@@ -148,7 +148,7 @@ Create a new habit for the authenticated user.
 - `period`: Optional array of days (weekly: `[0-6]`, monthly: `[1-31]`)
 - `targetAmount` and `unit`: Required together when `measurement` is `numeric`
 - `categoryId`: Optional string (must reference existing category)
-- `goalId`: Optional string (for future goal feature)
+- `goalId`: Optional string (references existing goal)
 
 **Response**: `201 Created`
 
@@ -537,7 +537,7 @@ export const habit = sqliteTable('habit', {
 	targetAmount: integer('targetAmount'),
 	unit: text('unit'),
 	categoryId: text('categoryId').references(() => category.id, { onDelete: 'set null' }),
-	goalId: text('goalId'), // For future goal system
+	goalId: text('goalId').references(() => goal.id, { onDelete: 'set null' }),
 	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull()
 });

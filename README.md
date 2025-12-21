@@ -12,10 +12,73 @@ Habit tracking app built with SvelteKit and Cloudflare Workers/D1, featuring Bet
 
 ## Features
 
-- Habit overview, planning, and statistics pages built with Svelte 5, Tailwind CSS 4, and Skeleton UI
-- Auth via Better Auth running in the Cloudflare Workers runtime
-- Cloudflare D1 + Drizzle ORM with migration tooling and Drizzle Studio
-- API endpoints validated with Zod and covered by Vitest tests
+### Core Habit Tracking
+- **Create and manage habits** with customizable titles, notes, and colors
+- **Two measurement types**:
+  - **Boolean habits** – Simple checkbox completion (e.g., "Meditate")
+  - **Numeric habits** – Track progress toward a target (e.g., "Drink 8 cups of water")
+- **Three frequency options**: Daily, Weekly (select specific days), Monthly (select specific dates)
+- **Goal management** – Organize habits into time-bound goals with start/end dates
+- **Categories** – Group habits by custom categories
+
+### Daily Overview Dashboard
+- Today's habit checklist with real-time completion status
+- Toggle between Habits and Goals views
+- Multi-ring progress visualization showing daily completion
+- Quick-complete actions for boolean habits
+- Incremental progress tracking for numeric habits
+
+### Planning Page
+- Complete list of all habits and goals
+- Create, edit, and delete habits/goals via modal dialogs
+- Floating action button (FAB) menu for quick actions
+- Daily motivational quote feature
+
+### Statistics & Analytics
+- **Date range picker** – View stats for custom periods
+- **Period views** – Daily, weekly, and monthly statistics
+- **Heatmap visualization** – Activity calendar showing completion patterns
+- **Streak tracking** – Current and longest streaks for each habit
+- **Completion rates** – Percentage-based progress tracking
+- **Habit trends** – Sparkline visualizations of recent activity
+- **Period summaries** – Aggregated statistics per time period
+- **Activity pulse** – Real-time activity indicators
+- **Top habits** – Rankings based on completion consistency
+- **Advanced insights** – Volatility analysis, best performance windows, milestones, recovery speed
+
+### User Accounts & Settings
+- Email/password authentication with Better Auth
+- Username-based login support
+- Profile customization (display name, pronouns, bio, avatar)
+- Theme preferences (light/dark/system)
+- Country selection for holiday integration
+- Public/private profile visibility
+- Avatar upload with Cloudflare R2 storage
+
+### Notifications System
+- **In-app notifications** – Persistent notification center with unread count
+- **Notification types**:
+  - Habit reminders
+  - Streak milestone alerts (10, 30, 100+ days)
+  - Goal progress updates
+  - Holiday conflict suggestions
+- **Web Push notifications** – Cross-device push notifications via service workers
+- **Configurable preferences** – Enable/disable notification types and reminder times
+
+### Holiday Integration
+- Automatic holiday detection based on user's country
+- Cached holiday data via Nager.Date API
+- Smart suggestions to reschedule habits on holidays
+
+### Technical Features
+- Built with **Svelte 5**, **Tailwind CSS 4**, and **Skeleton UI**
+- Auth via **Better Auth** with password security (Have I Been Pwned integration)
+- **Cloudflare D1** (SQLite) + **Drizzle ORM** with migration tooling
+- API endpoints validated with **Zod**
+- Multi-layer caching: IndexedDB (client), KV (edge), server-side stats cache
+- Rate limiting on API endpoints
+- ETag-based HTTP caching for efficient data fetching
+- Test coverage with **Vitest**
 - CI-friendly scripts for formatting, type checking, and builds
 
 ## Quick Start

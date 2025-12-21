@@ -71,7 +71,7 @@
 	</Popover.Trigger>
 
 	<Portal>
-		<Popover.Positioner class="z-50">
+		<Popover.Positioner class="!z-[9999]">
 			<Popover.Content
 				class="notification-dropdown w-[calc(100vw-1rem)] sm:w-96 max-h-[80vh] sm:max-h-[70vh] flex flex-col rounded-2xl bg-surface-50 dark:bg-surface-900 shadow-xl border border-surface-200 dark:border-surface-700 overflow-hidden {isClosing
 					? 'is-closing'

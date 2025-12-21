@@ -93,7 +93,7 @@
 	>
 		<!-- Header -->
 		<div class="flex justify-between items-center w-full mb-6">
-			<div class="font-semibold text-lg text-surface-50 flex-1">
+			<div class="font-semibold text-lg text-surface-50 flex-1 truncate">
 				{selectedProgressive.habit.title}
 			</div>
 			<button

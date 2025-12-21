@@ -160,7 +160,7 @@
 
 <div class="mb-6 flex justify-center">
 	<div
-		class="bg-surface-100 dark:bg-surface-800 pt-4 px-6 rounded-xl flex items-end justify-center shadow w-full max-w-2xl"
+		class="bg-surface-100 dark:bg-surface-800 pt-4 pb-2 px-6 rounded-xl flex items-end justify-center shadow w-full max-w-2xl"
 	>
 		<div class="mx-auto" style="width: {size}px; height: {svgHeight}px;">
 			<svg

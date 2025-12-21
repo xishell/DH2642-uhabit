@@ -33,10 +33,11 @@
 		const fromPath = navigation.from?.url.pathname ?? '/';
 		const toPath = navigation.to?.url.pathname ?? '/';
 
+		if (fromPath === toPath) return;
+
 		const fromIndex = getPageIndex(fromPath);
 		const toIndex = getPageIndex(toPath);
 
-		// Set direction: forward (left slide) or back (right slide)
 		const direction = toIndex >= fromIndex ? 'forward' : 'back';
 		document.documentElement.dataset.navDirection = direction;
 

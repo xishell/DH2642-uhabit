@@ -13,6 +13,7 @@
 		GoalWithProgress
 	} from '$lib/types/goal';
 	import type { Habit, HabitWithStatus } from '$lib/types/habit';
+	import { PASTEL_COLORS, DEFAULT_COLOR_INDEX } from '$lib/constants';
 	import { z } from 'zod';
 	import { toaster } from '$lib/stores/toaster';
 
@@ -61,12 +62,12 @@
 	});
 
 	// Color options (same as habits for consistency)
-	const colors = ['#E0E0E0', '#CCCCCC', '#B8B8B8', '#A4A4A4', '#909090', '#7C7C7C', '#686868'];
+	const colors = PASTEL_COLORS;
 
 	// Form state
 	let title = $state('');
 	let description = $state('');
-	let selectedColor = $state(colors[2]);
+	let selectedColor = $state(colors[DEFAULT_COLOR_INDEX]);
 	let startDate = $state('');
 	let endDate = $state('');
 	let selectedHabitIds = $state<Set<string>>(new Set());
@@ -129,7 +130,7 @@
 			if (goal) {
 				title = goal.title;
 				description = goal.description ?? '';
-				selectedColor = goal.color ?? colors[2];
+				selectedColor = goal.color ?? colors[DEFAULT_COLOR_INDEX];
 				startDate = formatDateForInput(goal.startDate);
 				endDate = formatDateForInput(goal.endDate);
 				// Pre-select habits attached to the goal
@@ -137,7 +138,7 @@
 			} else {
 				title = '';
 				description = '';
-				selectedColor = colors[2];
+				selectedColor = colors[DEFAULT_COLOR_INDEX];
 				// Default to today and one month from now
 				const today = new Date();
 				const oneMonthLater = new Date();

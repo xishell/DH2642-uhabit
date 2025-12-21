@@ -56,7 +56,7 @@
 </script>
 
 <div
-	class="group relative flex gap-3 p-3 rounded-xl cursor-pointer transition-colors {notification.read
+	class="group relative flex gap-3 p-3 sm:p-3 rounded-xl cursor-pointer transition-colors active:scale-[0.98] {notification.read
 		? 'bg-transparent hover:bg-surface-100 dark:hover:bg-surface-800'
 		: 'bg-primary-50 dark:bg-primary-950/30 hover:bg-primary-100 dark:hover:bg-primary-900/40'}"
 	onclick={handleClick}
@@ -65,9 +65,9 @@
 	tabindex="0"
 >
 	<div
-		class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-surface-100 dark:bg-surface-800"
+		class="flex-shrink-0 w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-surface-100 dark:bg-surface-800"
 	>
-		<Icon class="size-4 {iconColor}" />
+		<Icon class="size-5 sm:size-4 {iconColor}" />
 	</div>
 
 	<div class="flex-1 min-w-0">
@@ -93,10 +93,10 @@
 
 	<button
 		type="button"
-		class="absolute top-2 right-2 p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-surface-200 dark:hover:bg-surface-700 transition-all"
+		class="absolute top-2 right-2 p-1.5 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 bg-surface-200/80 dark:bg-surface-700/80 sm:bg-transparent hover:bg-surface-200 dark:hover:bg-surface-700 transition-all"
 		onclick={handleDismiss}
 		aria-label="Dismiss notification"
 	>
-		<X class="size-3.5 text-surface-500" />
+		<X class="size-4 sm:size-3.5 text-surface-500" />
 	</button>
 </div>

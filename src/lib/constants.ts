@@ -39,6 +39,20 @@ export const KV_KEYS = {
 	DAILY_QUOTE: 'daily-quote'
 } as const;
 
+// Pastel color palette for habits and goals
+export const PASTEL_COLORS: string[] = [
+	'#BFD7EA', // pastel blue
+	'#FFF1B6', // pastel yellow
+	'#CDEAC0', // pastel green
+	'#FFD6A5', // pastel orange
+	'#FFADAD', // pastel red
+	'#FBC4E2', // pastel pink
+	'#DCC6E0' // pastel purple
+];
+
+// Default color index (green)
+export const DEFAULT_COLOR_INDEX = 2;
+
 // Statistics cache configuration
 export const STATS_CACHE = {
 	/** IndexedDB database name */

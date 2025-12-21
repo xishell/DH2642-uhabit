@@ -7,6 +7,7 @@
 	import FormField from './FormField.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import type { Habit } from '$lib/types/habit';
+	import { PASTEL_COLORS, DEFAULT_COLOR_INDEX } from '$lib/constants';
 	import { z } from 'zod';
 	import { toaster } from '$lib/stores/toaster';
 
@@ -49,15 +50,7 @@
 	const isEditMode = $derived(!!habit);
 	const modalTitle = $derived(isEditMode ? 'Edit Habit' : 'New Habit');
 
-	const colors = [
-		'#BFD7EA', // pastel blue
-		'#FFF1B6', // pastel yellow
-		'#CDEAC0', // pastel green
-		'#FFD6A5', // pastel orange
-		'#FFADAD', // pastel red
-		'#FBC4E2', // pastel pink
-		'#DCC6E0' // pastel purple
-	];
+	const colors = PASTEL_COLORS;
 
 	const frequencyArr = [
 		{ value: 'daily', label: 'Daily (every day)' },
@@ -68,7 +61,7 @@
 	// Form state
 	let title = $state('');
 	let notes = $state('');
-	let selectedColor = $state(colors[2]);
+	let selectedColor = $state(colors[DEFAULT_COLOR_INDEX]);
 	let selectedFrequency = $state<string>('daily');
 	let targetAmount = $state<number | null>(null);
 	let unit = $state('');
@@ -112,7 +105,7 @@
 			if (habit) {
 				title = habit.title;
 				notes = habit.notes ?? '';
-				selectedColor = habit.color ?? colors[2];
+				selectedColor = habit.color ?? colors[DEFAULT_COLOR_INDEX];
 				selectedFrequency = habit.frequency;
 				targetAmount = habit.targetAmount;
 				unit = habit.unit ?? '';
@@ -120,7 +113,7 @@
 			} else {
 				title = '';
 				notes = '';
-				selectedColor = colors[2];
+				selectedColor = colors[DEFAULT_COLOR_INDEX];
 				selectedFrequency = 'daily';
 				targetAmount = null;
 				unit = '';

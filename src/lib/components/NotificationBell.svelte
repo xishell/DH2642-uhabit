@@ -73,24 +73,24 @@
 	<Portal>
 		<Popover.Positioner class="z-50">
 			<Popover.Content
-				class="notification-dropdown w-80 sm:w-96 max-h-[70vh] flex flex-col rounded-2xl bg-surface-50 dark:bg-surface-900 shadow-xl border border-surface-200 dark:border-surface-700 overflow-hidden {isClosing
+				class="notification-dropdown w-[calc(100vw-1rem)] sm:w-96 max-h-[80vh] sm:max-h-[70vh] flex flex-col rounded-2xl bg-surface-50 dark:bg-surface-900 shadow-xl border border-surface-200 dark:border-surface-700 overflow-hidden {isClosing
 					? 'is-closing'
 					: ''}"
 			>
 				<!-- Header -->
 				<div
-					class="flex items-center justify-between px-4 py-3 border-b border-surface-200 dark:border-surface-700"
+					class="flex items-center justify-between px-4 py-3 sm:py-3 border-b border-surface-200 dark:border-surface-700"
 				>
-					<Popover.Title class="text-sm font-semibold text-surface-900 dark:text-surface-100">
+					<Popover.Title class="text-base sm:text-sm font-semibold text-surface-900 dark:text-surface-100">
 						Notifications
 					</Popover.Title>
 					{#if notificationStore.unreadCount > 0}
 						<button
 							type="button"
-							class="flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+							class="flex items-center gap-1.5 px-2 py-1 -mr-2 rounded-lg text-xs sm:text-xs text-primary-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-950/50 transition-colors"
 							onclick={handleMarkAllRead}
 						>
-							<CheckCheck class="size-3.5" />
+							<CheckCheck class="size-4 sm:size-3.5" />
 							Mark all read
 						</button>
 					{/if}
@@ -124,10 +124,10 @@
 						</div>
 
 						{#if notificationStore.hasMore}
-							<div class="px-4 pb-3">
+							<div class="px-3 pb-3">
 								<button
 									type="button"
-									class="w-full py-2 text-sm text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors disabled:opacity-50"
+									class="w-full py-3 sm:py-2 text-sm font-medium text-primary-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-950/50 rounded-xl transition-colors disabled:opacity-50"
 									onclick={handleLoadMore}
 									disabled={notificationStore.loading}
 								>

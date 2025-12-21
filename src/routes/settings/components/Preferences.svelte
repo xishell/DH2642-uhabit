@@ -1,25 +1,33 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
+	import { reduceMotion as motionStore } from '$lib/stores/reduceMotion';
 	import { settingsChanges } from '$lib/stores/settingsChanges';
+	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import FieldWrapper from './FieldWrapper.svelte';
 
 	interface Props {
 		currentTheme: ThemeMode;
+		reduceMotion: boolean;
 		accentColor: string;
 		typography: string;
 		onFieldChange?: (field: string, value: unknown) => void;
 	}
 
-	let { currentTheme, accentColor, typography, onFieldChange }: Props = $props();
+	let { currentTheme, reduceMotion, accentColor, typography, onFieldChange }: Props = $props();
 
 	let draftTheme = $state(untrack(() => currentTheme));
+	let draftReduceMotion = $state(untrack(() => reduceMotion));
 	let draftAccentColor = $state(untrack(() => accentColor));
 	let draftTypography = $state(untrack(() => typography));
 
 	// Sync draft values when props change (e.g., on discard)
 	$effect(() => {
 		draftTheme = currentTheme;
+	});
+
+	$effect(() => {
+		draftReduceMotion = reduceMotion;
 	});
 
 	$effect(() => {
@@ -38,6 +46,14 @@
 		themeStore.set(newMode);
 		settingsChanges.setField('theme', currentTheme, newMode);
 		onFieldChange?.('theme', newMode);
+	}
+
+	function handleReduceMotionChange(checked: boolean) {
+		draftReduceMotion = checked;
+		// Apply immediately for visual feedback
+		motionStore.set(checked);
+		settingsChanges.setField('reduceMotion', reduceMotion, checked);
+		onFieldChange?.('reduceMotion', checked);
 	}
 
 	function handleAccentColorChange(event: Event) {
@@ -72,30 +88,61 @@
 			</select>
 		</FieldWrapper>
 
-		<FieldWrapper field="accentColor" label="Accent color">
+		<div class="flex items-center justify-between">
+			<div>
+				<p class="font-medium">Reduce motion</p>
+				<p class="text-sm text-surface-500 dark:text-surface-400">
+					Disable page transition animations
+				</p>
+			</div>
+			<Switch
+				name="reduceMotion"
+				checked={draftReduceMotion}
+				onCheckedChange={(e) => handleReduceMotionChange(e.checked)}
+			>
+				<Switch.Control>
+					<Switch.Thumb />
+				</Switch.Control>
+				<Switch.HiddenInput />
+			</Switch>
+		</div>
+
+		<div class="opacity-50">
+			<div class="flex items-center gap-2 mb-1">
+				<label for="accentColor" class="text-sm font-medium">Accent color</label>
+				<span class="text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700 text-surface-500 dark:text-surface-400">
+					Coming soon
+				</span>
+			</div>
 			<select
 				id="accentColor"
-				class="select w-full px-3 py-2 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-sm"
+				disabled
+				class="select w-full px-3 py-2 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-sm cursor-not-allowed"
 				value={draftAccentColor}
-				onchange={handleAccentColorChange}
 			>
 				<option value="indigo">Indigo</option>
 				<option value="emerald">Emerald</option>
 				<option value="rose">Rose</option>
 			</select>
-		</FieldWrapper>
+		</div>
 
-		<FieldWrapper field="typography" label="Typography">
+		<div class="opacity-50">
+			<div class="flex items-center gap-2 mb-1">
+				<label for="typography" class="text-sm font-medium">Typography</label>
+				<span class="text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700 text-surface-500 dark:text-surface-400">
+					Coming soon
+				</span>
+			</div>
 			<select
 				id="typography"
-				class="select w-full px-3 py-2 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-sm"
+				disabled
+				class="select w-full px-3 py-2 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-sm cursor-not-allowed"
 				value={draftTypography}
-				onchange={handleTypographyChange}
 			>
 				<option value="sans">Sans</option>
 				<option value="serif">Serif</option>
 				<option value="mono">Mono</option>
 			</select>
-		</FieldWrapper>
+		</div>
 	</div>
 </section>

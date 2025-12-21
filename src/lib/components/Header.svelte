@@ -74,7 +74,7 @@
 </script>
 
 <header
-	class="w-full bg-surface-100 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 shadow-sm"
+	class="w-full bg-surface-100 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 shadow-sm relative z-50"
 >
 	<div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
 		<a
@@ -103,7 +103,7 @@
 
 				<NotificationBell />
 
-				<div class="relative" bind:this={menuRoot}>
+				<div class="relative" style="view-transition-name: nav-avatar;" bind:this={menuRoot}>
 					<button
 						type="button"
 						class="flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-400"
@@ -127,6 +127,7 @@
 					{#if menuOpen}
 						<div
 							class="absolute right-0 mt-2 w-44 rounded-2xl bg-surface-50 dark:bg-surface-900 text-surface-700 dark:text-surface-200 shadow-lg border border-surface-200 dark:border-surface-700 z-50 p-2"
+							style="view-transition-name: avatar-menu;"
 							role="menu"
 							transition:fly={{ y: -6, duration: 150 }}
 						>

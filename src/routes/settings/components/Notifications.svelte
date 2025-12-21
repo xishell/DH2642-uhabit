@@ -104,7 +104,6 @@
 				if (success) {
 					pushStatus = 'unsubscribed';
 					draftPushEnabled = false;
-					settingsChanges.setField('pushEnabled', pushEnabled, false);
 					onFieldChange?.('pushEnabled', false);
 				}
 			} else {
@@ -112,10 +111,8 @@
 				if (success) {
 					pushStatus = 'subscribed';
 					draftPushEnabled = true;
-					settingsChanges.setField('pushEnabled', pushEnabled, true);
 					onFieldChange?.('pushEnabled', true);
 				} else {
-					// Check if permission was denied
 					pushStatus = await getPushStatus();
 				}
 			}
@@ -218,6 +215,7 @@
 					<Switch.Control>
 						<Switch.Thumb />
 					</Switch.Control>
+					<Switch.HiddenInput />
 				</Switch>
 			</div>
 
@@ -244,6 +242,7 @@
 					<Switch.Control>
 						<Switch.Thumb />
 					</Switch.Control>
+					<Switch.HiddenInput />
 				</Switch>
 			</div>
 
@@ -270,6 +269,7 @@
 					<Switch.Control>
 						<Switch.Thumb />
 					</Switch.Control>
+					<Switch.HiddenInput />
 				</Switch>
 			</div>
 
@@ -296,6 +296,7 @@
 					<Switch.Control>
 						<Switch.Thumb />
 					</Switch.Control>
+					<Switch.HiddenInput />
 				</Switch>
 			</div>
 		</div>

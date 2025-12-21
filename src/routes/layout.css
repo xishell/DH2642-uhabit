@@ -34,6 +34,85 @@
 	}
 }
 
+/* View Transitions API - Keep header static */
+header {
+	view-transition-name: header;
+}
+
+::view-transition-group(header),
+::view-transition-group(nav-avatar),
+::view-transition-group(avatar-menu) {
+	animation: none;
+}
+
+/* View Transitions API animations */
+
+/* Background to prevent black flash - matches theme */
+::view-transition-group(root) {
+	background: var(--color-surface-50);
+}
+
+.dark ::view-transition-group(root),
+:root[data-mode='dark'] ::view-transition-group(root) {
+	background: var(--color-surface-900);
+}
+
+/* Slide animations */
+@keyframes slide-out-to-left {
+	to {
+		transform: translateX(-100%);
+	}
+}
+
+@keyframes slide-in-from-right {
+	from {
+		transform: translateX(100%);
+	}
+}
+
+@keyframes slide-out-to-right {
+	to {
+		transform: translateX(100%);
+	}
+}
+
+@keyframes slide-in-from-left {
+	from {
+		transform: translateX(-100%);
+	}
+}
+
+/* Forward navigation: swipe left */
+:root[data-nav-direction='forward']::view-transition-old(root) {
+	animation: 250ms cubic-bezier(0.4, 0, 0.2, 1) both slide-out-to-left;
+}
+
+:root[data-nav-direction='forward']::view-transition-new(root) {
+	animation: 250ms cubic-bezier(0.4, 0, 0.2, 1) both slide-in-from-right;
+}
+
+/* Back navigation: swipe right */
+:root[data-nav-direction='back']::view-transition-old(root) {
+	animation: 250ms cubic-bezier(0.4, 0, 0.2, 1) both slide-out-to-right;
+}
+
+:root[data-nav-direction='back']::view-transition-new(root) {
+	animation: 250ms cubic-bezier(0.4, 0, 0.2, 1) both slide-in-from-left;
+}
+
+/* Reduce motion for users who prefer it (system or manual setting) */
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none;
+	}
+}
+
+:root[data-reduce-motion='true']::view-transition-old(root),
+:root[data-reduce-motion='true']::view-transition-new(root) {
+	animation: none;
+}
+
 /* Global focus states for accessibility */
 @layer base {
 	/* Visible focus ring for all interactive elements */

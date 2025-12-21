@@ -6,6 +6,7 @@
 	import type { UserSettingsResponse } from '$lib/auth/client';
 	import { STORAGE_KEYS } from '$lib/constants';
 	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
+	import { reduceMotion as motionStore } from '$lib/stores/reduceMotion';
 	import { settingsChanges, hasUnsavedChanges } from '$lib/stores/settingsChanges';
 	import { avatarUrl as avatarStore } from '$lib/stores/avatar';
 	import { toaster } from '$lib/stores/toaster';
@@ -25,6 +26,7 @@
 	let username = $state('');
 	let email = $state('');
 	let currentTheme = $state<ThemeMode>('system');
+	let currentReduceMotion = $state<boolean>(false);
 	let accentColor = $state('');
 	let typography = $state('');
 
@@ -65,6 +67,14 @@
 		typography = s.preferences?.typography ?? '';
 	}
 
+	function initializeLocalPreferences() {
+		// Subscribe once to get initial value
+		const unsubscribe = motionStore.subscribe((value) => {
+			currentReduceMotion = value;
+		});
+		unsubscribe();
+	}
+
 	function applyNotificationPrefs(notifPrefs: UserSettingsResponse['preferences']) {
 		const n = notifPrefs?.notificationPrefs;
 		pushEnabled = n?.pushEnabled ?? false;
@@ -83,6 +93,7 @@
 			username,
 			email,
 			theme: currentTheme,
+			reduceMotion: currentReduceMotion,
 			accentColor,
 			typography,
 			pushEnabled,
@@ -99,6 +110,7 @@
 		applyProfileSettings(settings);
 		applyPreferences(settings);
 		applyNotificationPrefs(settings.preferences);
+		initializeLocalPreferences();
 		if (setAsOriginal) captureOriginalValues();
 	};
 
@@ -244,6 +256,10 @@
 			currentTheme = v as ThemeMode;
 			themeStore.set(currentTheme);
 		},
+		reduceMotion: (v) => {
+			currentReduceMotion = v as boolean;
+			motionStore.set(currentReduceMotion);
+		},
 		accentColor: (v) => (accentColor = v as string),
 		typography: (v) => (typography = v as string),
 		pushEnabled: (v) => (pushEnabled = v as boolean),
@@ -299,6 +315,7 @@
 			<section id="preferences" class="scroll-mt-20">
 				<Preferences
 					{currentTheme}
+					reduceMotion={currentReduceMotion}
 					{accentColor}
 					{typography}
 					onFieldChange={(field, value) => fieldSetters[field]?.(value)}

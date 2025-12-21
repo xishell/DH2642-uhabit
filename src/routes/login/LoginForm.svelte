@@ -14,7 +14,11 @@
 
 	// Validation: either valid email or valid username (3-20 chars, alphanumeric + underscore)
 	const emailSchema = z.string().email();
-	const usernameSchema = z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/);
+	const usernameSchema = z
+		.string()
+		.min(3)
+		.max(20)
+		.regex(/^[a-zA-Z0-9_]+$/);
 
 	function validateIdentifier() {
 		identifierError = null;
@@ -72,7 +76,9 @@
 	<h1 class="text-2xl font-semibold text-center">Login</h1>
 
 	<div class="flex flex-col space-y-1">
-		<label for="identifier" class="text-sm font-medium text-surface-700-200">Email or Username</label>
+		<label for="identifier" class="text-sm font-medium text-surface-700-200"
+			>Email or Username</label
+		>
 		<input
 			id="identifier"
 			type="text"

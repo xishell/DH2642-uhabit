@@ -23,11 +23,7 @@
 
 	const currentPath = $derived($page.url.pathname);
 	const initials = $derived.by(() => {
-		const source =
-			user?.name?.trim() ||
-			user?.username?.trim() ||
-			user?.email?.trim() ||
-			'';
+		const source = user?.name?.trim() || user?.username?.trim() || user?.email?.trim() || '';
 		if (!source) return 'U';
 		const parts = source.split(/\s+/).filter(Boolean);
 		if (parts.length >= 2) {

@@ -82,7 +82,7 @@
 
 <!-- Outer wrapper controlling full page -->
 <div
-	class="min-h-screen bg-surface-50 dark:bg-surface-900 text-surface-900 dark:text-surface-50 flex flex-col"
+	class="min-h-dvh bg-surface-50 dark:bg-surface-900 text-surface-900 dark:text-surface-50 flex flex-col"
 >
 	<Header user={data.user} />
 

@@ -273,11 +273,11 @@
 	{/if}
 
 	<!-- MAIN CONTENT -->
-	<main class="flex-1 p-6 max-w-4xl space-y-16" class:pb-24={isMobile}>
+	<main class="flex-1 p-6 max-w-4xl space-y-16" class:pb-40={isMobile}>
 		{#if isLoading}
 			<SettingsSkeleton />
 		{:else}
-			<section id="profile">
+			<section id="profile" class="scroll-mt-20">
 				<PublicProfile
 					{displayName}
 					{bio}
@@ -288,7 +288,7 @@
 				/>
 			</section>
 			<hr class="border-surface-200 dark:border-surface-700" />
-			<section id="account">
+			<section id="account" class="scroll-mt-20">
 				<Account
 					{username}
 					{email}
@@ -296,7 +296,7 @@
 				/>
 			</section>
 			<hr class="border-surface-200 dark:border-surface-700" />
-			<section id="preferences">
+			<section id="preferences" class="scroll-mt-20">
 				<Preferences
 					{currentTheme}
 					{accentColor}
@@ -305,7 +305,7 @@
 				/>
 			</section>
 			<hr class="border-surface-200 dark:border-surface-700" />
-			<section id="notifications">
+			<section id="notifications" class="scroll-mt-20">
 				<Notifications
 					{pushEnabled}
 					{habitReminders}
@@ -324,5 +324,5 @@
 	{/if}
 
 	<!-- FLOATING SAVE BAR -->
-	<SaveBar onSave={handleSaveAll} onDiscard={handleDiscardAll} {isSaving} />
+	<SaveBar onSave={handleSaveAll} onDiscard={handleDiscardAll} {isSaving} {isMobile} />
 </div>

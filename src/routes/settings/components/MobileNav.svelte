@@ -1,28 +1,78 @@
 <script lang="ts">
-	import { Collapsible } from '@skeletonlabs/skeleton-svelte';
-	import { ArrowUpDownIcon } from '@lucide/svelte';
+	import { onMount } from 'svelte';
+	import { User, Settings, Palette, Bell } from 'lucide-svelte';
 
-	function go(id: string) {
-		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+	const sections = [
+		{ id: 'profile', label: 'Profile', icon: User },
+		{ id: 'account', label: 'Account', icon: Settings },
+		{ id: 'preferences', label: 'Theme', icon: Palette },
+		{ id: 'notifications', label: 'Alerts', icon: Bell }
+	];
+
+	let activeSection = $state('profile');
+
+	function scrollTo(id: string) {
+		const el = document.getElementById(id);
+		if (el) {
+			el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			activeSection = id;
+		}
 	}
+
+	onMount(() => {
+		const sectionEls = sections
+			.map((s) => document.getElementById(s.id))
+			.filter((el): el is HTMLElement => el !== null);
+
+		if (sectionEls.length === 0) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				// Find the most visible section
+				const visible = entries
+					.filter((e) => e.isIntersecting)
+					.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+				if (visible.length > 0) {
+					activeSection = visible[0].target.id;
+				}
+			},
+			{
+				rootMargin: '-20% 0px -60% 0px',
+				threshold: [0, 0.25, 0.5, 0.75, 1]
+			}
+		);
+
+		sectionEls.forEach((el) => observer.observe(el));
+
+		return () => observer.disconnect();
+	});
 </script>
 
-<div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-	<Collapsible class="card preset-filled-surface-100-900 px-4 py-3 w-64 shadow-xl">
-		<div class="flex justify-between items-center">
-			<p class="font-semibold text-sm">Settings</p>
-			<Collapsible.Trigger class="btn-icon hover:preset-tonal scale-90">
-				<ArrowUpDownIcon class="size-4" />
-			</Collapsible.Trigger>
-		</div>
-		<Collapsible.Content class="mt-3 flex flex-col gap-2">
-			<button class="anchor text-left text-sm" onclick={() => go('profile')}>Public profile</button>
-			<button class="anchor text-left text-sm" onclick={() => go('account')}>Account</button>
-			<button class="anchor text-left text-sm" onclick={() => go('preferences')}>Preferences</button
+<nav
+	class="fixed bottom-0 left-0 right-0 z-40 bg-surface-100 dark:bg-surface-800 border-t border-surface-200 dark:border-surface-700 safe-area-bottom"
+>
+	<div class="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
+		{#each sections as section}
+			{@const isActive = activeSection === section.id}
+			<button
+				type="button"
+				class="flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors"
+				class:text-primary-600={isActive}
+				class:dark:text-primary-400={isActive}
+				class:text-surface-500={!isActive}
+				class:dark:text-surface-400={!isActive}
+				onclick={() => scrollTo(section.id)}
 			>
-			<button class="anchor text-left text-sm" onclick={() => go('notifications')}
-				>Notifications</button
-			>
-		</Collapsible.Content>
-	</Collapsible>
-</div>
+				<section.icon class="size-5" strokeWidth={isActive ? 2.5 : 2} />
+				<span class="text-xs font-medium">{section.label}</span>
+			</button>
+		{/each}
+	</div>
+</nav>
+
+<style>
+	.safe-area-bottom {
+		padding-bottom: env(safe-area-inset-bottom, 0);
+	}
+</style>

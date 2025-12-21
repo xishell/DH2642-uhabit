@@ -6,9 +6,10 @@
 		onSave: () => Promise<void>;
 		onDiscard: () => void;
 		isSaving?: boolean;
+		isMobile?: boolean;
 	}
 
-	let { onSave, onDiscard, isSaving = false }: Props = $props();
+	let { onSave, onDiscard, isSaving = false, isMobile = false }: Props = $props();
 
 	const fieldLabels: Record<string, string> = {
 		displayName: 'Display name',
@@ -40,7 +41,9 @@
 
 {#if $hasUnsavedChanges}
 	<div
-		class="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none"
+		class="fixed left-0 right-0 z-50 p-4 pointer-events-none"
+		class:bottom-0={!isMobile}
+		class:bottom-16={isMobile}
 		transition:fly={{ y: 100, duration: 200 }}
 	>
 		<div

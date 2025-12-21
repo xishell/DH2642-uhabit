@@ -13,6 +13,7 @@ Habit tracking app built with SvelteKit and Cloudflare Workers/D1, featuring Bet
 ## Features
 
 ### Core Habit Tracking
+
 - **Create and manage habits** with customizable titles, notes, and colors
 - **Two measurement types**:
   - **Boolean habits** – Simple checkbox completion (e.g., "Meditate")
@@ -22,6 +23,7 @@ Habit tracking app built with SvelteKit and Cloudflare Workers/D1, featuring Bet
 - **Categories** – Group habits by custom categories
 
 ### Daily Overview Dashboard
+
 - Today's habit checklist with real-time completion status
 - Toggle between Habits and Goals views
 - Multi-ring progress visualization showing daily completion
@@ -29,12 +31,14 @@ Habit tracking app built with SvelteKit and Cloudflare Workers/D1, featuring Bet
 - Incremental progress tracking for numeric habits
 
 ### Planning Page
+
 - Complete list of all habits and goals
 - Create, edit, and delete habits/goals via modal dialogs
 - Floating action button (FAB) menu for quick actions
 - Daily motivational quote feature
 
 ### Statistics & Analytics
+
 - **Date range picker** – View stats for custom periods
 - **Period views** – Daily, weekly, and monthly statistics
 - **Heatmap visualization** – Activity calendar showing completion patterns
@@ -47,15 +51,16 @@ Habit tracking app built with SvelteKit and Cloudflare Workers/D1, featuring Bet
 - **Advanced insights** – Volatility analysis, best performance windows, milestones, recovery speed
 
 ### User Accounts & Settings
+
 - Email/password authentication with Better Auth
 - Username-based login support
 - Profile customization (display name, pronouns, bio, avatar)
 - Theme preferences (light/dark/system)
 - Country selection for holiday integration
-- Public/private profile visibility
 - Avatar upload with Cloudflare R2 storage
 
 ### Notifications System
+
 - **In-app notifications** – Persistent notification center with unread count
 - **Notification types**:
   - Habit reminders
@@ -66,11 +71,13 @@ Habit tracking app built with SvelteKit and Cloudflare Workers/D1, featuring Bet
 - **Configurable preferences** – Enable/disable notification types and reminder times
 
 ### Holiday Integration
+
 - Automatic holiday detection based on user's country
 - Cached holiday data via Nager.Date API
 - Smart suggestions to reschedule habits on holidays
 
 ### Technical Features
+
 - Built with **Svelte 5**, **Tailwind CSS 4**, and **Skeleton UI**
 - Auth via **Better Auth** with password security (Have I Been Pwned integration)
 - **Cloudflare D1** (SQLite) + **Drizzle ORM** with migration tooling

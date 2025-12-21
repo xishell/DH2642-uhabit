@@ -242,35 +242,39 @@ uhabit/
 
 The app uses 11 database tables defined in `src/lib/server/db/schema.ts`:
 
-| Table | Purpose |
-|-------|---------|
-| `user` | User accounts (Better Auth compatible) |
-| `session` | User sessions |
-| `account` | OAuth/credentials (Better Auth) |
-| `verification` | Email verification tokens |
-| `goal` | User goals/objectives |
-| `category` | Habit categories |
-| `habit` | Habits to track |
-| `habitCompletion` | Habit completion records |
-| `notification` | In-app notifications |
-| `pushSubscription` | Web Push subscriptions |
-| `holidayCache` | Cached holiday data |
-| `statsCache` | Cached computed statistics |
+| Table              | Purpose                                |
+| ------------------ | -------------------------------------- |
+| `user`             | User accounts (Better Auth compatible) |
+| `session`          | User sessions                          |
+| `account`          | OAuth/credentials (Better Auth)        |
+| `verification`     | Email verification tokens              |
+| `goal`             | User goals/objectives                  |
+| `category`         | Habit categories                       |
+| `habit`            | Habits to track                        |
+| `habitCompletion`  | Habit completion records               |
+| `notification`     | In-app notifications                   |
+| `pushSubscription` | Web Push subscriptions                 |
+| `holidayCache`     | Cached holiday data                    |
+| `statsCache`       | Cached computed statistics             |
 
 ## Key Architectural Patterns
 
 ### Presenter Pattern (MVP)
+
 The app uses presenters to encapsulate business logic separately from UI components:
+
 - `overviewPresenter.ts` – Manages overview state and habit completion
 - `habitsPresenter.ts` – Manages habit planning and CRUD operations
 - `statisticsPresenter.ts` – Manages statistics computation and caching
 
 ### Multi-Layer Caching
+
 - **Client**: IndexedDB for statistics caching
 - **Edge**: Cloudflare KV for quotes and rate limits
 - **Server**: Database-backed stats cache with TTL
 
 ### API Design
+
 - RESTful endpoints with Zod validation
 - Rate limiting via Cloudflare KV
 - Pagination support (default 20, max 100)

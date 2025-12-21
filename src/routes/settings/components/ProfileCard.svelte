@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte';
 	import { toaster } from '$lib/stores/toaster';
 	import { avatarUrl as avatarStore } from '$lib/stores/avatar';
@@ -93,8 +92,6 @@
 				title: 'Avatar updated',
 				description: 'Your profile picture has been updated.'
 			});
-
-			await invalidateAll();
 		} catch (error) {
 			console.error('Avatar upload failed:', error);
 			toaster.error({

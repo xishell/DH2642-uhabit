@@ -13,12 +13,20 @@
 	html,
 	body {
 		overflow-x: hidden;
+		min-height: 100%;
+		min-height: 100dvh;
 	}
 
 	html {
+		background-color: var(--color-surface-50);
 		transition:
 			background-color 0.3s ease,
 			color 0.3s ease;
+	}
+
+	html.dark,
+	html[data-mode='dark'] {
+		background-color: var(--color-surface-900);
 	}
 
 	body,
@@ -54,12 +62,11 @@ header {
 
 /* Background to prevent black flash - matches theme */
 ::view-transition-group(root) {
-	background: var(--color-surface-50);
+	background: var(--color-surface-900);
 }
 
-.dark ::view-transition-group(root),
-:root[data-mode='dark'] ::view-transition-group(root) {
-	background: var(--color-surface-900);
+:root:not(.dark):not([data-mode='dark'])::view-transition-group(root) {
+	background: var(--color-surface-50);
 }
 
 /* Slide animations */

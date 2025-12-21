@@ -50,9 +50,7 @@
 
 	function handleReduceMotionChange(checked: boolean) {
 		draftReduceMotion = checked;
-		// Apply immediately for visual feedback
 		motionStore.set(checked);
-		settingsChanges.setField('reduceMotion', reduceMotion, checked);
 		onFieldChange?.('reduceMotion', checked);
 	}
 
@@ -110,7 +108,9 @@
 		<div class="opacity-50">
 			<div class="flex items-center gap-2 mb-1">
 				<label for="accentColor" class="text-sm font-medium">Accent color</label>
-				<span class="text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700 text-surface-500 dark:text-surface-400">
+				<span
+					class="text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700 text-surface-500 dark:text-surface-400"
+				>
 					Coming soon
 				</span>
 			</div>
@@ -129,7 +129,9 @@
 		<div class="opacity-50">
 			<div class="flex items-center gap-2 mb-1">
 				<label for="typography" class="text-sm font-medium">Typography</label>
-				<span class="text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700 text-surface-500 dark:text-surface-400">
+				<span
+					class="text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700 text-surface-500 dark:text-surface-400"
+				>
 					Coming soon
 				</span>
 			</div>

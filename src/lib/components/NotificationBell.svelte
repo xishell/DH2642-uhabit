@@ -81,7 +81,9 @@
 				<div
 					class="flex items-center justify-between px-4 py-3 sm:py-3 border-b border-surface-200 dark:border-surface-700"
 				>
-					<Popover.Title class="text-base sm:text-sm font-semibold text-surface-900 dark:text-surface-100">
+					<Popover.Title
+						class="text-base sm:text-sm font-semibold text-surface-900 dark:text-surface-100"
+					>
 						Notifications
 					</Popover.Title>
 					{#if notificationStore.unreadCount > 0}

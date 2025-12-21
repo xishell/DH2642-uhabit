@@ -85,7 +85,10 @@
 				{/key}
 			</div>
 			{#if trends.length > 0}
-				<p class="text-xs text-surface-400 mt-2 truncate" title="{trends[0].title}, last {trends[0].spark.length} periods">
+				<p
+					class="text-xs text-surface-400 mt-2 truncate"
+					title="{trends[0].title}, last {trends[0].spark.length} periods"
+				>
 					{trends[0].title}, last {trends[0].spark.length} periods
 				</p>
 			{/if}

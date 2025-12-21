@@ -2,12 +2,13 @@
 	import type { HabitWithStatus } from '$lib/types/habit';
 	import { tweened } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
+	import { untrack } from 'svelte';
 
 	let {
 		single = [],
 		progressive = [],
-		maxRings = 4, // Maximum number of progressive habit rings to show
-		showInnerRings = true // Whether to show individual progressive habit rings
+		maxRings = 4,
+		showInnerRings = true
 	}: {
 		single?: HabitWithStatus[];
 		progressive?: HabitWithStatus[];
@@ -16,6 +17,7 @@
 	} = $props();
 
 	const animationDuration = 250;
+	const progressAnimationDuration = 500;
 	const staggerDelay = 80;
 
 	const total = $derived(single.length + progressive.length);
@@ -28,6 +30,21 @@
 			}, 0)
 	);
 	const totalPct = $derived(total === 0 ? 0 : Math.round((completionSum / total) * 100));
+
+	const outerPctTweened = tweened(0, { duration: 0, easing: cubicOut });
+	let initialLoadDone = false;
+
+	$effect(() => {
+		const pct = totalPct;
+		if (!initialLoadDone) {
+			outerPctTweened.set(pct, { duration: 0 });
+			setTimeout(() => {
+				initialLoadDone = true;
+			}, 50);
+		} else {
+			outerPctTweened.set(pct, { duration: progressAnimationDuration });
+		}
+	});
 
 	const progressiveRings = $derived(
 		progressive.slice(0, maxRings).map((p) => ({
@@ -47,13 +64,14 @@
 	const outerStrokeWidth = 18;
 	const innerStrokeWidth = 12;
 	const outerInnerGap = 8;
+	const innerRingSpacing = 10;
 
 	function getRingRadius(index: number): number {
 		if (index === 0) return (size - outerStrokeWidth) / 2;
 		const baseRadius = (size - outerStrokeWidth) / 2;
 		const firstInnerRadius =
 			baseRadius - outerStrokeWidth / 2 - outerInnerGap - innerStrokeWidth / 2;
-		return firstInnerRadius - (index - 1) * innerStrokeWidth;
+		return firstInnerRadius - (index - 1) * innerRingSpacing;
 	}
 
 	const outerRadiusValue = (size - outerStrokeWidth) / 2;
@@ -75,27 +93,52 @@
 
 	const outerRadius = $derived(getRingRadius(0));
 	const outerArcPath = $derived(getArcPath(outerRadius));
-	const outerProgress = $derived(getProgressValues(outerRadius, totalPct));
+	const outerProgress = $derived(getProgressValues(outerRadius, $outerPctTweened));
 	const svgHeight = svgHeightValue;
 
-	const ring0Radius = tweened(getRingRadius(1), { duration: animationDuration, easing: cubicOut });
-	const ring1Radius = tweened(getRingRadius(2), { duration: animationDuration, easing: cubicOut });
-	const ring2Radius = tweened(getRingRadius(3), { duration: animationDuration, easing: cubicOut });
-	const ring3Radius = tweened(getRingRadius(4), { duration: animationDuration, easing: cubicOut });
+	const collapsedRadius = (size - outerStrokeWidth) / 2;
+	const ring0Radius = tweened(collapsedRadius, { duration: animationDuration, easing: cubicOut });
+	const ring1Radius = tweened(collapsedRadius, { duration: animationDuration, easing: cubicOut });
+	const ring2Radius = tweened(collapsedRadius, { duration: animationDuration, easing: cubicOut });
+	const ring3Radius = tweened(collapsedRadius, { duration: animationDuration, easing: cubicOut });
 
-	const ring0Opacity = tweened(1, { duration: animationDuration, easing: cubicOut });
-	const ring1Opacity = tweened(1, { duration: animationDuration, easing: cubicOut });
-	const ring2Opacity = tweened(1, { duration: animationDuration, easing: cubicOut });
-	const ring3Opacity = tweened(1, { duration: animationDuration, easing: cubicOut });
+	const ring0Opacity = tweened(0, { duration: animationDuration, easing: cubicOut });
+	const ring1Opacity = tweened(0, { duration: animationDuration, easing: cubicOut });
+	const ring2Opacity = tweened(0, { duration: animationDuration, easing: cubicOut });
+	const ring3Opacity = tweened(0, { duration: animationDuration, easing: cubicOut });
+
+	const ring0Pct = tweened(0, { duration: 0, easing: cubicOut });
+	const ring1Pct = tweened(0, { duration: 0, easing: cubicOut });
+	const ring2Pct = tweened(0, { duration: 0, easing: cubicOut });
+	const ring3Pct = tweened(0, { duration: 0, easing: cubicOut });
 
 	const radiusStores = [ring0Radius, ring1Radius, ring2Radius, ring3Radius];
 	const opacityStores = [ring0Opacity, ring1Opacity, ring2Opacity, ring3Opacity];
+	const pctStores = [ring0Pct, ring1Pct, ring2Pct, ring3Pct];
+
+	let innerInitialLoadDone = false;
+	$effect(() => {
+		const rings = progressiveRings;
+		const duration = innerInitialLoadDone ? progressAnimationDuration : 0;
+
+		for (let i = 0; i < maxRings; i++) {
+			const pct = rings[i]?.percentage ?? 0;
+			pctStores[i].set(pct, { duration });
+		}
+
+		if (!innerInitialLoadDone) {
+			setTimeout(() => {
+				innerInitialLoadDone = true;
+			}, 50);
+		}
+	});
 
 	$effect(() => {
-		const numRings = Math.min(progressiveRings.length, maxRings);
+		const shouldShow = showInnerRings;
 		const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+		const numRings = untrack(() => Math.min(progressive.length, maxRings));
 
-		if (showInnerRings) {
+		if (shouldShow) {
 			for (let i = 0; i < numRings; i++) {
 				const delay = i * staggerDelay;
 				const id = setTimeout(() => {
@@ -105,14 +148,9 @@
 				timeoutIds.push(id);
 			}
 		} else {
-			for (let i = numRings - 1; i >= 0; i--) {
-				const delay = (numRings - 1 - i) * staggerDelay;
-				const targetRadius = i === 0 ? outerRadius : getRingRadius(i);
-				const id = setTimeout(() => {
-					radiusStores[i].set(targetRadius);
-					opacityStores[i].set(0);
-				}, delay);
-				timeoutIds.push(id);
+			for (let i = 0; i < maxRings; i++) {
+				opacityStores[i].set(0);
+				radiusStores[i].set(collapsedRadius);
 			}
 		}
 
@@ -124,7 +162,6 @@
 	<div
 		class="bg-surface-100 dark:bg-surface-800 pt-4 px-6 rounded-xl flex items-end justify-center shadow w-full max-w-2xl"
 	>
-		<!-- Multi-Ring Progress Visualization -->
 		<div class="mx-auto" style="width: {size}px; height: {svgHeight}px;">
 			<svg
 				viewBox="0 0 {size} {svgHeight}"
@@ -132,8 +169,6 @@
 				class="block mx-auto"
 				style="width: 100%; height: 100%;"
 			>
-				<!-- Outer Ring: Total Daily Progress -->
-				<!-- Background arc -->
 				<path
 					d={outerArcPath}
 					fill="none"
@@ -142,7 +177,6 @@
 					stroke-linecap="round"
 				/>
 
-				<!-- Progress arc -->
 				<path
 					d={outerArcPath}
 					fill="none"
@@ -151,10 +185,27 @@
 					stroke-linecap="round"
 					stroke-dasharray={outerProgress.circumference}
 					stroke-dashoffset={outerProgress.offset}
-					style="transition: stroke-dashoffset 0.5s ease;"
 				/>
 
-				<!-- Inner Rings: Individual Progressive Habits -->
+				<text
+					x={size / 2}
+					y={svgHeight - 45}
+					text-anchor="middle"
+					class="fill-surface-900 dark:fill-surface-50 text-4xl font-bold"
+					style="font-size: 2.25rem;"
+				>
+					{Math.round($outerPctTweened)}%
+				</text>
+				<text
+					x={size / 2}
+					y={svgHeight - 20}
+					text-anchor="middle"
+					class="fill-surface-500 dark:fill-surface-400 text-sm"
+					style="font-size: 0.875rem;"
+				>
+					completed today
+				</text>
+
 				{#each progressiveRings as ring, index}
 					{@const animatedRadius =
 						index === 0
@@ -172,32 +223,25 @@
 								: index === 2
 									? $ring2Opacity
 									: $ring3Opacity}
+					{@const animatedPct =
+						index === 0 ? $ring0Pct : index === 1 ? $ring1Pct : index === 2 ? $ring2Pct : $ring3Pct}
 					{@const ringCircumference = Math.PI * animatedRadius}
-					{@const ringOffset = ringCircumference - (ring.percentage / 100) * ringCircumference}
+					{@const ringOffset = ringCircumference - (animatedPct / 100) * ringCircumference}
 					{@const ringPath = getArcPath(animatedRadius)}
 					{@const ringColor = ring.color || defaultColors[index % defaultColors.length]}
 
-					<!-- Background arc -->
-					<path
-						d={ringPath}
-						fill="none"
-						class="stroke-surface-300/50 dark:stroke-surface-700/50"
-						stroke-width={innerStrokeWidth}
-						stroke-linecap="round"
-						style="opacity: {animatedOpacity};"
-					/>
-
-					<!-- Progress arc -->
-					<path
-						d={ringPath}
-						fill="none"
-						stroke={ringColor}
-						stroke-width={innerStrokeWidth}
-						stroke-linecap="round"
-						stroke-dasharray={ringCircumference}
-						stroke-dashoffset={ringOffset}
-						style="opacity: {animatedOpacity}; transition: stroke-dashoffset 0.5s ease;"
-					/>
+					{#if animatedPct > 0}
+						<path
+							d={ringPath}
+							fill="none"
+							stroke={ringColor}
+							stroke-width={innerStrokeWidth}
+							stroke-linecap="round"
+							stroke-dasharray={ringCircumference}
+							stroke-dashoffset={ringOffset}
+							style="opacity: {animatedOpacity};"
+						/>
+					{/if}
 				{/each}
 			</svg>
 		</div>

@@ -52,7 +52,12 @@
 			{#each activity as item (item.habitId)}
 				<div class="p-3 flex items-center justify-between gap-3 min-w-0">
 					<div class="min-w-0">
-						<p class="font-semibold text-surface-900 dark:text-surface-50 truncate" title={item.title}>{item.title}</p>
+						<p
+							class="font-semibold text-surface-900 dark:text-surface-50 truncate"
+							title={item.title}
+						>
+							{item.title}
+						</p>
 						<p class="text-xs text-surface-400">{item.meta}</p>
 					</div>
 					<span

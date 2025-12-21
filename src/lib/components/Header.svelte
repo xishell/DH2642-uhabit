@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { fly } from 'svelte/transition';
+	import { fly, slide } from 'svelte/transition';
 	import { routes } from '$lib/routes';
 	import { signOut } from '$lib/auth/client';
-	import { LogOutIcon } from '@lucide/svelte';
+	import { LogOutIcon, MenuIcon, XIcon } from '@lucide/svelte';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte';
 	import { avatarUrl } from '$lib/stores/avatar';
 	import NotificationBell from './NotificationBell.svelte';
@@ -39,6 +39,7 @@
 	});
 
 	let menuOpen = $state(false);
+	let mobileMenuOpen = $state(false);
 	let menuRoot = $state<HTMLDivElement | null>(null);
 
 	onMount(() => {
@@ -69,7 +70,6 @@
 		}
 	}
 
-	// Only hide nav on login/register pages, but allow nav if user exists
 	const showNav = $derived(!(currentPath === routes.login || currentPath === routes.register));
 </script>
 
@@ -77,7 +77,6 @@
 	class="w-full bg-surface-100 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 shadow-sm"
 >
 	<div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-		<!-- UHabit title left -->
 		<a
 			href={routes.overview}
 			data-sveltekit-preload-data="hover"
@@ -86,9 +85,8 @@
 			UHabit
 		</a>
 
-		<!-- Nav items right -->
 		{#if showNav}
-			<nav class="flex items-center gap-6">
+			<nav class="hidden md:flex items-center gap-6">
 				{#each navItems as item}
 					<a
 						href={item.href}
@@ -158,6 +156,85 @@
 					{/if}
 				</div>
 			</nav>
+
+			<div class="flex md:hidden items-center gap-3">
+				<NotificationBell />
+
+				<button
+					type="button"
+					class="p-2 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
+					onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
+					aria-expanded={mobileMenuOpen}
+					aria-label="Toggle menu"
+				>
+					{#if mobileMenuOpen}
+						<XIcon class="size-5 text-surface-700 dark:text-surface-300" />
+					{:else}
+						<MenuIcon class="size-5 text-surface-700 dark:text-surface-300" />
+					{/if}
+				</button>
+			</div>
 		{/if}
 	</div>
+
+	{#if showNav && mobileMenuOpen}
+		<div
+			class="md:hidden border-t border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-900"
+			transition:slide={{ duration: 200 }}
+		>
+			<nav class="max-w-6xl mx-auto px-6 py-3 flex flex-col gap-1">
+				{#each navItems as item}
+					<a
+						href={item.href}
+						data-sveltekit-preload-data="hover"
+						class="px-3 py-2 rounded-lg text-sm transition-all duration-200"
+						class:bg-primary-100={currentPath.startsWith(item.href)}
+						class:dark:bg-primary-900={currentPath.startsWith(item.href)}
+						class:text-primary-600={currentPath.startsWith(item.href)}
+						class:dark:text-primary-400={currentPath.startsWith(item.href)}
+						class:text-surface-600={!currentPath.startsWith(item.href)}
+						class:dark:text-surface-400={!currentPath.startsWith(item.href)}
+						class:hover:bg-surface-200={!currentPath.startsWith(item.href)}
+						class:dark:hover:bg-surface-800={!currentPath.startsWith(item.href)}
+						onclick={() => (mobileMenuOpen = false)}
+					>
+						{item.label}
+					</a>
+				{/each}
+
+				<div class="h-px bg-surface-200 dark:bg-surface-700 my-2" aria-hidden="true"></div>
+
+				<a
+					href={routes.settings}
+					data-sveltekit-preload-data="hover"
+					class="px-3 py-2 rounded-lg text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors flex items-center gap-3"
+					onclick={() => (mobileMenuOpen = false)}
+				>
+					<Avatar class="h-6 w-6">
+						{#if $avatarUrl}
+							<Avatar.Image src={$avatarUrl} alt="User avatar" />
+						{/if}
+						<Avatar.Fallback
+							class="bg-primary-500 text-white font-bold text-xs flex items-center justify-center"
+						>
+							{initials}
+						</Avatar.Fallback>
+					</Avatar>
+					Settings
+				</a>
+
+				<button
+					type="button"
+					class="px-3 py-2 rounded-lg text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors flex items-center gap-3 w-full text-left"
+					onclick={() => {
+						mobileMenuOpen = false;
+						handleLogout();
+					}}
+				>
+					<LogOutIcon class="size-4" />
+					Logout
+				</button>
+			</nav>
+		</div>
+	{/if}
 </header>

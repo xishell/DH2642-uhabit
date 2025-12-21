@@ -5,7 +5,7 @@
 	import { settingsChanges } from '$lib/stores/settingsChanges';
 
 	interface Props {
-		displayName: string;
+		name: string;
 		bio: string;
 		pronouns: string;
 		imageUrl?: string | null;
@@ -13,15 +13,15 @@
 		onAvatarChange?: (newUrl: string | null) => void;
 	}
 
-	let { displayName, bio, pronouns, imageUrl, onFieldChange, onAvatarChange }: Props = $props();
+	let { name, bio, pronouns, imageUrl, onFieldChange, onAvatarChange }: Props = $props();
 
-	let draftName = $state(untrack(() => displayName));
+	let draftName = $state(untrack(() => name));
 	let draftBio = $state(untrack(() => bio));
 	let draftPronouns = $state(untrack(() => pronouns));
 
 	// Sync draft values when props change (e.g., on discard)
 	$effect(() => {
-		draftName = displayName;
+		draftName = name;
 	});
 
 	$effect(() => {
@@ -35,8 +35,8 @@
 	function handleNameChange(e: Event) {
 		const value = (e.target as HTMLInputElement).value;
 		draftName = value;
-		settingsChanges.setField('displayName', displayName, value);
-		onFieldChange?.('displayName', value);
+		settingsChanges.setField('name', name, value);
+		onFieldChange?.('name', value);
 	}
 
 	function handleBioChange(e: Event) {
@@ -59,13 +59,13 @@
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 		<div class="card p-6 space-y-4">
-			<FieldWrapper field="displayName" label="Display name">
+			<FieldWrapper field="name" label="Display name">
 				<input
-					id="displayName"
+					id="name"
 					class="input w-full border border-surface-300 dark:border-surface-600"
 					value={draftName}
 					oninput={handleNameChange}
-					maxlength={20}
+					maxlength={100}
 				/>
 			</FieldWrapper>
 
@@ -94,7 +94,7 @@
 		</div>
 
 		<ProfileCard
-			displayName={draftName}
+			name={draftName}
 			bio={draftBio}
 			pronouns={draftPronouns}
 			{imageUrl}

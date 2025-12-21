@@ -12,7 +12,7 @@
 	let { onSave, onDiscard, isSaving = false, isMobile = false }: Props = $props();
 
 	const fieldLabels: Record<string, string> = {
-		displayName: 'Display name',
+		name: 'Display name',
 		bio: 'Bio',
 		pronouns: 'Pronouns',
 		username: 'Username',

@@ -1,7 +1,9 @@
 import { createAuthClient } from 'better-auth/client';
+import { usernameClient } from 'better-auth/client/plugins';
 
 export const authClient = createAuthClient({
-	baseURL: typeof window !== 'undefined' ? window.location.origin : ''
+	baseURL: typeof window !== 'undefined' ? window.location.origin : '',
+	plugins: [usernameClient()]
 });
 
 export interface SignUpData {
@@ -11,7 +13,7 @@ export interface SignUpData {
 }
 
 export async function signUp(data: SignUpData) {
-	// Use username as the Better Auth 'name' field
+	// Use username as the Better Auth 'name' field (display name)
 	const result = await authClient.signUp.email(
 		{
 			email: data.email,
@@ -20,8 +22,7 @@ export async function signUp(data: SignUpData) {
 		},
 		{
 			body: {
-				username: data.username,
-				displayName: data.username // Default displayName to username on registration
+				username: data.username
 			}
 		}
 	);
@@ -33,11 +34,19 @@ export async function signUp(data: SignUpData) {
 	return result.data;
 }
 
-export async function signIn(email: string, password: string) {
-	const result = await authClient.signIn.email({
-		email,
-		password
-	});
+export async function signIn(emailOrUsername: string, password: string) {
+	const isEmail = emailOrUsername.includes('@');
+
+	const result = isEmail
+		? await authClient.signIn.email({
+				email: emailOrUsername,
+				password
+			})
+		: await authClient.signIn.username({
+				username: emailOrUsername,
+				password
+			});
+
 	if (result.error) {
 		throw new Error(result.error.message || 'Sign in failed');
 	}
@@ -82,7 +91,7 @@ export interface UserPreferences {
 
 export interface UserSettings {
 	username?: string;
-	displayName?: string;
+	name?: string;
 	pronouns?: string;
 	theme?: 'light' | 'dark' | 'system';
 	country?: string;
@@ -91,7 +100,7 @@ export interface UserSettings {
 
 export interface UserSettingsResponse {
 	username: string | null;
-	displayName: string | null;
+	name: string;
 	pronouns: string | null;
 	theme: 'light' | 'dark' | 'system';
 	country: string | null;

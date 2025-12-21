@@ -21,7 +21,7 @@
 	import MobileNav from './components/MobileNav.svelte';
 
 	// Current values (editable)
-	let displayName = $state('');
+	let name = $state('');
 	let bio = $state('');
 	let pronouns = $state('');
 	let username = $state('');
@@ -54,7 +54,7 @@
 	const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000;
 
 	function applyProfileSettings(s: UserSettingsResponse) {
-		displayName = s.displayName ?? '';
+		name = s.name ?? '';
 		pronouns = s.pronouns ?? '';
 		username = s.username ?? '';
 		avatarUrl = s.imageUrl ?? null;
@@ -91,7 +91,7 @@
 
 	function captureOriginalValues() {
 		originalValues = {
-			displayName,
+			name,
 			bio,
 			pronouns,
 			username,
@@ -210,9 +210,9 @@
 		isSaving = true;
 		try {
 			const updated = await updatePreferences({
-				displayName,
-				pronouns,
-				username,
+				name: name || undefined,
+				pronouns: pronouns || undefined,
+				username: username || undefined,
 				theme: currentTheme,
 				country: country || undefined,
 				preferences: {
@@ -254,7 +254,7 @@
 
 	// Field setters for discarding changes
 	const fieldSetters: Record<string, (v: unknown) => void> = {
-		displayName: (v) => (displayName = v as string),
+		name: (v) => (name = v as string),
 		bio: (v) => (bio = v as string),
 		pronouns: (v) => (pronouns = v as string),
 		username: (v) => (username = v as string),
@@ -305,7 +305,7 @@
 		{:else}
 			<section id="profile" class="scroll-mt-20">
 				<PublicProfile
-					{displayName}
+					{name}
 					{bio}
 					{pronouns}
 					imageUrl={avatarUrl}

@@ -1,52 +1,67 @@
 <script lang="ts">
 	import '@skeletonlabs/skeleton-svelte'; // ensure skeleton is imported
 	import { signIn } from '$lib/auth/client';
+	import { toaster } from '$lib/stores/toaster';
 	import { z } from 'zod';
 
-	let email = $state('');
+	let identifier = $state('');
 	let password = $state('');
 	let loading = $state(false);
-	let errorMessage = $state<string | null>(null);
-	let emailError = $state<string | null>(null);
+	let identifierError = $state<string | null>(null);
 
-	// Email validation schema
-	const emailSchema = z.string().email('Please enter a valid email address').toLowerCase();
+	// Form is ready when both fields have content
+	let isReady = $derived(identifier.trim().length > 0 && password.length > 0);
 
-	// Validate email on blur for immediate feedback
-	function validateEmail() {
-		emailError = null;
-		try {
-			emailSchema.parse(email);
-		} catch (err) {
-			if (err instanceof z.ZodError) {
-				emailError = err.issues[0].message;
+	// Validation: either valid email or valid username (3-20 chars, alphanumeric + underscore)
+	const emailSchema = z.string().email();
+	const usernameSchema = z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/);
+
+	function validateIdentifier() {
+		identifierError = null;
+		const value = identifier.trim();
+		if (!value) return;
+
+		const isEmail = value.includes('@');
+		if (isEmail) {
+			const result = emailSchema.safeParse(value);
+			if (!result.success) {
+				identifierError = 'Please enter a valid email address';
+			}
+		} else {
+			const result = usernameSchema.safeParse(value);
+			if (!result.success) {
+				identifierError = 'Username must be 3-20 characters (letters, numbers, underscore)';
 			}
 		}
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
-		errorMessage = null;
-		emailError = null;
+		identifierError = null;
 		loading = true;
 
-		// Validate email before submission
-		try {
-			email = emailSchema.parse(email);
-		} catch (err) {
-			if (err instanceof z.ZodError) {
-				emailError = err.issues[0].message;
-				loading = false;
-				return;
-			}
+		const value = identifier.trim().toLowerCase();
+		const isEmail = value.includes('@');
+
+		// Validate before submission
+		const result = isEmail ? emailSchema.safeParse(value) : usernameSchema.safeParse(value);
+		if (!result.success) {
+			identifierError = isEmail
+				? 'Please enter a valid email address'
+				: 'Username must be 3-20 characters (letters, numbers, underscore)';
+			loading = false;
+			return;
 		}
 
 		try {
-			await signIn(email, password);
+			await signIn(value, password);
 			window.location.href = '/overview';
 		} catch (err) {
-			errorMessage = 'Invalid email or password. Please try again.';
-			console.error('Login error:', err); // Log for debugging
+			toaster.error({
+				title: 'Login failed',
+				description: 'Invalid credentials. Please try again.'
+			});
+			console.error('Login error:', err);
 		} finally {
 			loading = false;
 		}
@@ -56,27 +71,22 @@
 <form class="space-y-6 max-w-md mx-auto p-6 bg-surface-100-800 rounded-xl" onsubmit={handleSubmit}>
 	<h1 class="text-2xl font-semibold text-center">Login</h1>
 
-	{#if errorMessage}
-		<div class="p-3 bg-error-100 text-error-700 rounded">
-			{errorMessage}
-		</div>
-	{/if}
-
 	<div class="flex flex-col space-y-1">
-		<label for="email" class="text-sm font-medium text-surface-700-200">Email</label>
+		<label for="identifier" class="text-sm font-medium text-surface-700-200">Email or Username</label>
 		<input
-			id="email"
-			type="email"
-			bind:value={email}
-			onblur={validateEmail}
+			id="identifier"
+			type="text"
+			bind:value={identifier}
+			onblur={validateIdentifier}
 			required
+			autocomplete="username"
 			class="input px-4 py-2 border rounded-md bg-surface-50-900 focus:outline-none focus:ring-2
-                  {emailError
+                  {identifierError
 				? 'border-error-500 focus:ring-error-500'
 				: 'border-surface-300-600 focus:ring-primary-500'}"
 		/>
-		{#if emailError}
-			<p class="text-sm text-error-600">{emailError}</p>
+		{#if identifierError}
+			<p class="text-sm text-error-600">{identifierError}</p>
 		{/if}
 	</div>
 
@@ -94,7 +104,10 @@
 
 	<button
 		type="submit"
-		class="w-full py-3 px-6 bg-primary-200-800 text-primary-800-200 rounded-full hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+		class="w-full py-3 px-6 rounded-full transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+			{isReady
+			? 'bg-primary-500 text-white hover:bg-primary-600 shadow-md hover:shadow-lg'
+			: 'bg-surface-200 dark:bg-surface-700 text-surface-500 dark:text-surface-400 border border-surface-300 dark:border-surface-600'}"
 		disabled={loading}
 	>
 		{#if loading}

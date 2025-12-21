@@ -5,15 +5,15 @@ export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
 	// Keep 'name' for Better Auth compatibility (required by the library)
 	name: text('name').notNull(),
-	// User profile fields
+	// User profile fields (username plugin requires both username and displayUsername)
 	username: text('username').unique(),
+	displayUsername: text('displayUsername'), // Stores original casing for display
 	email: text('email').notNull().unique(),
 	emailVerified: integer('emailVerified', { mode: 'boolean' }).notNull().default(false),
 	image: text('image'),
 	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
 	// Custom fields for user preferences
-	displayName: text('displayName'),
 	pronouns: text('pronouns'),
 	theme: text('theme').default('system'), // 'light', 'dark', or 'system'
 	country: text('country'),

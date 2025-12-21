@@ -4,7 +4,7 @@
 	import { avatarUrl as avatarStore } from '$lib/stores/avatar';
 	import { STORAGE_KEYS } from '$lib/constants';
 
-	export let displayName: string;
+	export let name: string;
 	export let bio: string;
 	export let pronouns: string;
 	export let imageUrl: string | null = null;
@@ -18,7 +18,7 @@
 	let fileInput: HTMLInputElement;
 
 	$: initials =
-		displayName
+		name
 			?.split(' ')
 			.map((n) => n[0])
 			.join('')
@@ -142,7 +142,7 @@
 		</div>
 
 		<div class="flex-1 min-w-0 mt-4 md:mt-0">
-			<h3 class="font-semibold text-2xl">{displayName || 'Your name'}</h3>
+			<h3 class="font-semibold text-2xl">{name || 'Your name'}</h3>
 			<p class="text-sm opacity-80 mt-1 break-words" title={bio}>
 				{displayBio}
 			</p>

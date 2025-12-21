@@ -54,7 +54,6 @@
 			id: string;
 			name?: string | null;
 			username?: string | null;
-			displayName?: string | null;
 			email?: string | null;
 			image?: string | null;
 		} | null;

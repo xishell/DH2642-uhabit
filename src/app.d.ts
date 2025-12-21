@@ -13,7 +13,6 @@ declare global {
 				image?: string | null;
 				createdAt: Date;
 				updatedAt: Date;
-				displayName?: string | null;
 				theme?: string | null;
 				country?: string | null;
 				preferences?: string | null;

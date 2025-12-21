@@ -28,7 +28,7 @@ const preferencesSchema = z.object({
 		.max(20)
 		.regex(/^[a-zA-Z0-9_]+$/)
 		.optional(),
-	displayName: z.string().min(1).max(100).optional(),
+	name: z.string().min(1).max(100).optional(),
 	pronouns: z.string().max(50).optional(),
 	theme: z.enum(['light', 'dark', 'system']).optional(),
 	country: z.string().length(2).optional(), // ISO 3166-1 alpha-2 code
@@ -59,7 +59,7 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 	const [userData] = await drizzle
 		.select({
 			username: user.username,
-			displayName: user.displayName,
+			name: user.name,
 			pronouns: user.pronouns,
 			theme: user.theme,
 			country: user.country,
@@ -89,7 +89,7 @@ export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 
 	return json({
 		username: userData.username,
-		displayName: userData.displayName,
+		name: userData.name,
 		pronouns: userData.pronouns,
 		theme: userData.theme || 'system',
 		country: userData.country,
@@ -122,7 +122,7 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 	const [updatedUser] = await drizzle
 		.select({
 			username: user.username,
-			displayName: user.displayName,
+			name: user.name,
 			pronouns: user.pronouns,
 			theme: user.theme,
 			country: user.country,
@@ -137,7 +137,7 @@ export const PATCH: RequestHandler = async ({ request, locals, platform }) => {
 
 	return json({
 		username: updatedUser.username,
-		displayName: updatedUser.displayName,
+		name: updatedUser.name,
 		pronouns: updatedUser.pronouns,
 		theme: updatedUser.theme || 'system',
 		country: updatedUser.country,
@@ -166,7 +166,7 @@ const buildSimpleUpdates = (body: z.infer<typeof preferencesSchema>) => {
 	const updates: Partial<typeof user.$inferInsert> = { updatedAt: new Date() };
 	const simpleFields: Partial<typeof user.$inferInsert> = {
 		username: body.username ? body.username.toLowerCase().trim() : undefined,
-		displayName: body.displayName,
+		name: body.name || undefined,
 		pronouns: body.pronouns,
 		theme: body.theme,
 		country: body.country
@@ -177,11 +177,6 @@ const buildSimpleUpdates = (body: z.infer<typeof preferencesSchema>) => {
 			// @ts-expect-error - dynamic assignment
 			updates[key] = value;
 		}
-	}
-
-	// Sync name field with displayName if updated
-	if (body.displayName !== undefined) {
-		updates.name = body.displayName || 'User';
 	}
 
 	return updates;

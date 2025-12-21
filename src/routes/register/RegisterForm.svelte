@@ -2,7 +2,7 @@
 	import '@skeletonlabs/skeleton-svelte';
 	import { signUp } from '$lib/auth/client';
 	import PasswordStrengthIndicator from '$lib/components/PasswordStrengthIndicator.svelte';
-	import RegisterErrorAlert from './RegisterErrorAlert.svelte';
+	import { toaster } from '$lib/stores/toaster';
 	import {
 		emailSchema,
 		usernameSchema,
@@ -14,10 +14,13 @@
 	let email = $state('');
 	let password = $state('');
 	let loading = $state(false);
-	let errorMessage = $state<string | null>(null);
-	let errorHint = $state<string | null>(null);
 	let emailError = $state<string | null>(null);
 	let usernameError = $state<string | null>(null);
+
+	// Form is ready when all fields have content and password meets minimum length
+	let isReady = $derived(
+		username.trim().length > 0 && email.trim().length > 0 && password.length >= 8
+	);
 
 	// Validate email on blur for immediate feedback
 	function validateEmail() {
@@ -29,79 +32,77 @@
 		usernameError = validateUsernameValue(username);
 	}
 
-	function getErrorFeedback(err: unknown): { message: string; hint: string | null } {
+	function getErrorFeedback(err: unknown): { title: string; description: string } {
 		if (!(err instanceof Error)) {
 			return {
-				message: 'Something went wrong during registration.',
-				hint: 'Please try again in a moment.'
+				title: 'Registration failed',
+				description: 'Something went wrong. Please try again in a moment.'
 			};
 		}
 
 		const msg = err.message.toLowerCase();
-		const checks: { test: (m: string) => boolean; message: string; hint: string | null }[] = [
+		const checks: { test: (m: string) => boolean; title: string; description: string }[] = [
 			{
 				test: (m) =>
 					m.includes('password') &&
 					(m.includes('common') || m.includes('breach') || m.includes('compromised')),
-				message: 'This password is too common and may be easy to guess.',
-				hint: 'Try adding numbers, symbols, or making it longer.'
+				title: 'Password too common',
+				description: 'Try adding numbers, symbols, or making it longer.'
 			},
 			{
 				test: (m) =>
 					m.includes('password') &&
 					(m.includes('weak') || m.includes('short') || m.includes('length')),
-				message: "Your password doesn't meet the requirements.",
-				hint: 'Check the password requirements below.'
+				title: 'Password too weak',
+				description: 'Check the password requirements below.'
 			},
 			{
 				test: (m) => m.includes('password'),
-				message: err.message,
-				hint: 'Please choose a stronger password.'
+				title: 'Password issue',
+				description: 'Please choose a stronger password.'
 			},
 			{
 				test: (m) =>
 					m.includes('email') &&
 					(m.includes('already') || m.includes('exists') || m.includes('taken')),
-				message: 'An account with this email may already exist.',
-				hint: 'login-hint'
+				title: 'Email already registered',
+				description: 'Try logging in instead, or use a different email.'
 			},
 			{
 				test: (m) => m.includes('email') && m.includes('invalid'),
-				message: 'Please check your email address.',
-				hint: "Make sure it's formatted correctly (e.g., name@example.com)."
+				title: 'Invalid email',
+				description: "Make sure it's formatted correctly (e.g., name@example.com)."
 			},
 			{
 				test: (m) =>
 					m.includes('username') &&
 					(m.includes('already') || m.includes('exists') || m.includes('taken')),
-				message: 'This username is already taken.',
-				hint: 'Please choose a different username.'
+				title: 'Username taken',
+				description: 'Please choose a different username.'
 			},
 			{
 				test: (m) => m.includes('too many') || m.includes('rate limit'),
-				message: 'Too many attempts. Please wait a moment.',
-				hint: 'Try again in a few minutes.'
+				title: 'Too many attempts',
+				description: 'Please wait a few minutes and try again.'
 			},
 			{
 				test: (m) => m.includes('network') || m.includes('fetch') || m.includes('connection'),
-				message: 'Connection problem. Please check your internet.',
-				hint: 'Try refreshing the page and submitting again.'
+				title: 'Connection problem',
+				description: 'Check your internet and try again.'
 			}
 		];
 
 		const match = checks.find((item) => item.test(msg));
-		if (match) return { message: match.message, hint: match.hint };
+		if (match) return { title: match.title, description: match.description };
 
 		return {
-			message: 'Something went wrong during registration.',
-			hint: 'Please check your information and try again.'
+			title: 'Registration failed',
+			description: 'Please check your information and try again.'
 		};
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
-		errorMessage = null;
-		errorHint = null;
 		emailError = null;
 		usernameError = null;
 		loading = true;
@@ -127,8 +128,7 @@
 			window.location.href = '/overview';
 		} catch (err) {
 			const feedback = getErrorFeedback(err);
-			errorMessage = feedback.message;
-			errorHint = feedback.hint;
+			toaster.error(feedback);
 			console.error('Registration error:', err);
 		} finally {
 			loading = false;
@@ -139,10 +139,6 @@
 <form class="space-y-6 max-w-md mx-auto p-6 bg-surface-100-800 rounded-xl" onsubmit={handleSubmit}>
 	<h1 class="text-2xl font-semibold text-center">Create an Account</h1>
 
-	{#if errorMessage}
-		<RegisterErrorAlert {errorMessage} {errorHint} />
-	{/if}
-
 	<div class="flex flex-col space-y-1">
 		<label for="username" class="text-sm font-medium text-surface-700-200">Username</label>
 		<input
@@ -152,7 +148,7 @@
 			onblur={validateUsername}
 			placeholder="johndoe"
 			required
-			class="input px-4 py-2 border rounded-md bg-surface-50-900 focus:outline-none focus:ring-2
+			class="input px-4 py-2 border rounded-md bg-surface-50-900 focus:outline-none focus:ring-2 placeholder:text-surface-400 dark:placeholder:text-surface-500
                   {usernameError
 				? 'border-error-500 focus:ring-error-500'
 				: 'border-surface-300-600 focus:ring-primary-500'}"
@@ -171,7 +167,7 @@
 			onblur={validateEmail}
 			placeholder="you@example.com"
 			required
-			class="input px-4 py-2 border rounded-md bg-surface-50-900 focus:outline-none focus:ring-2
+			class="input px-4 py-2 border rounded-md bg-surface-50-900 focus:outline-none focus:ring-2 placeholder:text-surface-400 dark:placeholder:text-surface-500
                   {emailError
 				? 'border-error-500 focus:ring-error-500'
 				: 'border-surface-300-600 focus:ring-primary-500'}"
@@ -191,14 +187,17 @@
 			required
 			minlength="8"
 			class="input px-4 py-2 border border-surface-300-600 rounded-md
-                  bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  bg-surface-50-900 focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder:text-surface-400 dark:placeholder:text-surface-500"
 		/>
 		<PasswordStrengthIndicator {password} />
 	</div>
 
 	<button
 		type="submit"
-		class="w-full py-3 px-6 bg-primary-200-800 text-primary-800-200 rounded-full hover:bg-primary-400-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+		class="w-full py-3 px-6 rounded-full transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+			{isReady
+			? 'bg-primary-500 text-white hover:bg-primary-600 shadow-md hover:shadow-lg'
+			: 'bg-surface-200 dark:bg-surface-700 text-surface-500 dark:text-surface-400 border border-surface-300 dark:border-surface-600'}"
 		disabled={loading}
 	>
 		{#if loading}

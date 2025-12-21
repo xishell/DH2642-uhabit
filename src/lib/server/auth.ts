@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { haveIBeenPwned } from 'better-auth/plugins';
+import { haveIBeenPwned, username } from 'better-auth/plugins';
 import { APIError } from 'better-auth/api';
 import { getDB } from './db';
 import * as schema from './db/schema';
@@ -64,6 +64,8 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 			}
 		}),
 		plugins: [
+			// Enable username-based authentication
+			username(),
 			// Check passwords against 800M+ breached passwords
 			// Only enabled in production (dev mode allows weak passwords for testing)
 			...(!isDev
@@ -114,15 +116,8 @@ export function createAuth(db: D1Database, secret: string, url: string, devMode 
 		// Custom user fields
 		user: {
 			additionalFields: {
-				username: {
-					type: 'string',
-					required: false,
-					unique: true
-				},
-				displayName: {
-					type: 'string',
-					required: false
-				},
+				// Note: username and displayUsername are handled by the username plugin
+				// Note: name is used as the display name (required by Better Auth)
 				pronouns: {
 					type: 'string',
 					required: false

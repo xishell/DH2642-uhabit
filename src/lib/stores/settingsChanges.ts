@@ -1,7 +1,7 @@
 import { writable, derived } from 'svelte/store';
 
 export type SettingsField =
-	| 'displayName'
+	| 'name'
 	| 'bio'
 	| 'pronouns'
 	| 'username'

@@ -2,19 +2,22 @@
 	import { onMount } from 'svelte';
 	import { Popover, Portal } from '@skeletonlabs/skeleton-svelte';
 	import { Bell, CheckCheck, Loader2 } from '@lucide/svelte';
-	import { notificationStore } from '$lib/stores/notifications.svelte';
+	import { notificationsPresenter } from '$lib/presenters/notifications';
 	import NotificationItem from './NotificationItem.svelte';
 
 	let isOpen = $state(false);
 	let isClosing = $state(false);
 
+	// Subscribe to presenter state
+	const presenterState = notificationsPresenter.state;
+
 	onMount(() => {
-		notificationStore.fetchUnreadCount();
+		notificationsPresenter.fetchUnreadCount();
 	});
 
 	async function handleOpen() {
-		if (!notificationStore.initialized) {
-			await notificationStore.fetchNotifications(true);
+		if (!$presenterState.initialized) {
+			await notificationsPresenter.fetchNotifications(true);
 		}
 	}
 
@@ -35,19 +38,19 @@
 	}
 
 	function handleMarkRead(id: string) {
-		notificationStore.markAsRead(id);
+		notificationsPresenter.markAsRead(id);
 	}
 
 	function handleDismiss(id: string) {
-		notificationStore.dismiss(id);
+		notificationsPresenter.dismiss(id);
 	}
 
 	function handleMarkAllRead() {
-		notificationStore.markAllAsRead();
+		notificationsPresenter.markAllAsRead();
 	}
 
 	function handleLoadMore() {
-		notificationStore.loadMore();
+		notificationsPresenter.loadMore();
 	}
 </script>
 
@@ -61,11 +64,11 @@
 		aria-label="Notifications"
 	>
 		<Bell class="size-5 text-surface-600 dark:text-surface-400" />
-		{#if notificationStore.unreadCount > 0}
+		{#if $presenterState.unreadCount > 0}
 			<span
 				class="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1.5 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full"
 			>
-				{notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount}
+				{$presenterState.unreadCount > 99 ? '99+' : $presenterState.unreadCount}
 			</span>
 		{/if}
 	</Popover.Trigger>
@@ -86,7 +89,7 @@
 					>
 						Notifications
 					</Popover.Title>
-					{#if notificationStore.unreadCount > 0}
+					{#if $presenterState.unreadCount > 0}
 						<button
 							type="button"
 							class="flex items-center gap-1.5 px-2 py-1 -mr-2 rounded-lg text-xs sm:text-xs text-primary-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-950/50 transition-colors"
@@ -100,11 +103,11 @@
 
 				<!-- Notification list -->
 				<div class="flex-1 overflow-y-auto">
-					{#if notificationStore.loading && notificationStore.notifications.length === 0}
+					{#if $presenterState.loading && $presenterState.notifications.length === 0}
 						<div class="flex items-center justify-center py-12">
 							<Loader2 class="size-6 text-surface-400 animate-spin" />
 						</div>
-					{:else if notificationStore.notifications.length === 0}
+					{:else if $presenterState.notifications.length === 0}
 						<div class="flex flex-col items-center justify-center py-12 px-4 text-center">
 							<Bell class="size-10 text-surface-300 dark:text-surface-600 mb-3" />
 							<Popover.Description class="text-sm text-surface-500 dark:text-surface-400">
@@ -116,7 +119,7 @@
 						</div>
 					{:else}
 						<div class="p-2 space-y-1">
-							{#each notificationStore.notifications as notification (notification.id)}
+							{#each $presenterState.notifications as notification (notification.id)}
 								<NotificationItem
 									{notification}
 									onMarkRead={handleMarkRead}
@@ -125,15 +128,15 @@
 							{/each}
 						</div>
 
-						{#if notificationStore.hasMore}
+						{#if $presenterState.hasMore}
 							<div class="px-3 pb-3">
 								<button
 									type="button"
 									class="w-full py-3 sm:py-2 text-sm font-medium text-primary-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-950/50 rounded-xl transition-colors disabled:opacity-50"
 									onclick={handleLoadMore}
-									disabled={notificationStore.loading}
+									disabled={$presenterState.loading}
 								>
-									{#if notificationStore.loading}
+									{#if $presenterState.loading}
 										<Loader2 class="size-4 animate-spin inline mr-1" />
 										Loading...
 									{:else}

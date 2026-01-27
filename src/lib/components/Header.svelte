@@ -9,6 +9,7 @@
 	import { LogOutIcon, MenuIcon, XIcon } from '@lucide/svelte';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte';
 	import { avatarUrl } from '$lib/stores/avatar';
+	import { notificationsPresenter } from '$lib/presenters/notifications';
 	import NotificationBell from './NotificationBell.svelte';
 
 	let {
@@ -69,6 +70,9 @@
 			sessionStorage.removeItem(STORAGE_KEYS.GOALS_ETAG);
 			sessionStorage.removeItem(STORAGE_KEYS.SETTINGS_CACHE);
 			sessionStorage.removeItem(STORAGE_KEYS.QUOTE_CACHE);
+
+			// Reset notifications presenter state
+			notificationsPresenter.reset();
 
 			await signOut();
 			location.href = routes.login;

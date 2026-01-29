@@ -1,15 +1,19 @@
 <script lang="ts">
-	import { changedFields, type SettingsField } from '$lib/stores/settingsChanges';
+	import { getContext } from 'svelte';
+	import type { Readable } from 'svelte/store';
 
 	interface Props {
-		field: SettingsField;
+		field: string;
 		label: string;
 		children: import('svelte').Snippet;
 	}
 
 	let { field, label, children }: Props = $props();
 
-	const isChanged = $derived($changedFields.has(field));
+	// Get changedFields from context (provided by settings page)
+	const changedFields = getContext<Readable<Set<string>>>('settingsChangedFields');
+
+	const isChanged = $derived(changedFields ? $changedFields.has(field) : false);
 </script>
 
 <div class="relative">

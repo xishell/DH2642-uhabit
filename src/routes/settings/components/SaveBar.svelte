@@ -1,15 +1,24 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { hasUnsavedChanges, changedFields, settingsChanges } from '$lib/stores/settingsChanges';
+	import type { Readable } from 'svelte/store';
 
 	interface Props {
 		onSave: () => Promise<void>;
 		onDiscard: () => void;
 		isSaving?: boolean;
 		isMobile?: boolean;
+		hasUnsavedChanges?: Readable<boolean>;
+		changedFields?: Readable<Set<string>>;
 	}
 
-	let { onSave, onDiscard, isSaving = false, isMobile = false }: Props = $props();
+	let {
+		onSave,
+		onDiscard,
+		isSaving = false,
+		isMobile = false,
+		hasUnsavedChanges,
+		changedFields
+	}: Props = $props();
 
 	const fieldLabels: Record<string, string> = {
 		name: 'Display name',
@@ -18,16 +27,28 @@
 		username: 'Username',
 		email: 'Email',
 		theme: 'Theme',
+		reduceMotion: 'Reduce motion',
+		country: 'Country',
 		accentColor: 'Accent color',
 		typography: 'Typography',
-		notifications: 'Notifications'
+		pushEnabled: 'Push notifications',
+		habitReminders: 'Habit reminders',
+		streakMilestones: 'Streak milestones',
+		goalProgress: 'Goal progress',
+		holidaySuggestions: 'Holiday suggestions',
+		reminderTime: 'Reminder time'
 	};
 
-	const changedFieldsList = $derived(
-		Array.from($changedFields)
+	const hasChanges = $derived(hasUnsavedChanges ? $hasUnsavedChanges : false);
+
+	const changedFieldsList = $derived.by(() => {
+		if (!changedFields) return '';
+		const fields = $changedFields;
+		if (!fields) return '';
+		return Array.from(fields)
 			.map((f) => fieldLabels[f] || f)
-			.join(', ')
-	);
+			.join(', ');
+	});
 
 	async function handleSave() {
 		await onSave();
@@ -35,11 +56,10 @@
 
 	function handleDiscard() {
 		onDiscard();
-		settingsChanges.clearAll();
 	}
 </script>
 
-{#if $hasUnsavedChanges}
+{#if hasChanges}
 	<div
 		class="fixed left-0 right-0 z-50 p-4 pointer-events-none"
 		class:bottom-0={!isMobile}

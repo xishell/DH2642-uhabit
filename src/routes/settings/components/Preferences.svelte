@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
-	import { reduceMotion as motionStore } from '$lib/stores/reduceMotion';
-	import { userCountry } from '$lib/stores/country';
-	import { settingsChanges } from '$lib/stores/settingsChanges';
+	import { type ThemeMode } from '$lib/stores/theme';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import FieldWrapper from './FieldWrapper.svelte';
 	import { getCountryOptions } from '$lib/constants/countries';
@@ -53,38 +50,29 @@
 		const select = event.target as HTMLSelectElement;
 		const newMode = select.value as ThemeMode;
 		draftTheme = newMode;
-		// Apply theme immediately for visual feedback
-		themeStore.set(newMode);
-		settingsChanges.setField('theme', currentTheme, newMode);
 		onFieldChange?.('theme', newMode);
 	}
 
 	function handleReduceMotionChange(checked: boolean) {
 		draftReduceMotion = checked;
-		motionStore.set(checked);
 		onFieldChange?.('reduceMotion', checked);
 	}
 
 	function handleCountryChange(event: Event) {
 		const value = (event.target as HTMLSelectElement).value;
 		draftCountry = value;
-		// Apply immediately for visual feedback
-		userCountry.set(value || null);
-		settingsChanges.setField('country', country, value);
 		onFieldChange?.('country', value);
 	}
 
 	function handleAccentColorChange(event: Event) {
 		const value = (event.target as HTMLSelectElement).value;
 		draftAccentColor = value;
-		settingsChanges.setField('accentColor', accentColor, value);
 		onFieldChange?.('accentColor', value);
 	}
 
 	function handleTypographyChange(event: Event) {
 		const value = (event.target as HTMLSelectElement).value;
 		draftTypography = value;
-		settingsChanges.setField('typography', typography, value);
 		onFieldChange?.('typography', value);
 	}
 </script>

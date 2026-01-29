@@ -2,18 +2,28 @@
 	import { untrack } from 'svelte';
 	import ProfileCard from './ProfileCard.svelte';
 	import FieldWrapper from './FieldWrapper.svelte';
-	import { settingsChanges } from '$lib/stores/settingsChanges';
 
 	interface Props {
 		name: string;
 		bio: string;
 		pronouns: string;
 		imageUrl?: string | null;
+		isUploading?: boolean;
 		onFieldChange?: (field: string, value: unknown) => void;
-		onAvatarChange?: (newUrl: string | null) => void;
+		onAvatarUpload?: (
+			file: File
+		) => Promise<{ success: boolean; imageUrl?: string; error?: string }>;
 	}
 
-	let { name, bio, pronouns, imageUrl, onFieldChange, onAvatarChange }: Props = $props();
+	let {
+		name,
+		bio,
+		pronouns,
+		imageUrl,
+		isUploading = false,
+		onFieldChange,
+		onAvatarUpload
+	}: Props = $props();
 
 	let draftName = $state(untrack(() => name));
 	let draftBio = $state(untrack(() => bio));
@@ -35,21 +45,18 @@
 	function handleNameChange(e: Event) {
 		const value = (e.target as HTMLInputElement).value;
 		draftName = value;
-		settingsChanges.setField('name', name, value);
 		onFieldChange?.('name', value);
 	}
 
 	function handleBioChange(e: Event) {
 		const value = (e.target as HTMLTextAreaElement).value;
 		draftBio = value;
-		settingsChanges.setField('bio', bio, value);
 		onFieldChange?.('bio', value);
 	}
 
 	function handlePronounsChange(e: Event) {
 		const value = (e.target as HTMLSelectElement).value;
 		draftPronouns = value;
-		settingsChanges.setField('pronouns', pronouns, value);
 		onFieldChange?.('pronouns', value);
 	}
 </script>
@@ -98,7 +105,8 @@
 			bio={draftBio}
 			pronouns={draftPronouns}
 			{imageUrl}
-			{onAvatarChange}
+			{isUploading}
+			{onAvatarUpload}
 		/>
 	</div>
 </section>

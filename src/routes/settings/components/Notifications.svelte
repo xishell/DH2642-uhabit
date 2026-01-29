@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { untrack } from 'svelte';
-	import { settingsChanges } from '$lib/stores/settingsChanges';
 	import {
 		isPushSupported,
 		getPushStatus,
@@ -70,27 +69,15 @@
 		goalProgress: (v) => (draftGoalProgress = v),
 		holidaySuggestions: (v) => (draftHolidaySuggestions = v)
 	};
-	const getOriginal = (field: string): boolean => {
-		const origMap: Record<string, () => boolean> = {
-			pushEnabled: () => pushEnabled,
-			habitReminders: () => habitReminders,
-			streakMilestones: () => streakMilestones,
-			goalProgress: () => goalProgress,
-			holidaySuggestions: () => holidaySuggestions
-		};
-		return origMap[field]?.() ?? false;
-	};
 
 	function handleToggle(field: string, value: boolean) {
 		draftSetters[field]?.(value);
-		settingsChanges.setField(field as any, getOriginal(field), value);
 		onFieldChange?.(field, value);
 	}
 
 	function handleTimeChange(event: Event) {
 		const value = (event.target as HTMLInputElement).value;
 		draftReminderTime = value;
-		settingsChanges.setField('reminderTime', reminderTime, value);
 		onFieldChange?.('reminderTime', value);
 	}
 

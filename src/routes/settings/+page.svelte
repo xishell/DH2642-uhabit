@@ -1,15 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 	import { browser } from '$app/environment';
 	import { beforeNavigate } from '$app/navigation';
-	import { getPreferences, updatePreferences, getSession } from '$lib/auth/client';
-	import type { UserSettingsResponse } from '$lib/auth/client';
-	import { STORAGE_KEYS } from '$lib/constants';
-	import { themeMode as themeStore, type ThemeMode } from '$lib/stores/theme';
-	import { reduceMotion as motionStore } from '$lib/stores/reduceMotion';
-	import { settingsChanges, hasUnsavedChanges } from '$lib/stores/settingsChanges';
-	import { avatarUrl as avatarStore } from '$lib/stores/avatar';
-	import { userCountry } from '$lib/stores/country';
+	import { getSession } from '$lib/auth/client';
+	import { createSettingsPresenter } from '$lib/presenters/settingsPresenter';
 	import { toaster } from '$lib/stores/toaster';
 	import PublicProfile from './components/PublicProfile.svelte';
 	import Account from './components/Account.svelte';
@@ -20,132 +14,24 @@
 	import SettingsSkeleton from './components/SettingsSkeleton.svelte';
 	import MobileNav from './components/MobileNav.svelte';
 
-	// Current values (editable)
-	let name = $state('');
-	let bio = $state('');
-	let pronouns = $state('');
-	let username = $state('');
-	let email = $state('');
-	let currentTheme = $state<ThemeMode>('system');
-	let currentReduceMotion = $state<boolean>(false);
-	let country = $state('');
-	let accentColor = $state('');
-	let typography = $state('');
+	// Create presenter
+	const presenter = createSettingsPresenter({
+		fetcher: fetch,
+		browser,
+		storage: browser ? sessionStorage : null,
+		getSession
+	});
 
-	// Avatar
-	let avatarUrl = $state<string | null>(null);
+	const presenterState = presenter.state;
 
-	// Notification preferences
-	let pushEnabled = $state(false);
-	let habitReminders = $state(true);
-	let streakMilestones = $state(true);
-	let goalProgress = $state(true);
-	let holidaySuggestions = $state(true);
-	let reminderTime = $state('08:00');
+	// Provide changedFields to child components via context
+	setContext('settingsChangedFields', presenter.changedFields);
 
-	// Original values (for tracking changes)
-	let originalValues = $state<Record<string, unknown>>({});
-
-	let sessionEmail = '';
 	let isMobile = $state(false);
-	let isLoading = $state(true);
-	let isSaving = $state(false);
 
-	const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000;
-
-	function applyProfileSettings(s: UserSettingsResponse) {
-		name = s.name ?? '';
-		pronouns = s.pronouns ?? '';
-		username = s.username ?? '';
-		avatarUrl = s.imageUrl ?? null;
-		avatarStore.set(avatarUrl);
-	}
-
-	function applyPreferences(s: UserSettingsResponse) {
-		currentTheme = (s.theme as ThemeMode) || 'system';
-		themeStore.set(currentTheme);
-		country = s.country ?? '';
-		userCountry.set(s.country ?? null);
-		bio = s.preferences?.bio ?? '';
-		accentColor = s.preferences?.accentColor ?? '';
-		typography = s.preferences?.typography ?? '';
-	}
-
-	function initializeLocalPreferences() {
-		// Subscribe once to get initial value
-		const unsubscribe = motionStore.subscribe((value) => {
-			currentReduceMotion = value;
-		});
-		unsubscribe();
-	}
-
-	function applyNotificationPrefs(notifPrefs: UserSettingsResponse['preferences']) {
-		const n = notifPrefs?.notificationPrefs;
-		pushEnabled = n?.pushEnabled ?? false;
-		habitReminders = n?.habitReminders ?? true;
-		streakMilestones = n?.streakMilestones ?? true;
-		goalProgress = n?.goalProgress ?? true;
-		holidaySuggestions = n?.holidaySuggestions ?? true;
-		reminderTime = n?.reminderTime ?? '08:00';
-	}
-
-	function captureOriginalValues() {
-		originalValues = {
-			name,
-			bio,
-			pronouns,
-			username,
-			email,
-			theme: currentTheme,
-			reduceMotion: currentReduceMotion,
-			country,
-			accentColor,
-			typography,
-			pushEnabled,
-			habitReminders,
-			streakMilestones,
-			goalProgress,
-			holidaySuggestions,
-			reminderTime
-		};
-		settingsChanges.clearAll();
-	}
-
-	const applySettings = (settings: UserSettingsResponse, setAsOriginal = false) => {
-		applyProfileSettings(settings);
-		applyPreferences(settings);
-		applyNotificationPrefs(settings.preferences);
-		initializeLocalPreferences();
-		if (setAsOriginal) captureOriginalValues();
-	};
-
-	const readSettingsCache = () => {
-		if (!browser) return null;
-		const raw = sessionStorage.getItem(STORAGE_KEYS.SETTINGS_CACHE);
-		if (!raw) return null;
-		try {
-			const cached = JSON.parse(raw) as { savedAt: number; data: UserSettingsResponse };
-			if (Date.now() - cached.savedAt > SETTINGS_CACHE_TTL_MS) return null;
-			return cached.data;
-		} catch {
-			return null;
-		}
-	};
-
-	const writeSettingsCache = (settings: UserSettingsResponse) => {
-		if (!browser) return;
-		sessionStorage.setItem(
-			STORAGE_KEYS.SETTINGS_CACHE,
-			JSON.stringify({ savedAt: Date.now(), data: settings })
-		);
-	};
-
+	// Initialize from cache immediately if available
 	if (browser) {
-		const cached = readSettingsCache();
-		if (cached) {
-			applySettings(cached, true);
-			isLoading = false;
-		}
+		presenter.initFromCache();
 	}
 
 	onMount(() => {
@@ -157,29 +43,17 @@
 
 	onMount(async () => {
 		try {
-			const cached = readSettingsCache();
-			if (cached) {
-				applySettings(cached, true);
-				isLoading = false;
-			}
-
-			const [session, settings] = await Promise.all([getSession(), getPreferences()]);
-			sessionEmail = session?.user?.email ?? '';
-			if (sessionEmail) {
-				email = sessionEmail;
-			}
-
-			applySettings(settings, true);
-			writeSettingsCache(settings);
+			await presenter.loadSettings();
 		} catch (error) {
 			toaster.error({
 				title: 'Settings error',
 				description: error instanceof Error ? error.message : 'Failed to load settings.'
 			});
-		} finally {
-			isLoading = false;
 		}
 	});
+
+	// Subscribe to hasUnsavedChanges store
+	const hasUnsavedChanges = presenter.hasUnsavedChanges;
 
 	// Warn before navigation if there are unsaved changes
 	beforeNavigate(({ cancel }) => {
@@ -205,90 +79,55 @@
 		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
 	});
 
-	// Unified save handler
+	// Save handler
 	async function handleSaveAll() {
-		isSaving = true;
-		try {
-			const updated = await updatePreferences({
-				name: name || undefined,
-				pronouns: pronouns || undefined,
-				username: username || undefined,
-				theme: currentTheme,
-				country: country || undefined,
-				preferences: {
-					bio,
-					accentColor,
-					typography,
-					notificationPrefs: {
-						pushEnabled,
-						habitReminders,
-						streakMilestones,
-						goalProgress,
-						holidaySuggestions,
-						reminderTime
-					}
-				}
-			});
+		const result = await presenter.saveAll();
 
-			applySettings(updated, true);
-			writeSettingsCache(updated);
-
+		if (result.success) {
 			toaster.success({
 				title: 'Settings saved',
 				description: 'All your changes have been saved.'
 			});
-		} catch (error) {
+		} else {
 			toaster.error({
 				title: 'Save failed',
-				description: error instanceof Error ? error.message : 'Failed to save settings.'
+				description: result.error || 'Failed to save settings.'
 			});
-		} finally {
-			isSaving = false;
 		}
 	}
 
-	// Handle avatar change (immediate, not part of save/discard flow)
-	function handleAvatarChange(newUrl: string | null) {
-		avatarUrl = newUrl;
+	// Discard handler
+	function handleDiscardAll() {
+		presenter.discardAll();
 	}
 
-	// Field setters for discarding changes
-	const fieldSetters: Record<string, (v: unknown) => void> = {
-		name: (v) => (name = v as string),
-		bio: (v) => (bio = v as string),
-		pronouns: (v) => (pronouns = v as string),
-		username: (v) => (username = v as string),
-		theme: (v) => {
-			currentTheme = v as ThemeMode;
-			themeStore.set(currentTheme);
-		},
-		reduceMotion: (v) => {
-			currentReduceMotion = v as boolean;
-			motionStore.set(currentReduceMotion);
-		},
-		country: (v) => {
-			country = v as string;
-			userCountry.set(country || null);
-		},
-		accentColor: (v) => (accentColor = v as string),
-		typography: (v) => (typography = v as string),
-		pushEnabled: (v) => (pushEnabled = v as boolean),
-		habitReminders: (v) => (habitReminders = v as boolean),
-		streakMilestones: (v) => (streakMilestones = v as boolean),
-		goalProgress: (v) => (goalProgress = v as boolean),
-		holidaySuggestions: (v) => (holidaySuggestions = v as boolean),
-		reminderTime: (v) => (reminderTime = v as string)
-	};
+	// Avatar change handler
+	async function handleAvatarUpload(file: File) {
+		const result = await presenter.uploadAvatar(file);
 
-	// Discard all changes
-	function handleDiscardAll() {
-		settingsChanges.getOriginalValues().forEach((value, field) => fieldSetters[field]?.(value));
-		settingsChanges.clearAll();
+		if (result.success) {
+			toaster.success({
+				title: 'Avatar updated',
+				description: 'Your profile picture has been updated.'
+			});
+		} else {
+			toaster.error({
+				title: 'Upload failed',
+				description: result.error || 'Could not upload avatar.'
+			});
+		}
+
+		return result;
+	}
+
+	// Field change handler
+	function handleFieldChange(field: string, value: unknown) {
+		presenter.setField(field as Parameters<typeof presenter.setField>[0], value);
 	}
 </script>
 
 <div class="flex min-h-screen bg-surface-50 dark:bg-surface-900 justify-center items-start">
-	<!-- LEFT NAV (DESKTOP ONLY – UNCHANGED) -->
+	<!-- LEFT NAV (DESKTOP ONLY) -->
 	{#if !isMobile}
 		<aside
 			class="w-72 border-r border-surface-200 dark:border-surface-700 p-6 sticky top-0 h-screen"
@@ -300,48 +139,49 @@
 
 	<!-- MAIN CONTENT -->
 	<main class="flex-1 p-6 max-w-4xl space-y-16" class:pb-40={isMobile}>
-		{#if isLoading}
+		{#if $presenterState.isLoading}
 			<SettingsSkeleton />
 		{:else}
 			<section id="profile" class="scroll-mt-20">
 				<PublicProfile
-					{name}
-					{bio}
-					{pronouns}
-					imageUrl={avatarUrl}
-					onAvatarChange={handleAvatarChange}
-					onFieldChange={(field, value) => fieldSetters[field]?.(value)}
+					name={$presenterState.name}
+					bio={$presenterState.bio}
+					pronouns={$presenterState.pronouns}
+					imageUrl={$presenterState.avatarUrl}
+					isUploading={$presenterState.isUploadingAvatar}
+					onAvatarUpload={handleAvatarUpload}
+					onFieldChange={handleFieldChange}
 				/>
 			</section>
 			<hr class="border-surface-200 dark:border-surface-700" />
 			<section id="account" class="scroll-mt-20">
 				<Account
-					{username}
-					{email}
-					onFieldChange={(field, value) => fieldSetters[field]?.(value)}
+					username={$presenterState.username}
+					email={$presenterState.email}
+					onFieldChange={handleFieldChange}
 				/>
 			</section>
 			<hr class="border-surface-200 dark:border-surface-700" />
 			<section id="preferences" class="scroll-mt-20">
 				<Preferences
-					{currentTheme}
-					reduceMotion={currentReduceMotion}
-					{country}
-					{accentColor}
-					{typography}
-					onFieldChange={(field, value) => fieldSetters[field]?.(value)}
+					currentTheme={$presenterState.theme}
+					reduceMotion={$presenterState.reduceMotion}
+					country={$presenterState.country}
+					accentColor={$presenterState.accentColor}
+					typography={$presenterState.typography}
+					onFieldChange={handleFieldChange}
 				/>
 			</section>
 			<hr class="border-surface-200 dark:border-surface-700" />
 			<section id="notifications" class="scroll-mt-20">
 				<Notifications
-					{pushEnabled}
-					{habitReminders}
-					{streakMilestones}
-					{goalProgress}
-					{holidaySuggestions}
-					{reminderTime}
-					onFieldChange={(field, value) => fieldSetters[field]?.(value)}
+					pushEnabled={$presenterState.pushEnabled}
+					habitReminders={$presenterState.habitReminders}
+					streakMilestones={$presenterState.streakMilestones}
+					goalProgress={$presenterState.goalProgress}
+					holidaySuggestions={$presenterState.holidaySuggestions}
+					reminderTime={$presenterState.reminderTime}
+					onFieldChange={handleFieldChange}
 				/>
 			</section>
 		{/if}
@@ -352,5 +192,12 @@
 	{/if}
 
 	<!-- FLOATING SAVE BAR -->
-	<SaveBar onSave={handleSaveAll} onDiscard={handleDiscardAll} {isSaving} {isMobile} />
+	<SaveBar
+		onSave={handleSaveAll}
+		onDiscard={handleDiscardAll}
+		isSaving={$presenterState.isSaving}
+		{isMobile}
+		hasUnsavedChanges={presenter.hasUnsavedChanges}
+		changedFields={presenter.changedFields}
+	/>
 </div>

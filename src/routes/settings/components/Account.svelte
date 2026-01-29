@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { settingsChanges } from '$lib/stores/settingsChanges';
 	import EditFieldDialog from '$lib/components/EditFieldDialog.svelte';
 	import FieldWrapper from './FieldWrapper.svelte';
 
@@ -37,11 +36,9 @@
 
 		if (openField === 'username') {
 			draftUsername = editValue;
-			settingsChanges.setField('username', username, editValue);
 			onFieldChange?.('username', editValue);
 		} else if (openField === 'email') {
 			draftEmail = editValue;
-			settingsChanges.setField('email', email, editValue);
 			onFieldChange?.('email', editValue);
 		}
 
